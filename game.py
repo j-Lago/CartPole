@@ -199,7 +199,7 @@ class Game():
             }
         else:
             self.players = {
-                'p2'       : Cart(self.screen, self.available_controllers['keyboard (<>)'], (self.screen_width * x0, int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
+                'p2'       : Cart(self.screen, 'p2', self.available_controllers['ia'], (self.screen_width * x0, int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
             }
 
         if self.first_reset:
@@ -229,11 +229,12 @@ class Game():
 
 
         if self.first_reset:
-            self.popups = {
-                'p1': SelectInput(self, player=self.players['p1'], pos=(200, 25), options=self.available_controllers, anchor='nw'),
-                'p2': SelectInput(self, player=self.players['p2'], pos=(200, self.screen.get_height() - 25),
-                                  options=self.available_controllers, anchor='sw'),
-            }
+            self.popups = dict()
+            if 'p1' in self.players.keys():
+                self.popups['p1'] = SelectInput(self, player=self.players['p1'], pos=(200, 25), options=self.available_controllers, anchor='nw')
+            if 'p2' in self.players.keys():
+                self.popups['p2'] = SelectInput(self, player=self.players['p2'], pos=(200, self.screen.get_height() - 25), options=self.available_controllers, anchor='sw')
+
         self.first_reset = False
 
 
@@ -499,10 +500,11 @@ class Game():
         """
         Para uso exclusivo do treinamento da IA
         """
-        for key, value in input_key_value.items():
-            # self.axes[key].value = value
-            # self.inputs[key] = self.axes[key].value * self.MAX_POWER
-            raise NotImplementedError
+
+        for p_key, value in input_key_value.items():
+            for c_key, axis in self.available_controllers.items():
+                if axis.active_player_key == p_key:
+                    axis.update(self.players[axis.active_player_key])
 
         if self.state == GAMESTATE.RUN:
             self.inc_time()
