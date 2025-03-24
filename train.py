@@ -45,7 +45,7 @@ def train():
     print(f'{device=}')
 
     if LOAD_WEIGHTS:
-        eps_start = 0.5
+        eps_start = 0.9
 
     agent = Agent(eps_start, eps_end, eps_decay, n_actions, device)
     memory = ReplayMemory(memory_size)
