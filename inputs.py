@@ -35,7 +35,7 @@ class Joystick():
         self.value = initial_value
         self.dead_zone = dead_zone
         self.normalization = normalization
-        self.device_type = 'joystick'
+        self.device_type = 'Human: Joystick'
 
     def reset(self):
         self.value = self.initial_value
@@ -54,7 +54,7 @@ class KeysControl():
         self.initial_value = initial_value
         self.value = initial_value
         self.normalization = normalization
-        self.device_type = 'keyboard'
+        self.device_type = 'Human: Keyboard'
 
     def reset(self):
         self.value = self.initial_value
@@ -81,7 +81,7 @@ class LinearControl:
         self.normalization = normalization
         self.intx = 0.
         self.th_target = math.pi
-        self.device_type = 'Classic Linear Controller'
+        self.device_type = 'Classic: Linear'
 
     def reset(self):
         self.value = self.initial_value
@@ -115,12 +115,12 @@ class LinearControl:
         #     self.intx += dt * x
         #     self.th_target = math.pi + (+0.1*x +0.0*self.intx +0.000*v)
         # self.aux.update('')
-        DTH_MAX = 5/180*math.pi
+        DTH_MAX = 30/180*math.pi
         # dth = - self.aux.value * 5/180*math.pi
-        kp = 0.005
         dth = 0.
-        ki = 0.002/player.fps
-        kd = 0.006
+        kp = 0.006
+        ki = 0.0005/player.fps
+        kd = 0.0055
 
         self.intx += dt * x
         dth_p = kp*x
@@ -145,7 +145,7 @@ class IAControl:
         self.initial_value = initial_value
         self.value = initial_value
         self.normalization = normalization
-        self.device_type = 'IA'
+        self.device_type = 'IA: Reinforcement Learning'
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         weights = torch.load(weights_path, weights_only=True)

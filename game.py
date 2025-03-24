@@ -564,9 +564,12 @@ class Game():
             text_timer_label = self.fonts['small'].render(f"TIMER", True, cols['timer'])
             if 'p1' in self.players.keys():
                 text_p1 = self.fonts['medium'].render(f"{self.players['p1'].score:>10d}", True, dcols['p1'])
+                text_p1_label2 = self.fonts['tiny'].render(f"{self.axes['p1'].device_type}", True, dcols['p1'])
             else:
                 dcols['p1'] = (60, 60, 50)
                 text_p1 = self.fonts['medium'].render(f"{0:>10d}", True, dcols['p1'])
+                text_p1_label2 = self.fonts['small'].render(f"-", True, dcols['p1'])
+
 
             for key in self.players.keys():
                 if not self.players[key].alive:
@@ -577,6 +580,7 @@ class Game():
             text_best = self.fonts['normal'].render(f"{self.best_score:<10d}", True, cols['best_score'])
             text_p1_label = self.fonts['small'].render(f"P1 SCORE", True, dcols['p1'])
             text_p2_label = self.fonts['small'].render(f"P2 SCORE", True, dcols['p2'])
+            text_p2_label2 = self.fonts['tiny'].render(f"{self.axes['p2'].device_type}", True, dcols['p2'])
             text_best_label = self.fonts['small'].render(f"BEST SCORE", True, cols['best_score'])
             text_best_device = self.fonts['tiny'].render(f"{self.best_score_device}", True, cols['best_score'])
             self.screen.blit(text_fps, (30, 60))
@@ -587,7 +591,9 @@ class Game():
             self.screen.blit(text_timer, (self.screen_width - text_timer.get_width() - 30, self.screen_center[1] - text_center(text_timer)[1]))
             self.screen.blit(text_timer_label, (self.screen_width - text_timer_label.get_width()-30, self.screen_center[1] - text_center(text_timer_label)[1]-50))
             self.screen.blit(text_p1_label, (self.screen_width - text_p1_label.get_width() - 30, 150))
+            self.screen.blit(text_p1_label2, (self.screen_width - text_p1_label2.get_width() - 30, 150+30))
             self.screen.blit(text_p2_label, (self.screen_width - text_p2_label.get_width() - 30, self.screen_height - 170))
+            self.screen.blit(text_p2_label2,(self.screen_width - text_p2_label2.get_width() - 30, self.screen_height - 170 -20))
             self.screen.blit(text_best_label, (30, self.screen_center[1] - text_center(text_best_label)[1]-50))
             self.screen.blit(text_best_device, (30, self.screen_center[1] - text_center(text_best_device)[1]+40))
 
