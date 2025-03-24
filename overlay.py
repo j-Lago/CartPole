@@ -6,9 +6,12 @@ class Overlay():
                  active=True,
                  on_focus=True,
                  selectable=True,
+                 selected=False,
                  bg_color=(45, 45, 45),
+                 bg_selected_color=(90, 90, 90),
                  border_color=(100, 100, 100),
                  focus_color=(200, 200, 60),
+                 selected_color=(60, 200, 200),
                  custom_draw=None,
                  custom_callback=None,
                  ):
@@ -16,11 +19,14 @@ class Overlay():
         self.rect = rect
 
         self.bg_color = bg_color
+        self.bg_selected_color = bg_selected_color
         self.border_color = border_color
+        self.selected_color = selected_color
         self.focus_color = focus_color
 
         self.active = active
         self.on_focus = on_focus
+        self.selected = selected
         self.selectable = selectable
 
         self.custom_draw = custom_draw
@@ -38,8 +44,10 @@ class Overlay():
     def draw(self):
         if self.active:
             r_border = 15
-            pygame.draw.rect(self.surface, self.bg_color, self.rect, border_radius=r_border)
+            pygame.draw.rect(self.surface, self.bg_selected_color if self.selected else self.bg_color, self.rect, border_radius=r_border)
             pygame.draw.rect(self.surface, self.focus_color if self.on_focus else self.border_color, self.rect, border_radius=r_border, width=2)
+            if self.selected:
+                pygame.draw.rect(self.surface, self.selected_color, self.rect, border_radius=r_border, width=4)
 
             if self.custom_draw is not None:
                 self.custom_draw(self.surface, rect=self.rect)

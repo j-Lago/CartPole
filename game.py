@@ -76,6 +76,18 @@ class Game():
             self.joysticks[key] = pygame.joystick.Joystick(i)
             self.joysticks[key].init()
 
+        self.available_controllers = {
+            'classic': LinearControl(),
+            'ia': IAControl(),
+            'keyboard (<>)': KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT),
+            'keyboard (ad)': KeysControl(source=pygame.key, key_left=pygame.K_a, key_right=pygame.K_d, key_intensity=pygame.K_SPACE),
+        }
+
+        for i in range(pygame.joystick.get_count()):
+            joystick = pygame.joystick.Joystick(i)
+            joystick.init()
+            self.available_controllers[f'joystick ({i})'] = joystick
+
         self.axes = dict()
         key = 'p1'
         if key in self.joysticks.keys():
@@ -98,15 +110,20 @@ class Game():
         self.fonts = load_fonts(fonts)
         self.images = load_images(images)
 
-        self.popups = [
-            Overlay(self.screen, centered_rect(self.screen, 600, 200), False, selectable=False, custom_draw=partial(centered_text, text='popup test', font=self.fonts['normal'])),
-        ]
-        for l in range(3):
-            for c in range(3):
-                self.popups.append(Overlay(self.screen, (80+c*90, 80+l*90, 80, 80), False,
-                                           custom_draw=partial(centered_text, text=f'{l}{c}', font=self.fonts['small']),
-                                           custom_callback=lambda: self.sounds['beep'].play()
-                                           ))
+        # self.popups = [
+        #     Overlay(self.screen, centered_rect(self.screen, 600, 200), False, selectable=False, custom_draw=partial(centered_text, text='popup test', font=self.fonts['normal'])),
+        # ]
+        # for l in range(3):
+        #     for c in range(3):
+        #         self.popups.append(Overlay(self.screen, (80+c*90, 80+l*90, 80, 80), False,
+        #                                    custom_draw=partial(centered_text, text=f'{l}{c}', font=self.fonts['small']),
+        #                                    custom_callback=lambda: self.sounds['beep'].play()
+        #                                    ))
+
+        self.popups = {
+            'p1': SelectInput(self, name='p1', pos=(200, 25), options=self.available_controllers.keys(), anchor='nw'),
+            'p2': SelectInput(self, name='p2', pos=(200, self.screen.get_height()-25), options=self.available_controllers.keys(), anchor='sw'),
+        }
 
         # -- reset --------------------------------------
         self.clock = None
@@ -233,15 +250,16 @@ class Game():
 
             mouse = pygame.mouse.get_pos()
             on_focus = False
-            for popup in reversed(self.popups):
+            for popup in reversed(self.popups.values()):
                 if not on_focus:
-                    if popup.collision(mouse):
-                        popup.on_focus = True
-                        on_focus = True
-                    else:
-                        popup.on_focus = False
-                else:
-                    popup.on_focus = False
+                    popup.collision(mouse)
+            #         if popup.collision(mouse):
+            #             popup.on_focus = True
+                        # on_focus = True
+                    # else:
+                    #     popup.on_focus = False
+                # else:
+                #     popup.on_focus = False
 
 
             for event in pygame.event.get():
@@ -254,7 +272,7 @@ class Game():
                     if event.button == 1:
                         mouse = pygame.mouse.get_pos()
                         on_focus = False
-                        for popup in reversed(self.popups):
+                        for popup in reversed(self.popups.values()):
                             if not on_focus:
                                 if popup.collision(mouse) and popup.active:
                                     popup.callback()
@@ -358,7 +376,7 @@ class Game():
             self.sounds['jet_l'].play(loops=-1)
 
     def clear_popups(self):
-        for popup in self.popups:
+        for popup in self.popups.values():
             popup.active = False
         pygame.mouse.set_visible(False)
 
@@ -367,15 +385,15 @@ class Game():
 
     def popup(self):
 
-        for popup in self.popups:
+        for popup in self.popups.values():
             popup.active = not popup.active
 
 
         any_active = False
-        for popup in self.popups:
+        for popup in self.popups.values():
             any_active |= popup.active
 
-        if self.state == GAMESTATE.RUN or  (self.state == GAMESTATE.PAUSED and not any_active):
+        if self.state == GAMESTATE.RUN or (self.state == GAMESTATE.PAUSED and not any_active):
             self.pause(any_active)
         pygame.mouse.set_visible(any_active)
 
@@ -621,7 +639,7 @@ class Game():
             text = self.fonts['big'].render(f"PAUSED", True, cols['hud'])
             self.screen.blit(text, (self.screen_center[0] - text.get_width() // 2, self.screen_center[1] - text.get_height() // 2))
 
-        for popup in self.popups:
+        for popup in self.popups.values():
             popup.draw()
 
 
@@ -641,6 +659,88 @@ class Game():
                 self.last_screen = copy(self.screen)
                 self.screen.fill(cols['bg'])
                 self.screen.blit(self.last_screen, (random.random()*shake_x, random.random()*shake_y))
+
+
+
+
+
+class SelectInput:
+    def __init__(self, game, name, pos, options, anchor='nw'):
+        self.name = name
+
+        N_BUTTONS = len(options)
+        w = 300
+        h = 60
+        pad = 10
+
+        if anchor.lower() == 'nw':
+            x0, y0 = pos
+        elif anchor.lower() == 'sw':
+            x0 = pos[0]
+            y0 = pos[1] - N_BUTTONS * h - (N_BUTTONS-1) * pad
+        else:
+            raise ValueError(f"'anchor' deve ser 'nw' ou 'sw', mas {anchor} foi fornecido.")
+
+        self.callback = self.default_callback
+        surface=game.screen
+        self.buttons = dict()
+        for i, key in enumerate(options):
+            self.buttons[key] = (Overlay(surface, (x0, y0 + i * (h+pad), w, h), False, selectable=True, custom_draw=partial(centered_text, text=key, font=game.fonts['small'])))
+
+    def default_callback(self):
+        for button in self.buttons.values():
+            if button.on_focus:
+                button.selected = True
+            else:
+                button.selected = False
+
+
+
+    @property
+    def active(self):
+        active = False
+        for button in self.buttons.values():
+            active |= button.active
+        return active
+
+    @active.setter
+    def active(self, value):
+        for button in self.buttons.values():
+            button.active = value
+
+    @property
+    def on_focus(self):
+        on_focus = False
+        for button in self.buttons.values():
+            on_focus |= button.on_focus
+        return on_focus
+
+    # @on_focus.setter
+    # def on_focus(self, value):
+    #     for button in self.buttons.values():
+    #         button.on_focus = value
+
+    def collision(self, point):
+        collision = False
+        for button in self.buttons.values():
+            button.on_focus = button.collision(point)
+            collision |= self.on_focus
+        return collision
+
+    def draw(self):
+        for button in self.buttons.values():
+            button.draw()
+
+
+
+
+
+
+
+
+
+
+
 
 
 def load_sounds(description: dict) -> dict:
