@@ -185,6 +185,10 @@ class Game():
 
         p1 = self.available_controllers['joystick (0)']
         p2 = self.available_controllers['classic']
+
+
+
+
         if not self.first_reset:
             for controller in self.available_controllers.values():
                 if controller.active_player_key == 'p1':

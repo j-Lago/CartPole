@@ -8,7 +8,7 @@ if __name__ == '__main__':
                 assets.sounds,
                 assets.fonts,
                 assets.images,
-                60,
+                45,
                 18,
                 training_mode=False,
                 )
