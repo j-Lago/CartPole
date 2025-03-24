@@ -92,7 +92,8 @@ class LinearControl:
     def update(self, player):
         time = player.ticks / player.fps
         # coreografia inicial
-        init_r, pause_1, swing_l, pause_2 = 1.25, 1.25, 0.68, 1.5
+        # init_r, pause_1, swing_l, pause_2 = 1.25, 1.25, 0.68, 1.5
+        init_r, pause_1, swing_l, pause_2 = 1.49, 1.13, 0.59, 1.5
         if time < init_r:
             f = 1.
         elif time < init_r + pause_1:
@@ -118,9 +119,9 @@ class LinearControl:
         DTH_MAX = 30/180*math.pi
         # dth = - self.aux.value * 5/180*math.pi
         dth = 0.
-        kp = 0.006
-        ki = 0.0005/player.fps
-        kd = 0.0055
+        kp = 0.0042
+        ki = .0023/player.fps
+        kd = 0.006
 
         self.intx += dt * x
         dth_p = kp*x

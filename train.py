@@ -10,7 +10,7 @@ from tictoc import tictoc as tt
 def train():
     project = 'CartPole'
     name = 'target'
-    file_load = 'meta/last_train.pth'
+    file_load = 'meta/play_gastao.pth'
     file_training = 'meta/last_train.pth'
 
     DEVICE = 'cpu'        # 'cuda'
