@@ -183,7 +183,7 @@ class Game():
         x0 = 0.3 if not self.training_mode else random.uniform(0.2, 0.8)
 
 
-        p1 = self.available_controllers['joystick (0)']
+        p1 = self.available_controllers['keyboard (<>)']
         p2 = self.available_controllers['classic']
 
 
