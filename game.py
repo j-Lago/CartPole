@@ -79,7 +79,8 @@ class Game():
         self.axes = dict()
         key = 'p1'
         if key in self.joysticks.keys():
-            self.axes[key] = Joystick(source=self.joysticks[key], channel=2, dead_zone=0.05)
+            # self.axes[key] = Joystick(source=self.joysticks[key], channel=2, dead_zone=0.05)
+            self.axes[key] = LinearControl()
         else:
             # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
             self.axes[key] = LinearControl()

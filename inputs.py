@@ -87,11 +87,12 @@ class LinearControl:
         self.value = self.initial_value
         self.intx = 0.
         self.th_target = math.pi
+        # self.aux = Joystick(source=pygame.joystick.Joystick(0), channel=2, dead_zone=0.05)
 
     def update(self, player):
         time = player.ticks / player.fps
         # coreografia inicial
-        init_r, pause_1, swing_l, pause_2 = 1.25, 1.2, 0.68, 1.5
+        init_r, pause_1, swing_l, pause_2 = 1.25, 1.25, 0.68, 1.5
         if time < init_r:
             f = 1.
         elif time < init_r + pause_1:
@@ -107,19 +108,35 @@ class LinearControl:
 
     def linear_controller(self, player, time):
         dt = 1/player.fps
-        x = player.model.y[1][0]
+        x = player.model.y[0][0]
         v = player.model.y[1][0]
 
+        # if time > 15:
+        #     self.intx += dt * x
+        #     self.th_target = math.pi + (+0.1*x +0.0*self.intx +0.000*v)
+        # self.aux.update('')
+        DTH_MAX = 5/180*math.pi
+        # dth = - self.aux.value * 5/180*math.pi
+        kp = 0.005
+        dth = 0.
+        ki = 0.002/player.fps
+        kd = 0.006
+
+        self.intx += dt * x
+        dth_p = kp*x
+        dth_i = ki*self.intx
+        dth_d = kd*v
+        dth = dth_p + dth_i + dth_d
+
+        dth_sat = max(min(dth, DTH_MAX), -DTH_MAX)
+        self.intx -= (dth-dth_sat)/ki  # anti windup
+        self.th_target = math.pi + dth
+        # print(dth)
 
         th = player.model.y[2][0]
         th = th + self.th_target if th < 0 else th - self.th_target
-
         a = player.model.y[3][0]
-        f = -th*1.5 - a*1.7 + 0.1*v
-
-        if time > 10:
-            self.intx += dt * x
-            self.th_target += (-0.0003*x -0.0000*self.intx +0.0002*v)
+        f = -th * 1.5 - a * 1.7 + 0.1 * v
 
         return min(max(f, -1.), 1.)
 

@@ -10,7 +10,7 @@ from tictoc import tictoc as tt
 def train():
     project = 'CartPole'
     name = 'target'
-    file_load = 'meta/play_economico.pth'
+    file_load = 'meta/last_train.pth'
     file_training = 'meta/last_train.pth'
 
     DEVICE = 'cpu'        # 'cuda'
@@ -36,7 +36,7 @@ def train():
 
     eps_start = 1.0
     eps_end = 0.15
-    num_episodes = 100000
+    num_episodes = 1000000
 
     steps_since_train = 0
     best_score = -1000000000
@@ -86,10 +86,10 @@ def train():
         train_steps = 0
         done = False
         while not done:
-            if keyboard.is_pressed('+'):
-                em.enable_rendering(True)
-            if keyboard.is_pressed('-'):
-                em.enable_rendering(False)
+            # if keyboard.is_pressed('+'):
+            #     em.enable_rendering(True)
+            # if keyboard.is_pressed('-'):
+            #     em.enable_rendering(False)
 
             action = agent.select_action(state, police_net)
             next_state, reward, done = em.simulate_system(action.item())
