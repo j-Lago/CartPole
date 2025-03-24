@@ -60,3 +60,15 @@ def lerp_v2(p0, p1, t):
 
 def lerp_v3(p0, p1, t):
     return lerp(p0[0], p1[0], t), lerp(p0[1], p1[1], t), lerp(p0[2], p1[2], t)
+
+
+
+def centered_text(surface, rect, text, font, color):
+    text_popup = font.render(text, True, color)
+    tw, th = text_popup.get_width(), text_popup.get_height()
+    cx, cy = rect[0]+rect[2]//2, rect[1]+rect[3]//2
+    surface.blit(text_popup, (cx-tw//2, cy-th//2))
+
+
+def text_center(text) -> tuple[int, int]:
+    return text.get_width() // 2, text.get_height() // 2

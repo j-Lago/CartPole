@@ -9,7 +9,7 @@ import math
 import random
 import assets
 from assets import colors as cols
-from tools import lerp_v3, centered_rect
+from tools import lerp_v3, centered_rect, text_center
 import json
 from copy import copy, deepcopy
 from particle import TextParticle, BallParticle, Particles
@@ -89,6 +89,7 @@ class Game():
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
             self.available_controllers[f'joystick ({i})'] = Joystick(source=joystick, channel=2, dead_zone=0.05, normalization=normalization)
+
 
         # self.axes = dict()
         # key = 'p1'
@@ -240,7 +241,6 @@ class Game():
             for key, controller in self.available_controllers.items():
                 if controller.active_player_key == select.player.name:
                     select.player.input = controller
-                    print(f'{select.player.name}: {select.player.input}')
 
         for key, player in self.players.items():
             player.input.reset()
@@ -727,31 +727,36 @@ class Game():
 
 class SelectInput:
     def __init__(self, game, player, pos, options, anchor='nw'):
+        self.game = game
         self.player = player
-        self.options=options
+        self.options = options
+        self.anchor = anchor
+        self.pos = pos
+        self.callback = self.default_callback
+        self.buttons = None
 
-        N_BUTTONS = len(options)
+
+        N_BUTTONS = len(self.options)
         w = 300
         h = 60
         pad = 10
 
-        if anchor.lower() == 'nw':
-            x0, y0 = pos
-        elif anchor.lower() == 'sw':
-            x0 = pos[0]
-            y0 = pos[1] - N_BUTTONS * h - (N_BUTTONS-1) * pad
+        if self.anchor.lower() == 'nw':
+            x0, y0 = self.pos
+        elif self.anchor.lower() == 'sw':
+            x0 = self.pos[0]
+            y0 = self.pos[1] - N_BUTTONS * h - (N_BUTTONS-1) * pad
         else:
-            raise ValueError(f"'anchor' deve ser 'nw' ou 'sw', mas {anchor} foi fornecido.")
+            raise ValueError(f"'anchor' deve ser 'nw' ou 'sw', mas {self.anchor} foi fornecido.")
 
-        self.callback = self.default_callback
-        surface=game.screen
+        surface=self.game.screen
         self.buttons = dict()
-        for i, key in enumerate(options.keys()):
+        for i, key in enumerate(self.options.keys()):
+            selectable = True   #self.options[key].active_player_key is None
             self.buttons[key] = (Overlay(surface, (x0, y0 + i * (h+pad), w, h),
                                          active=False,
-                                         selected=options[key] == self.player.input,
-                                         selectable=True, custom_draw=partial(centered_text,
-                                                                              text=key, font=game.fonts['small'])))
+                                         selected=self.options[key] == self.player.input,
+                                         selectable=selectable, text=key, font=self.game.fonts['small']))
             # print(options[key].active_player_key)
 
     def default_callback(self):
@@ -800,7 +805,11 @@ class SelectInput:
         return collision
 
     def draw(self):
-        for button in self.buttons.values():
+
+        for key_option, option in self.options.items():
+            self.buttons[key_option].selectable = option.active_player_key is None
+
+        for key, button in self.buttons.items():
             button.draw()
 
 
@@ -832,14 +841,9 @@ def load_images(description: dict) -> dict:
     return {k: pygame.image.load(v) for k, v in description.items()}
 
 
-def text_center(text) -> tuple[int, int]:
-    return text.get_width() // 2, text.get_height() // 2
 
 
-def centered_text(surface, rect, text, font):
-    text_popup = font.render(text, True, (120, 120, 120))
-    tw, th = text_popup.get_width(), text_popup.get_height()
-    cx, cy = rect[0]+rect[2]//2, rect[1]+rect[3]//2
-    surface.blit(text_popup, (cx-tw//2, cy-th//2))
+
+
 
 
