@@ -11,6 +11,7 @@ from tools import draw_center_mass, draw_particles, draw_path_particles, lerp, l
 class Cart():
     def __init__(self,
                  surface,
+                 name,
                  controller: Joystick | KeysControl,
                  pos=(0., 0.),
                  color=(255, 255, 255),
@@ -27,7 +28,7 @@ class Cart():
                  training_mode=False
                  ):
 
-
+        self.name = name
         self.fps = fps
         self.paused = False
         self.input = controller
@@ -132,6 +133,7 @@ class Cart():
         return x
 
     def step(self) -> bool:
+        # self.input.update(self)
 
         if not self.paused:
             if self.fuel <= 0:

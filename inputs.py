@@ -27,8 +27,10 @@ JOYBUTTON: dict[str, int] = {
     'pad': 15,
 }
 
+
 class Joystick():
-    def __init__(self, source: pygame.joystick, channel, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
+    def __init__(self, source: pygame.joystick, channel, active_player_key:str|None=None, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
+        self.active_player_key = active_player_key
         self.source = source
         self.channel = channel
         self.initial_value = initial_value
@@ -46,7 +48,8 @@ class Joystick():
 
 
 class KeysControl():
-    def __init__(self, source, key_left, key_right, key_intensity = None, initial_value = 0., normalization: Callable = lambda x: x):
+    def __init__(self, source, key_left, key_right, active_player_key:str|None=None, key_intensity=None, initial_value = 0., normalization: Callable = lambda x: x):
+        self.active_player_key = active_player_key
         self.source = source
         self.key_left = key_left
         self.key_right = key_right
@@ -75,7 +78,8 @@ class KeysControl():
 
 
 class LinearControl:
-    def __init__(self, initial_value=0., normalization: Callable = lambda x: x):
+    def __init__(self, active_player_key:str|None=None, initial_value=0., normalization: Callable = lambda x: x):
+        self.active_player_key = active_player_key
         self.value = initial_value
         self.initial_value = initial_value
         self.normalization = normalization
@@ -142,7 +146,8 @@ class LinearControl:
         return min(max(f, -1.), 1.)
 
 class IAControl:
-    def __init__(self, initial_value=0., weights_path='meta/play.pth', normalization: Callable = lambda x: x):
+    def __init__(self, active_player_key:str|None=None, initial_value=0., weights_path='meta/play.pth', normalization: Callable = lambda x: x):
+        self.active_player_key = active_player_key
         self.initial_value = initial_value
         self.value = initial_value
         self.normalization = normalization

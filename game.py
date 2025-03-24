@@ -76,34 +76,36 @@ class Game():
             self.joysticks[key] = pygame.joystick.Joystick(i)
             self.joysticks[key].init()
 
+        normalization = lambda x: x
+
         self.available_controllers = {
-            'classic': LinearControl(),
-            'ia': IAControl(),
-            'keyboard (<>)': KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT),
-            'keyboard (ad)': KeysControl(source=pygame.key, key_left=pygame.K_a, key_right=pygame.K_d, key_intensity=pygame.K_SPACE),
+            'classic': LinearControl(normalization=normalization),
+            'ia': IAControl(normalization=normalization),
+            'keyboard (<>)': KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT, normalization=normalization),
+            'keyboard (ad)': KeysControl(source=pygame.key, key_left=pygame.K_a, key_right=pygame.K_d, key_intensity=pygame.K_SPACE, normalization=normalization),
         }
 
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
-            self.available_controllers[f'joystick ({i})'] = joystick
+            self.available_controllers[f'joystick ({i})'] = Joystick(source=joystick, channel=2, dead_zone=0.05, normalization=normalization)
 
-        self.axes = dict()
-        key = 'p1'
-        if key in self.joysticks.keys():
-            # self.axes[key] = Joystick(source=self.joysticks[key], channel=2, dead_zone=0.05)
-            self.axes[key] = LinearControl()
-        else:
-            # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
-            self.axes[key] = LinearControl()
+        # self.axes = dict()
+        # key = 'p1'
+        # if key in self.joysticks.keys():
+        #     # self.axes[key] = Joystick(source=self.joysticks[key], channel=2, dead_zone=0.05)
+        #     self.axes[key] = LinearControl()
+        # else:
+        #     # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
+        #     self.axes[key] = LinearControl()
 
-        key = 'p2'
-        if key in self.joysticks.keys():
-            self.axes[key] = Joystick(source=self.joysticks[key], channel=2, dead_zone=0.05)
-        else:
-            # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
-            # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_a, key_right=pygame.K_d, key_intensity=pygame.K_SPACE)
-            self.axes[key] = IAControl()
+        # key = 'p2'
+        # if key in self.joysticks.keys():
+        #     self.axes[key] = Joystick(source=self.joysticks[key], channel=2, dead_zone=0.05)
+        # else:
+        #     # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
+        #     # self.axes[key] = KeysControl(source=pygame.key, key_left=pygame.K_a, key_right=pygame.K_d, key_intensity=pygame.K_SPACE)
+        #     self.axes[key] = IAControl()
 
         # assets
         self.sounds = load_sounds(sounds)
@@ -120,10 +122,8 @@ class Game():
         #                                    custom_callback=lambda: self.sounds['beep'].play()
         #                                    ))
 
-        self.popups = {
-            'p1': SelectInput(self, name='p1', pos=(200, 25), options=self.available_controllers.keys(), anchor='nw'),
-            'p2': SelectInput(self, name='p2', pos=(200, self.screen.get_height()-25), options=self.available_controllers.keys(), anchor='sw'),
-        }
+        self.popups = None
+        self.first_reset = True
 
         # -- reset --------------------------------------
         self.clock = None
@@ -132,7 +132,7 @@ class Game():
         self.state = None
         self.npcs = dict()
         self.players = dict()
-        self.inputs = dict()
+        # self.inputs = dict()
         self.particles = None
         self.bars = None
         self.marked_to_end = None
@@ -174,21 +174,37 @@ class Game():
         y_sup = 0.35
         y_inf = 0.78
         self.npcs = {
-                'target_p1': Cart(self.screen, None, (self.screen_center[0]     , int(self.screen_height*y_sup)), color=cols['p1'], width=3, size=assets.sizes['cart'], th0=math.pi, alive=False),
-                'target_p2': Cart(self.screen, None, (self.screen_center[0]     , int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=math.pi, alive=False),
+                'target_p1': Cart(self.screen, 'target_p1', None, (self.screen_center[0]     , int(self.screen_height*y_sup)), color=cols['p1'], width=3, size=assets.sizes['cart'], th0=math.pi, alive=False),
+                'target_p2': Cart(self.screen, 'target_p2', None, (self.screen_center[0]     , int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=math.pi, alive=False),
             }
         dth = random.random()*.1
         th0 = self.th0 if not self.training_mode else random.uniform(0., 2*math.pi)
         x0 = 0.3 if not self.training_mode else random.uniform(0.2, 0.8)
+
+
+        p1 = self.available_controllers['joystick (0)']
+        p2 = self.available_controllers['classic']
+        if not self.first_reset:
+            for controller in self.available_controllers.values():
+                if controller.active_player_key == 'p1':
+                    p1 = controller
+                elif controller.active_player_key == 'p2':
+                    p2 = controller
+
         if not self.DO_NOT_RENDER and not self.STEP_BY_STEP:
             self.players = {
-                'p1'       : Cart(self.screen, self.axes['p1'], (self.screen_width * x0, int(self.screen_height*y_sup)), color=cols['p1'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
-                'p2'       : Cart(self.screen, self.axes['p2'], (self.screen_width * x0, int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
+                'p1'       : Cart(self.screen, 'p1', p1, (self.screen_width * x0, int(self.screen_height*y_sup)), color=cols['p1'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
+                'p2'       : Cart(self.screen, 'p2', p2, (self.screen_width * x0, int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
             }
         else:
             self.players = {
-                'p2'       : Cart(self.screen, self.axes['p2'], (self.screen_width * x0, int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
+                'p2'       : Cart(self.screen, self.available_controllers['keyboard (<>)'], (self.screen_width * x0, int(self.screen_height*y_inf)), color=cols['p2'], width=3, size=assets.sizes['cart'], th0=th0+dth, force_factor=self.MAX_POWER, fps=self.fps, training_mode=self.training_mode),
             }
+
+        if self.first_reset:
+            for key, player in self.players.items():
+                player.input.active_player_key = key
+
 
         fuel_bar_width = 500
         fuel_bar_height = 14
@@ -209,8 +225,37 @@ class Game():
                               on_color=cols['p2'], border_color=cols['p2'], off_color=cols['bg'], show_particles=True),
         }
 
-        for axis in self.axes.values():
-            axis.reset()
+
+
+        if self.first_reset:
+            self.popups = {
+                'p1': SelectInput(self, player=self.players['p1'], pos=(200, 25), options=self.available_controllers, anchor='nw'),
+                'p2': SelectInput(self, player=self.players['p2'], pos=(200, self.screen.get_height() - 25),
+                                  options=self.available_controllers, anchor='sw'),
+            }
+        self.first_reset = False
+
+
+        for select in self.popups.values():
+            for key, controller in self.available_controllers.items():
+                if controller.active_player_key == select.player.name:
+                    select.player.input = controller
+                    print(f'{select.player.name}: {select.player.input}')
+
+        for key, player in self.players.items():
+            player.input.reset()
+
+
+
+        # for key, player in self.players.items():
+        #     for controller in self.available_controllers.values():
+        #         if controller.active_player_key == key:
+        #             player.input = controller
+        #             print(key, controller)
+
+
+
+
 
         pygame.event.clear()
         self.clear_popups()
@@ -397,10 +442,20 @@ class Game():
             self.pause(any_active)
         pygame.mouse.set_visible(any_active)
 
+        if not any_active:
+            self.reset()
+
 
 
 
     def pause(self, new_state = None):
+        any_active_popup = False
+        for popup in self.popups.values():
+            any_active_popup |= popup.active
+        if any_active_popup and self.state == GAMESTATE.PAUSED:
+            self.reset()
+            return
+
         if new_state is None:
             new_state = False if self.state == GAMESTATE.PAUSED else True
 
@@ -430,18 +485,24 @@ class Game():
 
 
     def process_inputs(self):
-        for key, axis in self.axes.items():
-            axis.update(self.players[key])
-        for key, player in self.players.items():
-            self.inputs[key] = self.axes[key].value * self.MAX_POWER
+        for key, axis in self.available_controllers.items():
+            if axis.active_player_key in ['p1', 'p2']:
+                axis.update(self.players[axis.active_player_key])
+
+        # for key, axis in self.axes.items():
+        #     axis.update(self.players[key])
+        # for key, player in self.players.items():
+        #     self.inputs[key] = self.axes[key].value * self.MAX_POWER
+
 
     def ia_step(self, input_key_value: dict) -> bool:   # ex: {'p2': -0.78}
         """
         Para uso exclusivo do treinamento da IA
         """
         for key, value in input_key_value.items():
-            self.axes[key].value = value
-            self.inputs[key] = self.axes[key].value * self.MAX_POWER
+            # self.axes[key].value = value
+            # self.inputs[key] = self.axes[key].value * self.MAX_POWER
+            raise NotImplementedError
 
         if self.state == GAMESTATE.RUN:
             self.inc_time()
@@ -582,7 +643,7 @@ class Game():
             text_timer_label = self.fonts['small'].render(f"TIMER", True, cols['timer'])
             if 'p1' in self.players.keys():
                 text_p1 = self.fonts['medium'].render(f"{self.players['p1'].score:>10d}", True, dcols['p1'])
-                text_p1_label2 = self.fonts['tiny'].render(f"{self.axes['p1'].device_type}", True, dcols['p1'])
+                text_p1_label2 = self.fonts['tiny'].render(f"{self.players['p1'].input.device_type}", True, dcols['p1'])
             else:
                 dcols['p1'] = (60, 60, 50)
                 text_p1 = self.fonts['medium'].render(f"{0:>10d}", True, dcols['p1'])
@@ -598,7 +659,7 @@ class Game():
             text_best = self.fonts['normal'].render(f"{self.best_score:<10d}", True, cols['best_score'])
             text_p1_label = self.fonts['small'].render(f"P1 SCORE", True, dcols['p1'])
             text_p2_label = self.fonts['small'].render(f"P2 SCORE", True, dcols['p2'])
-            text_p2_label2 = self.fonts['tiny'].render(f"{self.axes['p2'].device_type}", True, dcols['p2'])
+            text_p2_label2 = self.fonts['tiny'].render(f"{self.players['p2'].input.device_type}", True, dcols['p2'])
             text_best_label = self.fonts['small'].render(f"BEST SCORE", True, cols['best_score'])
             text_best_device = self.fonts['tiny'].render(f"{self.best_score_device}", True, cols['best_score'])
             self.screen.blit(text_fps, (30, 60))
@@ -665,8 +726,9 @@ class Game():
 
 
 class SelectInput:
-    def __init__(self, game, name, pos, options, anchor='nw'):
-        self.name = name
+    def __init__(self, game, player, pos, options, anchor='nw'):
+        self.player = player
+        self.options=options
 
         N_BUTTONS = len(options)
         w = 300
@@ -684,13 +746,23 @@ class SelectInput:
         self.callback = self.default_callback
         surface=game.screen
         self.buttons = dict()
-        for i, key in enumerate(options):
-            self.buttons[key] = (Overlay(surface, (x0, y0 + i * (h+pad), w, h), False, selectable=True, custom_draw=partial(centered_text, text=key, font=game.fonts['small'])))
+        for i, key in enumerate(options.keys()):
+            self.buttons[key] = (Overlay(surface, (x0, y0 + i * (h+pad), w, h),
+                                         active=False,
+                                         selected=options[key] == self.player.input,
+                                         selectable=True, custom_draw=partial(centered_text,
+                                                                              text=key, font=game.fonts['small'])))
+            # print(options[key].active_player_key)
 
     def default_callback(self):
-        for button in self.buttons.values():
+        for key, button in self.buttons.items():
             if button.on_focus:
                 button.selected = True
+                for key_option, option in self.options.items():
+                    if option.active_player_key == self.player.name:
+                        option.active_player_key = None
+                self.options[key].active_player_key = self.player.name
+                self.player.input = self.options[key]
             else:
                 button.selected = False
 
