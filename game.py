@@ -239,7 +239,7 @@ class Game():
                 self.popups['p1'] = SelectInput(self, player=self.players['p1'], pos=(200, 25), options=self.available_controllers, anchor='nw')
             if 'p2' in self.players.keys():
                 self.popups['p2'] = SelectInput(self, player=self.players['p2'], pos=(200, self.screen.get_height() - 25), options=self.available_controllers, anchor='sw')
-            self.popups['restart'] = Overlay(self.screen, (self.screen.get_width()//2+100, self.screen.get_height()//2 - 80, 400, 160), on_focus=True, selected=False, selectable=True, text='RESTART', font=self.fonts['normal'], custom_callback=self.reset)
+            self.popups['restart'] = Overlay(self.screen, (self.screen.get_width()//2+50, self.screen.get_height()//2 - 80, 400, 160), on_focus=True, selected=False, selectable=True, text='RESTART', font=self.fonts['normal'], custom_callback=self.reset)
         self.first_reset = False
 
 
