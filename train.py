@@ -1,5 +1,5 @@
 import torch
-import keyboard
+# import keyboard
 from pytorch_game import create_game as Environment
 from pytorch_game import Agent, ReplayMemory, Experience, Qvalues, extract_tensors
 from dqn import DQN

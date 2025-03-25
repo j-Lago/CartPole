@@ -88,7 +88,7 @@ class Game():
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
-            self.available_controllers[f'joystick ({i})'] = Joystick(source=joystick, channel=2, dead_zone=0.05, normalization=normalization)
+            self.available_controllers[f'joystick ({i})'] = Joystick(source=joystick, channel=2, dead_zone=0.02, normalization=normalization)
 
 
         # self.axes = dict()
@@ -180,10 +180,11 @@ class Game():
             }
         dth = random.random()*.1
         th0 = self.th0 if not self.training_mode else random.uniform(0., 2*math.pi)
-        x0 = 0.3 if not self.training_mode else random.uniform(0.2, 0.8)
+        x0 = random.uniform(0.15, 0.35) if not self.training_mode else random.uniform(0.15, 0.85)
 
 
-        p1 = self.available_controllers['keyboard (<>)']
+        # p1 = self.available_controllers['keyboard (<>)']
+        p1 = self.available_controllers['ia']
         p2 = self.available_controllers['classic']
 
 
@@ -743,27 +744,41 @@ class SelectInput:
 
 
         N_BUTTONS = len(self.options)
+        pad = 10
         w = 300
         h = 60
-        pad = 10
+        w0 = 250
+        h0 = (N_BUTTONS * h) + (N_BUTTONS-1)*pad + 2
 
         if self.anchor.lower() == 'nw':
             x0, y0 = self.pos
         elif self.anchor.lower() == 'sw':
             x0 = self.pos[0]
-            y0 = self.pos[1] - N_BUTTONS * h - (N_BUTTONS-1) * pad
+            y0 = self.pos[1] - h0
         else:
             raise ValueError(f"'anchor' deve ser 'nw' ou 'sw', mas {self.anchor} foi fornecido.")
 
         surface=self.game.screen
+
         self.buttons = dict()
         for i, key in enumerate(self.options.keys()):
             selectable = True   #self.options[key].active_player_key is None
-            self.buttons[key] = (Overlay(surface, (x0, y0 + i * (h+pad), w, h),
+            self.buttons[key] = (Overlay(surface, (x0+w0+pad, y0 + i * (h+pad), w, h),
                                          active=False,
                                          selected=self.options[key] == self.player.input,
-                                         selectable=selectable, text=key, font=self.game.fonts['small']))
-            # print(options[key].active_player_key)
+                                         selectable=selectable, text=key, font=self.game.fonts['small'],
+                                         bg_selected_color=cols[player.name],
+                                         selected_color=cols['bg'],
+                                         ))
+        self.buttons['player'] = Overlay(surface, (x0, y0, w0, h0),
+                                         active=False,
+                                         selected=False,
+                                         selectable=False,
+                                         text=player.name.upper(),
+                                         font=self.game.fonts['big'],
+                                         bg_unselectable_color=cols[player.name],
+                                         unselectable_color=cols['bg'],
+        )
 
     def default_callback(self):
         for key, button in self.buttons.items():
