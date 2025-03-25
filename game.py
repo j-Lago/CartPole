@@ -9,7 +9,7 @@ import math
 import random
 import assets
 from assets import colors as cols
-from tools import lerp_v3, centered_rect, text_center
+from tools import lerp_v3, centered_rect, text_center, centered_text
 import json
 from copy import copy, deepcopy
 from particle import TextParticle, BallParticle, Particles
@@ -239,14 +239,15 @@ class Game():
                 self.popups['p1'] = SelectInput(self, player=self.players['p1'], pos=(200, 25), options=self.available_controllers, anchor='nw')
             if 'p2' in self.players.keys():
                 self.popups['p2'] = SelectInput(self, player=self.players['p2'], pos=(200, self.screen.get_height() - 25), options=self.available_controllers, anchor='sw')
-
+            self.popups['restart'] = Overlay(self.screen, (self.screen.get_width()//2+100, self.screen.get_height()//2 - 80, 400, 160), on_focus=True, selected=False, selectable=True, text='RESTART', font=self.fonts['normal'], custom_callback=self.reset)
         self.first_reset = False
 
 
-        for select in self.popups.values():
-            for key, controller in self.available_controllers.items():
-                if controller.active_player_key == select.player.name:
-                    select.player.input = controller
+        for pkey, select in self.popups.items():
+            if pkey in ('p1', 'p2'):
+                for key, controller in self.available_controllers.items():
+                    if controller.active_player_key == select.player.name:
+                        select.player.input = controller
 
         for key, player in self.players.items():
             player.input.reset()
@@ -301,9 +302,12 @@ class Game():
 
             mouse = pygame.mouse.get_pos()
             on_focus = False
-            for popup in reversed(self.popups.values()):
+            for pkey, popup in reversed(self.popups.items()):
                 if not on_focus:
-                    popup.collision(mouse)
+                    col = popup.collision(mouse)
+                    if pkey not in ['p1', 'p2']:
+                        popup.on_focus = col
+
             #         if popup.collision(mouse):
             #             popup.on_focus = True
                         # on_focus = True
@@ -778,7 +782,7 @@ class SelectInput:
                                          font=self.game.fonts['big'],
                                          bg_unselectable_color=cols[player.name],
                                          unselectable_color=cols['bg'],
-        )
+                                         )
 
     def default_callback(self):
         for key, button in self.buttons.items():
