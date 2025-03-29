@@ -120,7 +120,7 @@ class LinearControl:
         #     self.intx += dt * x
         #     self.th_target = math.pi + (+0.1*x +0.0*self.intx +0.000*v)
         # self.aux.update('')
-        DTH_MAX = 30/180*math.pi
+        DTH_MAX = 40./180.*math.pi
         # dth = - self.aux.value * 5/180*math.pi
         dth = 0.
         kp = 0.0042
