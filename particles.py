@@ -8,6 +8,7 @@ from vec import lerp_vec3
 
 
 
+
 class Particle():
     def __init__(self, pos: tuple[float, float], vel: tuple[float, float], dt, decay=.999999, lifetime=-1, alive=True, g=-9.81):
         self.x = pos[0]
@@ -145,4 +146,4 @@ def example(spawn_every_n_ticks = (1,2), particles_per_spawn = (1,2), lifetime =
 
 
 if __name__ == '__main__':
-    example(spawn_every_n_ticks=1, particles_per_spawn=(10, 30), lifetime=5, maxlen=20000)
+    example(spawn_every_n_ticks=1, particles_per_spawn=(10, 30), lifetime=5, maxlen=10000)
