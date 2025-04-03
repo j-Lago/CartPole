@@ -4,6 +4,7 @@ from random import random as rand, randint, uniform, choice
 import pygame
 from screen import NormalizedScreen
 from _collections import deque
+from vec import lerp_vec3
 
 
 
@@ -62,6 +63,19 @@ class BallParticle(Particle):
             self.surface.draw_circle(self.color, (self.x, self.y), self.radius, self.radius_in_pixels)
 
 
+class TextParticle(Particle):
+    def __init__(self, surface: NormalizedScreen, color, text, font, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.color = color
+        self.surface = surface
+        self.text = text
+        self.font = font
+
+    def draw(self):
+        if self.alive:
+            self.surface.blit(self.font.render(self.text, True, self.color), (self.x, self.y), rescale=True)
+
+
 
 class Particles():
     def __init__(self, maxlen: int | None = None):
@@ -89,18 +103,30 @@ class Particles():
         self.particles = [x for x in self.particles if x.alive]
 
 
-
 def example(spawn_every_n_ticks = (1,2), particles_per_spawn = (1,2), lifetime = (1,2), maxlen=None):
-
     class Game(NormalizedScreen):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self.particles = Particles(maxlen)
+            self.text_particles = Particles(500)
+            self.particles_fonts = [pygame.font.SysFont('Times', 28),
+                                    pygame.font.SysFont('Times', 34),
+                                    pygame.font.SysFont('Times', 40),]
+            self.letters = [chr(i) for i in range(945, 970) if i != 962]  #choice(('0', '1')), #choice(tuple(chr(i) for i in range(97, 123))),
             self.loop()
 
         def draw(self):
             w, h = self.width, self.height
             if self.ticks % spawn_every_n_ticks == 0:
+                for _ in range(4):
+                    self.text_particles.append(
+                        TextParticle(self,
+                                     color=lerp_vec3((90, 250, 90), (30, 90, 30), rand()),
+                                     text=choice(self.letters),
+                                     font=choice(self.particles_fonts),
+                                     pos=(uniform(-1.8, 1.8), 1.1),
+                                     vel=(0, -0.8), dt=1/self.fps, g=-98, lifetime=2
+                                     ))
                 for _ in range(randint(*particles_per_spawn)):
                     self.particles.append(
                         BallParticle(self,
@@ -109,10 +135,13 @@ def example(spawn_every_n_ticks = (1,2), particles_per_spawn = (1,2), lifetime =
                                      randint(1, 2) / 600,
                                      pos=(uniform(-1.3, -1.25), uniform(-.95, -.9)), vel=(uniform(.4, .7), rand() * 0.05 + 1.5),
                                      dt=1 / self.fps, lifetime=lifetime, g=-98))
-            self.extra_info = [f'particles: {len(self.particles)}']
+            self.extra_info = [f'ball_particles: {len(self.particles)}',
+                               f'text_particles: {len(self.text_particles)}',
+                               f'global_scale: {self.global_scale:.1f}']
+            self.text_particles.step_and_draw()
             self.particles.step_and_draw()
 
-    game = Game('particle test', (900, 600))
+    Game('particle test', (900, 600))
 
 
 if __name__ == '__main__':

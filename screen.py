@@ -48,6 +48,7 @@ class NormalizedScreen(ABC):
         self.fullscreen_mode = None
         self.screen = None
         self.xy_scale = None
+        self.fullscreen_scale_factor = (1., 1.)
         self.global_scale = 1.0
         self.aspect_ratio = aspect_ratio
         if window_size is None:
@@ -56,6 +57,8 @@ class NormalizedScreen(ABC):
         else:
             self.original_window_size = window_size
             self.init_window_mode(window_size)
+
+
 
         self.width = self.screen.get_width()
         self.height = self.screen.get_height()
@@ -155,6 +158,7 @@ class NormalizedScreen(ABC):
         h = user32.GetSystemMetrics(1)
         self.screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
         self.fullscreen_mode = True
+        self.fullscreen_scale_factor = (w / self.original_window_size[0], w / self.original_window_size[1])
         self.rescale()
 
     def init_window_mode(self, window_size):
@@ -261,6 +265,12 @@ class NormalizedScreen(ABC):
             size = (size, size)
         self.draw_line(color, (pos[0]-size[0]/2, pos[1]), (pos[0]+size[0]/2, pos[1]), width)
         self.draw_line(color, (pos[0], pos[1] - size[1] / 2), (pos[0], pos[1] + size[1] / 2), width)
+
+    def blit(self, rendered_text, pos, rescale=False):
+        if (self.fullscreen_mode or self.global_scale != 1) and rescale:
+            factor = min(self.fullscreen_scale_factor) * self.global_scale
+            rendered_text = pygame.transform.scale(rendered_text, (rendered_text.get_width()*factor, rendered_text.get_height()*factor))
+        self.screen.blit(rendered_text, self.world_to_screen(pos))
 
 
     @property
