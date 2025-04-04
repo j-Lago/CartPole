@@ -62,6 +62,7 @@ class Screen:
         self.fullscreen = fullscreen
         self.antialiasing = antialiasing
         self.window_size = window_size
+        self.canvas_size = canvas_size
         self.fps = fps
         self.global_scale = 1.0
         self.global_bias = [0, 0]
@@ -69,6 +70,7 @@ class Screen:
         self.ticks = 0
         self.extra_info = []
 
+        self.event_loop_callback = None
         self.active_tab = 'main'
         self.show_info = False
         self.info_position = (30, 30)
@@ -94,14 +96,8 @@ class Screen:
             'default': pygame.font.SysFont('Courier New', 200),
         }
 
-        self.tabs = {
-            'main' : {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 30), 'draw': self.draw_main, 'shortcut': pygame.K_F1, 'ticks': 0},
-            'menu' : {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (45, 30, 30), 'draw': self.draw_menu, 'shortcut': pygame.K_F2, 'ticks': 0},
-            'extra': {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 45), 'draw': self.draw_extra, 'shortcut': pygame.K_F3, 'ticks': 0},
-        }
-
+        self.tabs = dict()
         self.clock = pygame.time.Clock()
-        self.loop()
 
     def loop(self):
         while True:
@@ -133,36 +129,8 @@ class Screen:
                         if event.key == self.tabs[tab_key]['shortcut']:
                             self.active_tab = tab_key
 
-                keys = pygame.key.get_pressed()
-                if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
-                    if event.button == 5:  # Scroll para baixo
-                        self.global_scale /= 1.1
-                    if event.button == 4:  # Scroll para cima
-                        self.global_scale *= 1.1
-
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        self.mouse_left.press(event.pos)
-                    if event.button == 2:
-                        self.mouse_middle.press(event.pos)
-                    if event.button == 3:
-                        self.mouse_right.press(event.pos)
-
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if event.button == 1:
-                        self.mouse_left.release(event.pos)
-                    if event.button == 2:
-                        self.mouse_middle.release(event.pos)
-                    if event.button == 3:
-                        self.mouse_right.release(event.pos)
-
-                if event.type == pygame.MOUSEMOTION:
-                    if self.mouse_left.pressed:
-                        self.mouse_left.drag(event.pos)
-                    if self.mouse_middle.pressed:
-                        self.mouse_middle.drag(event.pos)
-                    if self.mouse_right.pressed:
-                        self.mouse_right.drag(event.pos)
+                if self.event_loop_callback is not None:
+                    self.event_loop_callback(event)
 
             canvas = self.tabs[self.active_tab]['canvas']
             canvas.fill(self.tabs[self.active_tab]['bg_color'])
@@ -237,6 +205,51 @@ class Screen:
 
 
 
+class Game(Screen):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tabs = {
+            'main' : {'canvas': pygame.surface.Surface(self.canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 30), 'draw': self.draw_main, 'shortcut': pygame.K_F1, 'ticks': 0},
+            'menu' : {'canvas': pygame.surface.Surface(self.canvas_size, pygame.SRCALPHA), 'bg_color': (45, 30, 30), 'draw': self.draw_menu, 'shortcut': pygame.K_F2, 'ticks': 0},
+            'extra': {'canvas': pygame.surface.Surface(self.canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 45), 'draw': self.draw_extra, 'shortcut': pygame.K_F3, 'ticks': 0},
+        }
+        self.event_loop_callback = self.process_user_input_event
+        self.loop()
+
+    def process_user_input_event(self, event):
+        keys = pygame.key.get_pressed()
+        if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
+            if event.button == 5:  # Scroll para baixo
+                self.global_scale /= 1.1
+            if event.button == 4:  # Scroll para cima
+                self.global_scale *= 1.1
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                self.mouse_left.press(event.pos)
+            if event.button == 2:
+                self.mouse_middle.press(event.pos)
+            if event.button == 3:
+                self.mouse_right.press(event.pos)
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                self.mouse_left.release(event.pos)
+            if event.button == 2:
+                self.mouse_middle.release(event.pos)
+            if event.button == 3:
+                self.mouse_right.release(event.pos)
+
+        if event.type == pygame.MOUSEMOTION:
+            if self.mouse_left.pressed:
+                self.mouse_left.drag(event.pos)
+            if self.mouse_middle.pressed:
+                self.mouse_middle.drag(event.pos)
+            if self.mouse_right.pressed:
+                self.mouse_right.drag(event.pos)
+
+
+
 
 def blit_with_aspect_ratio(dest: pygame.surface.Surface, source: pygame.surface.Surface, antialiasing=True, offset: tuple[int, int] | None = None):
 
@@ -272,6 +285,7 @@ def render_message(text, font, color):
         text_surface.set_alpha(color[3])
     return text_surface
 
+
 def render_and_blit_message(canvas, text, font, color, scale=(1.0, 1.0), **kwargs):
     if isinstance(scale, float):
         scale = (scale, scale)
@@ -300,4 +314,4 @@ def world_to_screen(vec2: tuple[float, float], scale: tuple[float, float] | floa
 
 
 if __name__ == '__main__':
-    Screen()
+    Game()
