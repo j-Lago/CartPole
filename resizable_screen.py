@@ -17,19 +17,22 @@ class MouseButton:
     def press(self, pos):
         self.press_time = pygame.time.get_ticks()
         self.press_pos = pos
-        self.drag_pos = pos
         self.pressed = True
-        self.dragging = True
 
     def release(self, pos):
         self.release_time = pygame.time.get_ticks()
         self.release_pos = pos
         self.pressed = False
+        self.drag_pos = pos
         self.dragging = False
 
     def drag(self, pos):
         self.drag_pos = pos
         self.dragging = True
+
+    @property
+    def drag_delta(self):
+        return self.drag_pos[0]-self.press_pos[0], self.drag_pos[1]-self.press_pos[1]
 
 
 class Screen:
@@ -62,6 +65,7 @@ class Screen:
         self.fps = fps
         self.global_scale = 1.0
         self.global_bias = [0, 0]
+        self._last_global_bias = [0, 0]
         self.ticks = 0
         self.extra_info = []
 
@@ -195,7 +199,9 @@ class Screen:
         center = (size[0]//2+self.global_bias[0], size[1]//2+self.global_bias[1])
 
         if self.mouse_right.dragging:
-            self.global_bias = self.mouse_right.drag_pos[0]-self.mouse_right.press_pos[0], self.mouse_right.drag_pos[1]-self.mouse_right.press_pos[1]
+            self.global_bias = self.mouse_right.drag_delta[0]+self._last_global_bias[0], self.mouse_right.drag_delta[1]+self._last_global_bias[1]
+        else:
+            self._last_global_bias = self.global_bias
 
         scale = min(*size)/2 * self.global_scale
         radius = 0.1 * scale
