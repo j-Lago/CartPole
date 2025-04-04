@@ -4,7 +4,27 @@ from datetime import datetime
 
 
 class Screen:
-    def __init__(self, window_size: tuple[int, int] = (1600, 900), canvas_size: tuple[int, int] = (1920, 1080), fps:float=60.0, antialiasing:bool=True, fullscreen=False):
+    def __init__(self, window_size: tuple[int, int] = (1600, 900),
+                 canvas_size: tuple[int, int] = (1920, 1080),
+                 fps: float = 60.0,
+                 antialiasing: bool = True,
+                 fullscreen: bool = False,
+                 ):
+        """
+        Inicializa uma janela pygame.
+        Alguns atalhos de teclado são pre-configurados:
+            F10 ativa/destiva antialiasing
+            F11 alterna entre modo fullscreen e windoned
+            F12 mostra informações da renderização da aplicação
+            alt+F4 fecha a aplicação
+            F1..F3 altera o canvas (tabs) que será renderizado (apenas exemplo, todo: retirar depois)
+
+        :param window_size: tamanho inicial da janela para o modo windoned
+        :param canvas_size: tamanho da superficie de renderização. Essa superficie ao final de cada frame será redimensionada para o tamanho atual da janela
+        :param fps: taxa de quadros por segundo
+        :param antialiasing: define se será ou não aplicado antialiasing no redimensionamento da janela. Não tem efeito se window_size == canvas_size
+        :param fullscreen: inicia no modo fullscreen
+        """
         self.fullscreen = fullscreen
         self.antialiasing = antialiasing
         self.window_size = window_size
@@ -12,7 +32,7 @@ class Screen:
         self.ticks = 0
         self.extra_info = []
 
-        self.active_canvas = 'main'
+        self.active_tab = 'main'
         self.show_info = False
         self.info_position = (30, 30)
 
@@ -34,9 +54,9 @@ class Screen:
         }
 
         self.tabs = {
-            'main' : {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 30), 'draw': self.draw_main, 'shortcut': pygame.K_F1},
-            'menu' : {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (45, 30, 30), 'draw': self.draw_menu, 'shortcut': pygame.K_F2},
-            'extra': {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 45), 'draw': self.draw_extra, 'shortcut': pygame.K_F3},
+            'main' : {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 30), 'draw': self.draw_main, 'shortcut': pygame.K_F1, 'ticks': 0},
+            'menu' : {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (45, 30, 30), 'draw': self.draw_menu, 'shortcut': pygame.K_F2, 'ticks': 0},
+            'extra': {'canvas': pygame.surface.Surface(canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 45), 'draw': self.draw_extra, 'shortcut': pygame.K_F3, 'ticks': 0},
         }
 
         self.clock = pygame.time.Clock()
@@ -53,7 +73,9 @@ class Screen:
                     self.window_size = screen.get_size()
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_F12:
+                    if event.key == pygame.K_F10:
+                        self.antialiasing = not self.antialiasing
+                    elif event.key == pygame.K_F12:
                         self.show_info = not self.show_info
                     elif event.key == pygame.K_F11:
                         self.fullscreen = not self.fullscreen
@@ -68,18 +90,20 @@ class Screen:
 
                     for tab_key in self.tabs:
                         if event.key == self.tabs[tab_key]['shortcut']:
-                            self.active_canvas = tab_key
+                            self.active_tab = tab_key
 
-            canvas = self.tabs[self.active_canvas]['canvas']
-            canvas.fill(self.tabs[self.active_canvas]['bg_color'])
-            self.tabs[self.active_canvas]['draw'](canvas)
+            canvas = self.tabs[self.active_tab]['canvas']
+            canvas.fill(self.tabs[self.active_tab]['bg_color'])
+            self.tabs[self.active_tab]['draw'](canvas)
 
             self.window.fill(self.cols['screen_bg'])
-            blit_with_aspect_ratio(self.window, self.tabs[self.active_canvas]['canvas'], self.antialiasing)
+            blit_with_aspect_ratio(self.window, self.tabs[self.active_tab]['canvas'], self.antialiasing)
 
             if self.show_info:
                 info_list = [f'fps: {self.clock.get_fps():.1f} Hz',
                              f'sim_time: {self.ticks / self.fps:.1f} s',
+                             f'antialiasing: {self.antialiasing}',
+                             f'active_tab: {self.active_tab} ({self.tabs[self.active_tab]["ticks"] / self.fps:.1f} s)',
                              f'canvas_res: {canvas.get_size()} px',
                              f'window_res: {self.window.get_size()} px',
                              f'mouse: {pygame.mouse.get_pos()} px',
@@ -92,8 +116,7 @@ class Screen:
             pygame.display.flip()
             self.clock.tick(self.fps)
             self.ticks += 1
-
-
+            self.tabs[self.active_tab]['ticks'] += 1
 
     def draw_main(self, canvas):
         pygame.draw.circle(canvas, (30, 255, 30, 128), (200, 200), 200)
