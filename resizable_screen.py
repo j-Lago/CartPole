@@ -3,6 +3,35 @@ import sys
 from datetime import datetime
 
 
+
+class MouseButton:
+    def __init__(self):
+        self.press_time = None
+        self.release_time = None
+        self.press_pos = None
+        self.release_pos = None
+        self.drag_pos = None
+        self.pressed = False
+        self.dragging = False
+
+    def press(self, pos):
+        self.press_time = pygame.time.get_ticks()
+        self.press_pos = pos
+        self.drag_pos = pos
+        self.pressed = True
+        self.dragging = True
+
+    def release(self, pos):
+        self.release_time = pygame.time.get_ticks()
+        self.release_pos = pos
+        self.pressed = False
+        self.dragging = False
+
+    def drag(self, pos):
+        self.drag_pos = pos
+        self.dragging = True
+
+
 class Screen:
     def __init__(self, window_size: tuple[int, int] = (1600, 900),
                  canvas_size: tuple[int, int] = (1920, 1080),
@@ -17,6 +46,8 @@ class Screen:
             F11 alterna entre modo fullscreen e windoned
             F12 mostra informações da renderização da aplicação
             alt+F4 fecha a aplicação
+            ctr+scroll zoom
+            right mouse drag
             F1..F3 altera o canvas (tabs) que será renderizado (apenas exemplo, todo: retirar depois)
 
         :param window_size: tamanho inicial da janela para o modo windoned
@@ -29,12 +60,18 @@ class Screen:
         self.antialiasing = antialiasing
         self.window_size = window_size
         self.fps = fps
+        self.global_scale = 1.0
+        self.global_bias = [0, 0]
         self.ticks = 0
         self.extra_info = []
 
         self.active_tab = 'main'
         self.show_info = False
         self.info_position = (30, 30)
+
+        self.mouse_left = MouseButton()
+        self.mouse_middle = MouseButton()
+        self.mouse_right = MouseButton()
 
         pygame.init()
 
@@ -92,6 +129,37 @@ class Screen:
                         if event.key == self.tabs[tab_key]['shortcut']:
                             self.active_tab = tab_key
 
+                keys = pygame.key.get_pressed()
+                if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
+                    if event.button == 5:  # Scroll para baixo
+                        self.global_scale /= 1.1
+                    if event.button == 4:  # Scroll para cima
+                        self.global_scale *= 1.1
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.mouse_left.press(event.pos)
+                    if event.button == 2:
+                        self.mouse_middle.press(event.pos)
+                    if event.button == 3:
+                        self.mouse_right.press(event.pos)
+
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.mouse_left.release(event.pos)
+                    if event.button == 2:
+                        self.mouse_middle.release(event.pos)
+                    if event.button == 3:
+                        self.mouse_right.release(event.pos)
+
+                if event.type == pygame.MOUSEMOTION:
+                    if self.mouse_left.pressed:
+                        self.mouse_left.drag(event.pos)
+                    if self.mouse_middle.pressed:
+                        self.mouse_middle.drag(event.pos)
+                    if self.mouse_right.pressed:
+                        self.mouse_right.drag(event.pos)
+
             canvas = self.tabs[self.active_tab]['canvas']
             canvas.fill(self.tabs[self.active_tab]['bg_color'])
             self.tabs[self.active_tab]['draw'](canvas)
@@ -107,6 +175,7 @@ class Screen:
                              f'canvas_res: {canvas.get_size()} px',
                              f'window_res: {self.window.get_size()} px',
                              f'mouse: {pygame.mouse.get_pos()} px',
+                             f'global_scale: {self.global_scale}',
                              *self.extra_info
                              ]
 
@@ -119,13 +188,33 @@ class Screen:
             self.tabs[self.active_tab]['ticks'] += 1
 
     def draw_main(self, canvas):
-        pygame.draw.circle(canvas, (30, 255, 30, 128), (200, 200), 200)
-        pygame.draw.circle(canvas, (30, 30, 255), (350, 250), 200)
-        render_and_blit_message(canvas, datetime.now().strftime("%H:%M:%S"), self.fonts['default'], (30, 120, 30, 128))
-        width = 2
-        pygame.draw.line(canvas, (255, 255, 255), (200, 200), (600, 500), width=width)
-        pygame.draw.line(canvas, (255, 255, 255), (600, 500), (1000, 500), width=width)
-        pygame.draw.line(canvas, (255, 255, 255), (1000, 500), (1000, 800), width=width)
+
+
+
+        size = (1920, 1080)
+        center = (size[0]//2+self.global_bias[0], size[1]//2+self.global_bias[1])
+
+        if self.mouse_right.dragging:
+            self.global_bias = self.mouse_right.drag_pos[0]-self.mouse_right.press_pos[0], self.mouse_right.drag_pos[1]-self.mouse_right.press_pos[1]
+
+        scale = min(*size)/2 * self.global_scale
+        radius = 0.1 * scale
+        pygame.draw.circle(canvas, (255, 255, 255), world_to_screen((+0, +0), scale=scale, bias=center), radius)
+        pygame.draw.circle(canvas, (255, 0, 0), world_to_screen((-1, -1), scale=scale, bias=center), radius)
+        pygame.draw.circle(canvas, (0, 255, 0), world_to_screen((-1, +1), scale=scale, bias=center), radius)
+        pygame.draw.circle(canvas, (0, 0, 255), world_to_screen((+1, +1), scale=scale, bias=center), radius)
+        pygame.draw.circle(canvas, (255, 255, 0), world_to_screen((+1, -1), scale=scale, bias=center), radius)
+
+
+
+        render_and_blit_message(canvas, datetime.now().strftime("%H:%M:%S"), self.fonts['default'], (30, 120, 30, 128), scale=self.global_scale, center=center)
+        width = 1
+        M=8
+        grid_color = (90, 90, 90)
+        for m in range(2*M+1):
+            pygame.draw.line(canvas, grid_color, world_to_screen((-1+m/M, -1), scale, center), world_to_screen((-1+m/M, 1), scale, center), width=width)
+            pygame.draw.line(canvas, grid_color, world_to_screen((-1, -1+m/M), scale, center), world_to_screen((1, -1+m/M), scale, center), width=width)
+
 
     def draw_menu(self, canvas):
         prtsc = self.tabs['main']['canvas'].copy()
@@ -177,9 +266,16 @@ def render_message(text, font, color):
         text_surface.set_alpha(color[3])
     return text_surface
 
-def render_and_blit_message(canvas, text, font, color):
+def render_and_blit_message(canvas, text, font, color, scale=(1.0, 1.0), **kwargs):
+    if isinstance(scale, float):
+        scale = (scale, scale)
+    if len(kwargs) == 0:
+        kwargs['center'] = (canvas.get_width() // 2, canvas.get_height() // 2)
     text_surface = render_message(text, font, color)
-    text_rect = text_surface.get_rect(center=(canvas.get_width() // 2, canvas.get_height() // 2))
+    if scale != (1.0, 1.0):
+        text_surface = pygame.transform.smoothscale_by(text_surface, scale)
+
+    text_rect = text_surface.get_rect(**kwargs)
     canvas.blit(text_surface, text_rect)
 
 
@@ -187,6 +283,14 @@ def draw_text_list(canvas, info_list, font, color, pos, vspace):
     for l, info in enumerate(info_list):
         info_render = font.render(info, True, color)
         canvas.blit(info_render, (pos[0], pos[1] + vspace * l))
+
+
+def world_to_screen(vec2: tuple[float, float], scale: tuple[float, float] | float, bias: tuple[float, float]) -> tuple[int, int]:
+    if isinstance(scale, float | int):
+        scale = (scale, scale)
+    screen_x = round(vec2[0] * scale[0] + bias[0])
+    screen_y = round(-vec2[1] * scale[1] + bias[1])
+    return screen_x, screen_y
 
 
 if __name__ == '__main__':
