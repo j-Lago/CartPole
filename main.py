@@ -30,7 +30,7 @@ class Game(Screen):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
             self.steer = Joystick(joystick, 2)
-            self.throttle = Joystick(joystick, 1)
+            self.throttle = Joystick(joystick, 4, normalization=lambda x: x)
 
         self.particles = Particles(20000)
         self.text_particles = Particles(500)
@@ -124,7 +124,7 @@ class Game(Screen):
             self.steer.update()
             self.throttle.update()
             angle = self.steer.value * math.pi / 6
-            throttle = max(self.throttle_min, -self.throttle.value)
+            throttle = max(self.throttle_min, self.throttle.value)
         else:
             angle = 0.0
             throttle = self.throttle_min
