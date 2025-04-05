@@ -52,15 +52,20 @@ class Canvas(pygame.Surface):
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))
 
-    def world_to_screen_rect(self, rect: Vector2) -> Rect:
-        print('>>>>>>', rect)
+    def world_to_screen_rect(self, rect: Rect) -> Rect:
         return Rect(round(rect[0] * self.scale + self.bias[0]), round(-rect[1] * self.scale + self.bias[1]), rect[2]*self.scale, rect[3]*self.scale)
+
+    def screen_to_world_rect(self, rect: Rect) -> tuple[float, float, float, float]:
+        return (rect[0] - self.bias[0]) / self.scale, (-rect[1] - self.bias[1]) / self.scale, rect[2]/self.scale, rect[3]/self.scale
 
     def world_to_screen_points(self, points: Sequence) -> Sequence:
         return tuple(self.world_to_screen_v2(point) for point in points)
 
     def world_to_screen_f(self, dist: float) -> int:
         return round(dist * self.scale)
+
+    def get_world_rect(self) -> tuple[float, float, float, float]:
+        return self.screen_to_world_rect(self.get_rect())
 
     def blit(self, source, dest, area=None, special_flags=0):
         super().blit(source, self.world_to_screen_v2(dest), area, special_flags)

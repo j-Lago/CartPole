@@ -109,7 +109,9 @@ class Game(Screen):
 
         prtsc = self.tabs[self.last_active_tab].copy()
         prtsc.set_alpha(128)
-        blit_with_aspect_ratio(canvas, prtsc, True)
+        offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
+        canvas.blit(prtsc, offset)
+        # blit_with_aspect_ratio(canvas, prtsc, True)
 
         # text_surface = render_message('MENU', self.fonts['default'], (0, 0, 0))
         # text_rect = text_surface.get_rect(center=(canvas.get_width() // 2, canvas.get_height() // 2))
