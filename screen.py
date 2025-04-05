@@ -1,78 +1,109 @@
-
-from abc import ABC, abstractmethod
 import pygame
-import ctypes
 import sys
-import os
-os.environ['SDL_JOYSTICK_HIDAPI_PS4_RUMBLE'] = '1'
+from datetime import datetime
+from canvas import Canvas
+from inputs import Joystick, JOYBUTTON
+import math
+from canvas import rotate_vec2s
+from random import random, randint, uniform, choice
+from particles import BallParticle, Particles, TextParticle
+from pygame import Vector2
+from lerp import lerp, lerp_vec2, lerp_vec3
+
+class MouseButton:
+    def __init__(self):
+        self.press_time = None
+        self.release_time = None
+        self.press_pos = None
+        self.release_pos = None
+        self.drag_pos = None
+        self.pressed = False
+        self.dragging = False
+
+    def press(self, pos):
+        self.press_time = pygame.time.get_ticks()
+        self.press_pos = pos
+        self.pressed = True
+
+    def release(self, pos):
+        self.release_time = pygame.time.get_ticks()
+        self.release_pos = pos
+        self.pressed = False
+        self.drag_pos = pos
+        self.dragging = False
+
+    def drag(self, pos):
+        self.drag_pos = pos
+        self.dragging = True
+
+    @property
+    def drag_delta(self):
+        return self.drag_pos[0]-self.press_pos[0], self.drag_pos[1]-self.press_pos[1]
 
 
-class NormalizedScreen(ABC):
-    def __init__(self, name: str,
-                 window_size: tuple[int, int] | None,
-                 fps: int = 60,
-                 aspect_ratio: None | float = 1.0,
-                 info_position: tuple[float, float] | None = None,
-                 show_info: bool = False,
-                 grid_step: float = 1/32,
-                 show_grid: bool = False,
-                 snap_to_grid: bool = False
+class Screen:
+    def __init__(self, window_size: tuple[int, int] = (1600, 900),
+                 canvas_size: tuple[int, int] = (1920, 1080),
+                 fps: float = 60.0,
+                 antialiasing: bool = True,
+                 fullscreen: bool = False,
                  ):
+        """
+        Inicializa uma janela pygame.
+        Alguns atalhos de teclado são pre-configurados:
+            F10 ativa/destiva antialiasing
+            F11 alterna entre modo fullscreen e windoned
+            F12 mostra informações da renderização da aplicação
+            alt+F4 fecha a aplicação
+            ctr+scroll zoom
+            right mouse drag
+            F1..F3 altera o canvas (tabs) que será renderizado (apenas exemplo, todo: retirar depois)
+
+        :param window_size: tamanho inicial da janela para o modo windoned
+        :param canvas_size: tamanho da superficie de renderização. Essa superficie ao final de cada frame será redimensionada para o tamanho atual da janela
+        :param fps: taxa de quadros por segundo
+        :param antialiasing: define se será ou não aplicado antialiasing no redimensionamento da janela. Não tem efeito se window_size == canvas_size
+        :param fullscreen: inicia no modo fullscreen
+        """
+        self.fullscreen = fullscreen
+        self.antialiasing = antialiasing
+        self.window_size = window_size
+        self.canvas_size = canvas_size
+        self.fps = fps
+        # self.tabs['main']['scale'] = 1.0
+        # self.tabs['main']['bias'] = [0, 0]
+        # self.tabs['main']['last_bias'] = [0, 0]
+        self.ticks = 0
+        self.extra_info = []
+
+        self.event_loop_callback = None
+        self.active_tab = 'main'
+        self.show_info = False
+        self.info_position = (30, 30)
+
+        self.mouse_left = MouseButton()
+        self.mouse_middle = MouseButton()
+        self.mouse_right = MouseButton()
 
         pygame.init()
-        pygame.font.init()
 
-        self.cols = {'bg': (30, 30, 30),
-                     'grid': (60, 60, 60),
-                     'mouse': (240, 60, 30),
-                     'mouse_left_drag': (180, 90, 60),
-                     'mouse_middle_drag': (90, 180, 60),
-                     'mouse_right_drag': (90, 60, 180),
-                     'text': (160, 130, 120)}
-        self.fonts = {'default': pygame.font.SysFont('Consolas', 22)}
-
-        self.extra_info = []
-        self.fps = fps
-        self.grid_step = grid_step
-        self.info_position = info_position
-        self.show_info = show_info
-        self.show_grid = show_grid
-        self.snap_to_grid = snap_to_grid
-        self.set_name(name)
-        self.left_click = MouseKey()
-        self.right_click = MouseKey()
-        self.middle_click = MouseKey()
-        pygame.mouse.set_visible(False)
-
-        self.ticks = 0
-        self.fullscreen_mode = None
-        self.screen = None
-        self.xy_scale = None
-        self.fullscreen_scale_factor = (1., 1.)
-        self.global_scale = 1.0
-        self.aspect_ratio = aspect_ratio
-        if window_size is None:
-            self.original_window_size = (1600, 900)
-            self.init_fullscreen_mode()
+        if self.fullscreen:
+            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
-            self.original_window_size = window_size
-            self.init_window_mode(window_size)
+            self.window = pygame.display.set_mode(window_size, pygame.RESIZABLE)
 
+        self.cols = {
+            'screen_bg': (30, 30, 30),
+            'info': (220, 200, 90),
+        }
 
+        self.fonts = {
+            'info': pygame.font.SysFont('Consolas', 26),
+            'default': pygame.font.SysFont('Courier New', 200),
+        }
 
-        self.width = self.screen.get_width()
-        self.height = self.screen.get_height()
-
+        self.tabs = dict()
         self.clock = pygame.time.Clock()
-
-    def reset(self):
-        self.extra_info = []
-        self.ticks = 0
-        self.width = self.screen.get_width()
-        self.height = self.screen.get_height()
-
-    def set_name(self, name):
-        pygame.display.set_caption(name)
 
     def loop(self):
         while True:
@@ -80,255 +111,272 @@ class NormalizedScreen(ABC):
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+                elif event.type == pygame.VIDEORESIZE:
+                    screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                    self.window_size = screen.get_size()
 
                 if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_F11:
-                        self.toggle_screen_mode()
-                    if event.key == pygame.K_F12:
-                        self.show_info = not self.show_info
                     if event.key == pygame.K_F10:
-                        self.show_grid = not self.show_grid
-                    if event.key == pygame.K_F9:
-                        self.snap_to_grid = not self.snap_to_grid
+                        self.antialiasing = not self.antialiasing
+                    elif event.key == pygame.K_F12:
+                        self.show_info = not self.show_info
+                    elif event.key == pygame.K_F11:
+                        self.fullscreen = not self.fullscreen
+                        if self.fullscreen:
+                            pygame.display.quit()
+                            pygame.display.init()
+                            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                        else:
+                            self.window = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
+                    elif event.key == pygame.K_a:
+                        self.antialiasing = not self.antialiasing
 
-                keys = pygame.key.get_pressed()
-                if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
-                    if event.button == 5:  # Scroll para baixo
-                        self.rescale(self.global_scale/1.1)
-                    if event.button == 4:  # Scroll para cima
-                        self.rescale(self.global_scale*1.1)
+                    for tab_key in self.tabs:
+                        if event.key == self.tabs[tab_key].shortcut:
+                            self.active_tab = tab_key
 
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        self.left_click.press(self.mouse_position)
-                    if event.button == 2:
-                        self.middle_click.press(self.mouse_position)
-                    if event.button == 3:
-                        self.right_click.press(self.mouse_position)
+                if self.event_loop_callback is not None:
+                    self.event_loop_callback(event)
 
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if event.button == 1:
-                        self.left_click.release(self.mouse_position)
-                    if event.button == 2:
-                        self.middle_click.release(self.mouse_position)
-                    if event.button == 3:
-                        self.right_click.release(self.mouse_position)
+            canvas = self.tabs[self.active_tab]
+            canvas.fill(self.tabs[self.active_tab].bg_color)
+            self.tabs[self.active_tab].draw(canvas)
 
+            self.window.fill(self.cols['screen_bg'])
+            blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
 
-
-
-            self.screen.fill(self.cols['bg'])
-            if self.show_grid:
-                self.draw_grid(self.cols['grid'], self.grid_step)
-
-
-            self.draw()
-
-            mouse = self.mouse_position
             if self.show_info:
-                info_list = [f'fps: {self.clock.get_fps():.1f}',
-                             f'res: {self.screen.get_width()} x {self.screen.get_height()}',
-                             f'sim_time: {self.ticks / self.fps:.1f}s',
-                             f'world_aspect: {self.aspect_ratio}',
-                             f'mouse: {mouse[0]:.2f}, {mouse[1]:.2f}',
+                info_list = [f'fps: {self.clock.get_fps():.1f} Hz',
+                             f'sim_time: {self.ticks / self.fps:.1f} s',
+                             f'antialiasing: {self.antialiasing}',
+                             f'active_tab: {self.active_tab} ({self.tabs[self.active_tab].ticks / self.fps:.1f} s)',
+                             f'canvas_res: {canvas.get_size()} px',
+                             f'window_res: {self.window.get_size()} px',
+                             f'mouse: {pygame.mouse.get_pos()} px',
+                             f'global_scale: {self.tabs[self.active_tab].scale}',
+                             f'global_bias: {self.tabs[self.active_tab].bias}',
                              *self.extra_info
-                ]
+                             ]
 
-                # for info in self.extra_info:
-                #     info_list.append(info)
-
-                info_pos = self.info_position if self.info_position is not None else (self.x_min+30/self.xy_scale[0], self.y_max-30/self.xy_scale[1])
-                self.draw_text_list(info_list, self.fonts['default'], self.cols['text'], info_pos, 26)
-
-            # custom mouse
-            self.draw_mouse()
-
+                info_pos = self.info_position
+                draw_text_list(self.window, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
 
             pygame.display.flip()
-            self.ticks += 1
             self.clock.tick(self.fps)
+            self.ticks += 1
+            self.tabs[self.active_tab].ticks += 1
 
-    @abstractmethod
-    def draw(self):
-        pass
 
-    def init_fullscreen_mode(self):
-        user32 = ctypes.windll.user32
-        w = user32.GetSystemMetrics(0)
-        h = user32.GetSystemMetrics(1)
-        self.screen = pygame.display.set_mode((w, h), pygame.FULLSCREEN)
-        self.fullscreen_mode = True
-        self.fullscreen_scale_factor = (w / self.original_window_size[0], w / self.original_window_size[1])
-        self.rescale()
 
-    def init_window_mode(self, window_size):
-        self.screen = pygame.display.set_mode(window_size)
-        self.fullscreen_mode = False
-        self.rescale()
+class Game(Screen):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tabs = {
+            'main': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun = self.draw_main, shortcut=pygame.K_F1),
+            'menu': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(45, 30, 30), draw_fun=self.draw_menu, shortcut=pygame.K_F2),
+            'extra': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color= (15, 15, 15), draw_fun=self.draw_extra, shortcut=pygame.K_F3)
+        }
+        self.event_loop_callback = self.process_user_input_event
 
-    def rescale(self, new_global_scale: float | None = None):
-        if new_global_scale is not None:
-            self.global_scale = new_global_scale
-        w, h = self.screen.get_width(), self.screen.get_height()
-        if self.aspect_ratio is None:
-            self.xy_scale = w, h
+        self.steer = None
+        self.throttle = None
+        self.throttle_min = 0.05
+        for i in range(pygame.joystick.get_count()):
+            joystick = pygame.joystick.Joystick(i)
+            joystick.init()
+            self.steer = Joystick(joystick, 2)
+            self.throttle = Joystick(joystick, 1)
+
+        self.particles = Particles(20000)
+        self.text_particles = Particles(500)
+        self.particles_fonts = [
+            pygame.font.SysFont('Times', 28),
+            pygame.font.SysFont('Times', 34),
+            pygame.font.SysFont('Times', 40),
+        ]
+        self.letters = [chr(i) for i in range(945, 970) if i != 962]  #choice(('0', '1')), #choice(tuple(chr(i) for i in range(97, 123))),
+
+        self.loop()
+
+    def process_user_input_event(self, event):
+        keys = pygame.key.get_pressed()
+        if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
+            if event.button == 5:
+                self.tabs[self.active_tab].scale /= 1.1
+            if event.button == 4:
+                self.tabs[self.active_tab].scale *= 1.1
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                self.mouse_left.press(event.pos)
+            if event.button == 2:
+                self.mouse_middle.press(event.pos)
+            if event.button == 3:
+                self.mouse_right.press(event.pos)
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                self.mouse_left.release(event.pos)
+            if event.button == 2:
+                self.mouse_middle.release(event.pos)
+            if event.button == 3:
+                self.mouse_right.release(event.pos)
+
+        if event.type == pygame.MOUSEMOTION:
+            if self.mouse_left.pressed:
+                self.mouse_left.drag(event.pos)
+            if self.mouse_middle.pressed:
+                self.mouse_middle.drag(event.pos)
+            if self.mouse_right.pressed:
+                self.mouse_right.drag(event.pos)
+
+        if self.mouse_right.dragging:
+            self.tabs[self.active_tab].bias = [int(self.mouse_right.drag_delta[0] + self.tabs[self.active_tab].last_bias[0]), int(self.mouse_right.drag_delta[1] + self.tabs[self.active_tab].last_bias[1])]
         else:
-            m = min(w, h)
-            if m == h:
-                self.xy_scale = self.global_scale * m, self.global_scale * m / self.aspect_ratio
-            else:
-                self.xy_scale = self.global_scale * m * self.aspect_ratio, self.global_scale * m
+            self.tabs[self.active_tab].last_bias = self.tabs[self.active_tab].bias
 
-        self.width = w
-        self.height = h
+    def draw_main(self, canvas: Canvas):
 
-    def toggle_screen_mode(self):
-        self.fullscreen_mode = not self.fullscreen_mode
-        if self.fullscreen_mode:
-            self.init_fullscreen_mode()
+        center = canvas.bias
+        scale = canvas.scale
+
+        width = 1
+        M = 10
+        grid_color = (100, 100, 100)
+        for m in range(4 * M + 1):
+            canvas.draw_line(grid_color, (-2 + m / M, -1), (-2 + m / M, 1), width=width)
+        for m in range(2 * M + 1):
+            canvas.draw_line(grid_color, (-2, -1 + m / M), (2, -1 + m / M), width=width)
+
+        radius = 0.1
+        for n in range(11):
+            canvas.draw_circle((180, 255, 180), (+0, +0), radius * n, width=1)
+        canvas.draw_circle((255, 0, 0), (-1, -1), radius)
+        canvas.draw_circle((0, 255, 0), (-1, +1), radius)
+        canvas.draw_circle((0, 0, 255), (+1, +1), radius)
+        canvas.draw_circle((255, 255, 0), (+1, -1), radius)
+
+        render_and_blit_message(canvas, datetime.now().strftime("%H:%M:%S"), self.fonts['default'],
+                                (240, 240, 180, 128), relative_scale=self.tabs['main'].relative_scale, center=center)
+
+    def draw_menu(self, canvas):
+        prtsc = self.tabs['main'].copy()
+        prtsc.set_alpha(128)
+        blit_with_aspect_ratio(canvas, prtsc)
+
+        text_surface = render_message('MENU', self.fonts['default'], (0, 0, 0))
+        text_rect = text_surface.get_rect(center=(canvas.get_width() // 2, canvas.get_height() // 2))
+        pygame.draw.rect(canvas, (255, 255, 30, 128), text_rect, border_radius=30)
+        canvas.blit(text_surface, text_rect)
+
+    def draw_extra(self, canvas):
+        if self.steer is not None:
+            self.steer.update()
+            self.throttle.update()
+            angle = self.steer.value * math.pi / 6
+            throttle = max(self.throttle_min, -self.throttle.value)
         else:
-            self.init_window_mode(self.original_window_size)
+            angle = 0.0
+            throttle = self.throttle_min
 
-    # @property
-    # def scale(self):
-    #     return min(self.width, self.height)
-
-    # @property
-    # def width(self):
-    #     return self.screen.get_width()
-    #
-    # @property
-    # def height(self):
-    #     return self.screen.get_height()
-
-
-    def draw_circle(self, color, center, radius, radius_in_pixels = False, width=0, **kwargs):
-        pixel_width = max(int(width * self.xy_scale[0]), 1) if width != 0 else 0
-        pygame.draw.circle(self.screen, color, self.world_to_screen(center), radius if radius_in_pixels else round(radius * self.xy_scale[0]), pixel_width, **kwargs)
-
-    def draw_line(self, color, start_pos, end_pos, width=None):
-        if width is None:
-            width = 1 / min(*self.xy_scale)
-        pixel_width = max(int(width * self.xy_scale[0]), 1) if width != 0 else 0
-        pygame.draw.line(self.screen, color, self.world_to_screen(start_pos), self.world_to_screen(end_pos), pixel_width)
-
-    def draw_polygon(self, color: tuple[int, int, int], points: tuple[tuple[float, float], ...], width: float | None = 0):
-        if width is None:
-            width = 1 / min(*self.xy_scale)
-        pixel_width = max(int(width * self.xy_scale[0]), 1) if width != 0 else 0
-        pygame.draw.polygon(self.screen, color, self.world_to_screen_points(points), pixel_width)
-
-    def draw_text_list(self, info_list, font, color, pos, vspace):
-        pos = self.world_to_screen(pos)
-        for l, info in enumerate(info_list):
-            info_render = font.render(info, True, color)
-            self.screen.blit(info_render, (pos[0], pos[1] + vspace * l))
-
-    def draw_mouse(self, ignore_global_scale=True):
-        major_marker_size = 1 / 8
-        minor_marker_size = 3 / 64
-        major_width = 1 / self.height
-        minor_width = 3 / self.height
-        if ignore_global_scale:
-            major_marker_size /= self.global_scale
-            minor_marker_size /= self.global_scale
-            major_width /= self.global_scale
-            minor_width /= self.global_scale
-
-        self.draw_cross(self.cols['mouse'], self.mouse_position, major_marker_size, major_width)
-        self.draw_cross(self.cols['mouse'], self.mouse_position, minor_marker_size, minor_width)
-
-        if self.left_click.state:
-            self.draw_line(self.cols['mouse_left_drag'], self.left_click.press_pos, self.mouse_position)
-
-        # if not self.left_click.state and self.left_click.release_pos is not None:
-        #     self.draw_line(self.cols['mouse_left_drag'], self.left_click.press_pos, self.left_click.release_pos)
-
-        if self.middle_click.state:
-            self.draw_line(self.cols['mouse_middle_drag'], self.middle_click.press_pos, self.mouse_position)
-
-        if self.right_click.state:
-            self.draw_line(self.cols['mouse_right_drag'], self.right_click.press_pos, self.mouse_position)
-
-    def draw_grid(self, color, step, width=None):
-        if width is None:
-            width = 1 / min(*self.xy_scale)
-        for n in range(int(self.x_min / step) - 1, int(self.x_max / step) + 1):
-            self.draw_line(color, (n * step, self.y_min), (n * step, self.y_max), width)
-        for n in range(int(self.y_min / step) - 1, int(self.y_max / step) + 1):
-            self.draw_line(color, (self.x_min, n * step), (self.x_max, n * step), width)
-
-    def draw_cross(self, color, pos, size: float | tuple[float, float], width: float | None = None):
-        if width is None:
-            width = 1 / min(*self.xy_scale)
-        if isinstance(size, float):
-            size = (size, size)
-        self.draw_line(color, (pos[0]-size[0]/2, pos[1]), (pos[0]+size[0]/2, pos[1]), width)
-        self.draw_line(color, (pos[0], pos[1] - size[1] / 2), (pos[0], pos[1] + size[1] / 2), width)
-
-    def blit(self, rendered_text, pos, rescale=False):
-        if (self.fullscreen_mode or self.global_scale != 1) and rescale:
-            factor = min(self.fullscreen_scale_factor) * self.global_scale
-            rendered_text = pygame.transform.scale(rendered_text, (rendered_text.get_width()*factor, rendered_text.get_height()*factor))
-        self.screen.blit(rendered_text, self.world_to_screen(pos))
+        if self.ticks % 2 == 0:
+            for _ in range(11):
+                self.text_particles.append(
+                    TextParticle(canvas,
+                                 color=lerp_vec3((90, 250, 90), (30, 90, 30), random()),
+                                 text=choice(self.letters),
+                                 font=choice(self.particles_fonts),
+                                 pos=(uniform(-1.8, 1.8), 1.1),
+                                 vel=(0, -0.8), dt=1/self.fps, g=-98, lifetime=2,
+                                 ))
+        self.text_particles.step_and_draw()
 
 
-    @property
-    def mouse_position(self):
-        x, y = self.screen_to_world(pygame.mouse.get_pos())
-        if self.snap_to_grid:
-            x = round(x / self.grid_step) * self.grid_step
-            y = round(y / self.grid_step) * self.grid_step
-        return x,y
+        canvas.draw_polygon((90, 90, 100), rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
+        canvas.draw_polygon((120, 120, 130),
+                            ((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)))
 
-    def screen_to_world(self, point: tuple[int, int]) -> tuple[float, float]:
-        x = (point[0] - self.width // 2) * 2 / self.xy_scale[0]
-        y = -(point[1] - self.height // 2) * 2 / self.xy_scale[1]
-        return x, y
+        canvas.draw_circle((255, 200, 60), (0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
+        canvas.draw_circle((0, 0, 0), (0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
 
-    def world_to_screen(self, point: tuple[float, float]) -> tuple[int, int]:
-        screen_x = round(point[0] * self.xy_scale[0] / 2) + self.width // 2
-        screen_y = -round(point[1] * self.xy_scale[1] / 2) + self.height // 2
-        return screen_x, screen_y
+        emmit_l = Vector2(-0.08, -0.082).rotate_rad(angle)
+        emmit_r = Vector2(0.08, -0.082).rotate_rad(angle)
 
-    def world_to_screen_points(self, points: tuple[tuple[float, float], ...]) -> tuple[tuple[int, int], ...]:
-        return tuple(self.world_to_screen(point) for point in points)
+        c, s = math.cos(angle), math.sin(angle)
 
+        for _ in range(randint(round(20 * throttle), round(40 * throttle))):
+            vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
+            self.particles.append(BallParticle(canvas,
+                                               lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),(255, 255, 255), random() * 0.5),
+                                               uniform(.003, .006),
+                                               pos=lerp_vec2(emmit_l, emmit_r, random()),
+                                               vel=vel.rotate_rad(angle),
+                                               dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
 
-    @property
-    def x_max(self):
-        return self.width / self.xy_scale[0]
-
-    @property
-    def y_max(self):
-        return self.height / self.xy_scale[1]
-
-    @property
-    def x_min(self):
-        return -self.x_max
-
-    @property
-    def y_min(self):
-        return -self.y_max
+        self.particles.step_and_draw()
 
 
 
-class MouseKey:
-    def __init__(self):
-        self.press_time = None
-        self.release_time = None
-        self.press_pos = None
-        self.release_pos = None
-        self.state = False
 
-    def press(self, pos):
-        self.press_time = pygame.time.get_ticks()
-        self.press_pos = pos
-        self.state = True
-
-    def release(self, pos):
-        self.release_time = pygame.time.get_ticks()
-        self.release_pos = pos
-        self.state = False
+def blit_with_aspect_ratio(dest: pygame.surface.Surface, source: pygame.surface.Surface, antialiasing=True, offset: tuple[int, int] | None = None):
 
 
+    source_width, source_height = source.get_size()
+    dest_width, dest_height = dest.get_size()
+
+    source_ratio = source_width / source_height
+    dest_ratio = dest_width / dest_height
+
+    if source.get_size() == dest.get_size():
+        scaled_surface = source.copy()
+        if offset is None:
+            offset = (0, 0)
+    else:
+        rescale = pygame.transform.smoothscale if antialiasing else pygame.transform.scale
+        if source_ratio > dest_ratio:
+            new_width = dest_width
+            new_height = int(dest_width / source_ratio)
+        else:
+            new_height = dest_height
+            new_width = int(dest_height * source_ratio)
+        scaled_surface = rescale(source, (new_width, new_height))
+        if offset is None:
+            offset = (dest_width - new_width) // 2, (dest_height - new_height) // 2   # centralizada
+    dest.blit(scaled_surface, offset)
+
+
+
+def render_message(text, font, color):
+    text_surface = font.render(text, True, color[:3])
+    if len(color) == 4:
+        text_surface.set_alpha(color[3])
+    return text_surface
+
+
+def render_and_blit_message(canvas, text, font, color, relative_scale=1.0, **kwargs):
+    if len(kwargs) == 0:
+        kwargs['center'] = (canvas.get_width() // 2, canvas.get_height() // 2)
+    text_surface = render_message(text, font, color)
+    if relative_scale != 1:
+        text_surface = pygame.transform.smoothscale_by(text_surface, relative_scale)
+
+    text_rect = text_surface.get_rect(**kwargs)
+    canvas.blit(text_surface, text_rect)
+
+
+def draw_text_list(canvas, info_list, font, color, pos, vspace):
+    for l, info in enumerate(info_list):
+        info_render = font.render(info, True, color)
+        canvas.blit(info_render, (pos[0], pos[1] + vspace * l))
+
+
+def world_to_screen(vec2: tuple[float, float], scale: tuple[float, float] | float, bias: tuple[float, float]) -> tuple[int, int]:
+    if isinstance(scale, float | int):
+        scale = (scale, scale)
+    screen_x = round(vec2[0] * scale[0] + bias[0])
+    screen_y = round(-vec2[1] * scale[1] + bias[1])
+    return screen_x, screen_y
+
+
+if __name__ == '__main__':
+    Game()
