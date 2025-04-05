@@ -1,7 +1,7 @@
 import pygame
 import sys
 from datetime import datetime
-
+from canvas import Canvas
 
 
 class MouseButton:
@@ -64,9 +64,9 @@ class Screen:
         self.window_size = window_size
         self.canvas_size = canvas_size
         self.fps = fps
-        self.global_scale = 1.0
-        self.global_bias = [0, 0]
-        self._last_global_bias = [0, 0]
+        # self.tabs['main']['scale'] = 1.0
+        # self.tabs['main']['bias'] = [0, 0]
+        # self.tabs['main']['last_bias'] = [0, 0]
         self.ticks = 0
         self.extra_info = []
 
@@ -126,28 +126,29 @@ class Screen:
                         self.antialiasing = not self.antialiasing
 
                     for tab_key in self.tabs:
-                        if event.key == self.tabs[tab_key]['shortcut']:
+                        if event.key == self.tabs[tab_key].shortcut:
                             self.active_tab = tab_key
 
                 if self.event_loop_callback is not None:
                     self.event_loop_callback(event)
 
-            canvas = self.tabs[self.active_tab]['canvas']
-            canvas.fill(self.tabs[self.active_tab]['bg_color'])
-            self.tabs[self.active_tab]['draw'](canvas)
+            canvas = self.tabs[self.active_tab]
+            canvas.fill(self.tabs[self.active_tab].bg_color)
+            self.tabs[self.active_tab].draw(canvas)
 
             self.window.fill(self.cols['screen_bg'])
-            blit_with_aspect_ratio(self.window, self.tabs[self.active_tab]['canvas'], self.antialiasing)
+            blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
 
             if self.show_info:
                 info_list = [f'fps: {self.clock.get_fps():.1f} Hz',
                              f'sim_time: {self.ticks / self.fps:.1f} s',
                              f'antialiasing: {self.antialiasing}',
-                             f'active_tab: {self.active_tab} ({self.tabs[self.active_tab]["ticks"] / self.fps:.1f} s)',
+                             f'active_tab: {self.active_tab} ({self.tabs[self.active_tab].ticks / self.fps:.1f} s)',
                              f'canvas_res: {canvas.get_size()} px',
                              f'window_res: {self.window.get_size()} px',
                              f'mouse: {pygame.mouse.get_pos()} px',
-                             f'global_scale: {self.global_scale}',
+                             f'global_scale: {self.tabs[self.active_tab].scale}',
+                             f'global_bias: {self.tabs[self.active_tab].bias}',
                              *self.extra_info
                              ]
 
@@ -157,41 +158,39 @@ class Screen:
             pygame.display.flip()
             self.clock.tick(self.fps)
             self.ticks += 1
-            self.tabs[self.active_tab]['ticks'] += 1
+            self.tabs[self.active_tab].ticks += 1
 
-    def draw_main(self, canvas):
+    def draw_main(self, canvas: Canvas):
 
+        center=canvas.bias
+        scale=canvas.scale
 
-
-        size = (1920, 1080)
-        center = (size[0]//2+self.global_bias[0], size[1]//2+self.global_bias[1])
-
-        if self.mouse_right.dragging:
-            self.global_bias = self.mouse_right.drag_delta[0]+self._last_global_bias[0], self.mouse_right.drag_delta[1]+self._last_global_bias[1]
-        else:
-            self._last_global_bias = self.global_bias
-
-        scale = min(*size)/2 * self.global_scale
-        radius = 0.1 * scale
-        pygame.draw.circle(canvas, (255, 255, 255), world_to_screen((+0, +0), scale=scale, bias=center), radius)
-        pygame.draw.circle(canvas, (255, 0, 0), world_to_screen((-1, -1), scale=scale, bias=center), radius)
-        pygame.draw.circle(canvas, (0, 255, 0), world_to_screen((-1, +1), scale=scale, bias=center), radius)
-        pygame.draw.circle(canvas, (0, 0, 255), world_to_screen((+1, +1), scale=scale, bias=center), radius)
-        pygame.draw.circle(canvas, (255, 255, 0), world_to_screen((+1, -1), scale=scale, bias=center), radius)
-
-
-
-        render_and_blit_message(canvas, datetime.now().strftime("%H:%M:%S"), self.fonts['default'], (30, 120, 30, 128), scale=self.global_scale, center=center)
         width = 1
-        M=8
-        grid_color = (90, 90, 90)
-        for m in range(2*M+1):
-            pygame.draw.line(canvas, grid_color, world_to_screen((-1+m/M, -1), scale, center), world_to_screen((-1+m/M, 1), scale, center), width=width)
-            pygame.draw.line(canvas, grid_color, world_to_screen((-1, -1+m/M), scale, center), world_to_screen((1, -1+m/M), scale, center), width=width)
+        M = 10
+        grid_color = (100, 100, 100)
+        for m in range(4 * M + 1):
+            canvas.draw_line(grid_color, (-2 + m / M, -1), (-2 + m / M, 1), width=width)
+        for m in range(2 * M + 1):
+            canvas.draw_line(grid_color, (-2, -1 + m / M),(2, -1 + m / M), width=width)
+
+
+        radius = 0.1
+        for n in range(11):
+            canvas.draw_circle((180, 255, 180), (+0, +0), radius*n, width=1)
+        canvas.draw_circle((255, 0, 0), (-1, -1), radius)
+        canvas.draw_circle((0, 255, 0), (-1, +1), radius)
+        canvas.draw_circle((0, 0, 255), (+1, +1), radius)
+        canvas.draw_circle((255, 255, 0), (+1, -1), radius)
+
+
+
+        render_and_blit_message(canvas, datetime.now().strftime("%H:%M:%S"), self.fonts['default'], (240, 240, 180, 128), relative_scale=self.tabs['main'].relative_scale, center=center)
+
+
 
 
     def draw_menu(self, canvas):
-        prtsc = self.tabs['main']['canvas'].copy()
+        prtsc = self.tabs['main'].copy()
         prtsc.set_alpha(128)
         blit_with_aspect_ratio(canvas, prtsc)
 
@@ -209,9 +208,9 @@ class Game(Screen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.tabs = {
-            'main' : {'canvas': pygame.surface.Surface(self.canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 30), 'draw': self.draw_main, 'shortcut': pygame.K_F1, 'ticks': 0},
-            'menu' : {'canvas': pygame.surface.Surface(self.canvas_size, pygame.SRCALPHA), 'bg_color': (45, 30, 30), 'draw': self.draw_menu, 'shortcut': pygame.K_F2, 'ticks': 0},
-            'extra': {'canvas': pygame.surface.Surface(self.canvas_size, pygame.SRCALPHA), 'bg_color': (30, 45, 45), 'draw': self.draw_extra, 'shortcut': pygame.K_F3, 'ticks': 0},
+            'main': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun = self.draw_main, shortcut=pygame.K_F1),
+            'menu': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(45, 30, 30), draw_fun=self.draw_menu, shortcut=pygame.K_F2),
+            'extra': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color= (30, 45, 45), draw_fun=self.draw_extra, shortcut=pygame.K_F3)
         }
         self.event_loop_callback = self.process_user_input_event
         self.loop()
@@ -219,10 +218,10 @@ class Game(Screen):
     def process_user_input_event(self, event):
         keys = pygame.key.get_pressed()
         if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
-            if event.button == 5:  # Scroll para baixo
-                self.global_scale /= 1.1
-            if event.button == 4:  # Scroll para cima
-                self.global_scale *= 1.1
+            if event.button == 5:
+                self.tabs[self.active_tab].scale /= 1.1
+            if event.button == 4:
+                self.tabs[self.active_tab].scale *= 1.1
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
@@ -247,6 +246,11 @@ class Game(Screen):
                 self.mouse_middle.drag(event.pos)
             if self.mouse_right.pressed:
                 self.mouse_right.drag(event.pos)
+
+        if self.mouse_right.dragging:
+            self.tabs[self.active_tab].bias = [int(self.mouse_right.drag_delta[0] + self.tabs[self.active_tab].last_bias[0]), int(self.mouse_right.drag_delta[1] + self.tabs[self.active_tab].last_bias[1])]
+        else:
+            self.tabs[self.active_tab].last_bias = self.tabs[self.active_tab].bias
 
 
 
@@ -286,14 +290,12 @@ def render_message(text, font, color):
     return text_surface
 
 
-def render_and_blit_message(canvas, text, font, color, scale=(1.0, 1.0), **kwargs):
-    if isinstance(scale, float):
-        scale = (scale, scale)
+def render_and_blit_message(canvas, text, font, color, relative_scale, **kwargs):
     if len(kwargs) == 0:
         kwargs['center'] = (canvas.get_width() // 2, canvas.get_height() // 2)
     text_surface = render_message(text, font, color)
-    if scale != (1.0, 1.0):
-        text_surface = pygame.transform.smoothscale_by(text_surface, scale)
+    if relative_scale != 1:
+        text_surface = pygame.transform.smoothscale_by(text_surface, relative_scale)
 
     text_rect = text_surface.get_rect(**kwargs)
     canvas.blit(text_surface, text_rect)
