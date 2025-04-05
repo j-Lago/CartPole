@@ -4,6 +4,7 @@ from typing import Sequence
 from pygame import Color
 from typing import Callable
 import math
+from copy import deepcopy
 
 
 class Canvas(pygame.Surface):
@@ -32,6 +33,8 @@ class Canvas(pygame.Surface):
         self.bias = bias
         self.last_bias = bias
         self.ticks = 0
+
+
 
     @property
     def relative_scale(self):
