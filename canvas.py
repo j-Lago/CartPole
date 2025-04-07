@@ -9,18 +9,17 @@ from copy import deepcopy
 
 class Canvas(pygame.Surface):
     def __init__(self,
-                 size: Vector2,
+                 size: Vector2 | tuple[int, int],
                  flags: pygame.constants,
-                 bg_color: Color,
-                 draw_fun: Callable,
-                 shortcut: pygame.constants,
+                 bg_color: Color | tuple[int, int, int],
+                 draw_fun: Callable = None,
+                 shortcut: pygame.constants = None,
                  scale: float | None = None,
-                 bias: Vector2 | None = None,
+                 bias: Vector2 | tuple[float, float] | None = None,
                  ):
+
+
         super().__init__(size, flags)
-        self.bg_color: Color = bg_color
-        self.draw = draw_fun
-        self.shortcut = shortcut
 
         self.base_scale = min(*size) / 2
         if scale is None:
@@ -29,6 +28,9 @@ class Canvas(pygame.Surface):
         if bias is None:
             bias = (size[0] // 2, size[1] // 2)
 
+        self.bg_color: Color = bg_color
+        self.draw = draw_fun
+        self.shortcut = shortcut
         self.scale = scale
         self.bias = bias
         self.last_bias = bias
@@ -83,5 +85,5 @@ def rotate_around_v2(vec: Vector2, angle: float, center: Vector2 = (0.0, 0.0)):
     return (vec - center).rotate_rad(angle) + center
 
 
-def rotate_vec2s(vecs: Sequence[Vector2], angle: float, center: Vector2 = (0.0, 0.0)) -> Sequence:
+def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle: float, center: Vector2 = (0.0, 0.0)) -> Sequence:
     return tuple(rotate_around_v2(vec, angle, center) for vec in vecs)

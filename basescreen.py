@@ -1,44 +1,16 @@
 import pygame
 import sys
 from canvas import Canvas
-
-class MouseButton:
-    def __init__(self):
-        self.press_time = None
-        self.release_time = None
-        self.press_pos = None
-        self.release_pos = None
-        self.drag_pos = None
-        self.pressed = False
-        self.dragging = False
-
-    def press(self, pos):
-        self.press_time = pygame.time.get_ticks()
-        self.press_pos = pos
-        self.pressed = True
-
-    def release(self, pos):
-        self.release_time = pygame.time.get_ticks()
-        self.release_pos = pos
-        self.pressed = False
-        self.drag_pos = pos
-        self.dragging = False
-
-    def drag(self, pos):
-        self.drag_pos = pos
-        self.dragging = True
-
-    @property
-    def drag_delta(self):
-        return self.drag_pos[0]-self.press_pos[0], self.drag_pos[1]-self.press_pos[1]
+from mouse import Mouse
 
 
-class Screen:
+class BaseScreen:
     def __init__(self, window_size: tuple[int, int] = (1600, 900),
                  canvas_size: tuple[int, int] = (1920, 1080),
                  fps: float = 60.0,
                  antialiasing: bool = True,
                  fullscreen: bool = False,
+                 flags: int = pygame.RESIZABLE
                  ):
         """
         Inicializa uma janela pygame.
@@ -57,33 +29,29 @@ class Screen:
         :param antialiasing: define se será ou não aplicado antialiasing no redimensionamento da janela. Não tem efeito se window_size == canvas_size
         :param fullscreen: inicia no modo fullscreen
         """
+        self._flags = flags
         self.fullscreen = fullscreen
         self.antialiasing = antialiasing
         self.window_size = window_size
         self.canvas_size = canvas_size
         self.fps = fps
-        # self.tabs['main']['scale'] = 1.0
-        # self.tabs['main']['bias'] = [0, 0]
-        # self.tabs['main']['last_bias'] = [0, 0]
+
         self.ticks = 0
         self.extra_info = []
-
         self.event_loop_callback = None
         self.active_tab = None
         self.last_active_tab = None
         self.show_info = False
         self.info_position = (30, 30)
 
-        self.mouse_left = MouseButton()
-        self.mouse_middle = MouseButton()
-        self.mouse_right = MouseButton()
+        self.mouse = Mouse()
 
         pygame.init()
 
         if self.fullscreen:
             self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
         else:
-            self.window = pygame.display.set_mode(window_size, pygame.RESIZABLE)
+            self.window = pygame.display.set_mode(window_size, self._flags)
 
         self.cols = {
             'screen_bg': (30, 30, 30),
@@ -101,14 +69,16 @@ class Screen:
     def loop(self):
         while True:
             for event in pygame.event.get():
+                keys = pygame.key.get_pressed()
+                self.mouse.process_event(event, keys)
+
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.VIDEORESIZE:
-                    screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
+                    screen = pygame.display.set_mode(event.size, self._flags)
                     self.window_size = screen.get_size()
-
-                if event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F10:
                         self.antialiasing = not self.antialiasing
                     elif event.key == pygame.K_F12:
@@ -120,7 +90,7 @@ class Screen:
                             pygame.display.init()
                             self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                         else:
-                            self.window = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
+                            self.window = pygame.display.set_mode(self.window_size, self._flags)
                     elif event.key == pygame.K_a:
                         self.antialiasing = not self.antialiasing
 
@@ -133,11 +103,14 @@ class Screen:
                 if self.event_loop_callback is not None:
                     self.event_loop_callback(event)
 
+
+            # draw
+            self.window.fill(self.cols['screen_bg'])
+
             canvas = self.tabs[self.active_tab]
             canvas.fill(self.tabs[self.active_tab].bg_color)
             self.tabs[self.active_tab].draw(canvas)
 
-            self.window.fill(self.cols['screen_bg'])
             blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
 
             if self.show_info:
@@ -168,7 +141,7 @@ class Screen:
 
 
 
-def blit_with_aspect_ratio(dest: Canvas, source: pygame.surface.Surface, antialiasing=True, offset: tuple[int, int] | None = None):
+def blit_with_aspect_ratio(dest: Canvas | pygame.Surface, source: pygame.surface.Surface, antialiasing=True, offset: tuple[int, int] | None = None):
 
 
     source_width, source_height = source.get_size()

@@ -8,16 +8,23 @@ from random import random, randint, uniform, choice
 from particles import BallParticle, Particles, TextParticle
 from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
-from screen import Screen, render_and_blit_message, blit_with_aspect_ratio, render_message
+from basescreen import BaseScreen, render_and_blit_message
+from mouse import MouseButton, MouseScroll, Mouse
 
 
-class Game(Screen):
+class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.mouse.left.press_callback = self.left_click
+        self.mouse.right.press_callback = self.right_click
+        self.mouse.scroll.up_callback = self.scroll_up
+        self.mouse.scroll.down_callback = self.scroll_down
+
         self.tabs = {
-            'test': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun = self.draw_main, shortcut=pygame.K_F2),
             'rocket': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color= (15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
-            'menu': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun = self.draw_main, shortcut=pygame.K_F2),
+            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
         }
         self.active_tab = 'rocket'
         self.last_active_tab = self.active_tab
@@ -43,49 +50,28 @@ class Game(Screen):
 
         self.loop()
 
+    def left_click(self, button: MouseButton):
+        pass
+
+    def right_click(self, button: MouseButton):
+        pass
+
+    def scroll_up(self, scroll: MouseScroll):
+        if scroll.up_keys[pygame.K_LCTRL]:
+            self.tabs[self.active_tab].scale /= 1.1
+
+    def scroll_down(self, scroll: MouseScroll):
+        if scroll.down_keys[pygame.K_LCTRL]:
+            self.tabs[self.active_tab].scale *= 1.1
+
     def process_user_input_event(self, event):
-
-        keys = pygame.key.get_pressed()
-        if event.type == pygame.MOUSEBUTTONDOWN and keys[pygame.K_LCTRL]:
-            if event.button == 5:
-                self.tabs[self.active_tab].scale /= 1.1
-            if event.button == 4:
-                self.tabs[self.active_tab].scale *= 1.1
-
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                self.mouse_left.press(event.pos)
-            if event.button == 2:
-                self.mouse_middle.press(event.pos)
-            if event.button == 3:
-                self.mouse_right.press(event.pos)
-
-        if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1:
-                self.mouse_left.release(event.pos)
-            if event.button == 2:
-                self.mouse_middle.release(event.pos)
-            if event.button == 3:
-                self.mouse_right.release(event.pos)
-
-        if event.type == pygame.MOUSEMOTION:
-            if self.mouse_left.pressed:
-                self.mouse_left.drag(event.pos)
-            if self.mouse_middle.pressed:
-                self.mouse_middle.drag(event.pos)
-            if self.mouse_right.pressed:
-                self.mouse_right.drag(event.pos)
-
-        if self.mouse_right.dragging:
-            self.tabs[self.active_tab].bias = [int(self.mouse_right.drag_delta[0] + self.tabs[self.active_tab].last_bias[0]), int(self.mouse_right.drag_delta[1] + self.tabs[self.active_tab].last_bias[1])]
+        if self.mouse.right.dragging:
+            self.tabs[self.active_tab].bias = [int(self.mouse.right.drag_delta[0] + self.tabs[self.active_tab].last_bias[0]), int(self.mouse.right.drag_delta[1] + self.tabs[self.active_tab].last_bias[1])]
         else:
             self.tabs[self.active_tab].last_bias = self.tabs[self.active_tab].bias
 
     def draw_main(self, canvas: Canvas):
-
         center = canvas.bias
-        scale = canvas.scale
-
         width = 1
         M = 10
         grid_color = (100, 100, 100)
@@ -106,18 +92,11 @@ class Game(Screen):
                                 (240, 240, 180, 128), relative_scale=self.tabs[self.active_tab].relative_scale, center=center)
 
     def draw_menu(self, canvas):
-
         prtsc = self.tabs[self.last_active_tab].copy()
         prtsc.set_alpha(128)
         offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
         canvas.blit(prtsc, offset)
-        # blit_with_aspect_ratio(canvas, prtsc, True)
 
-        # text_surface = render_message('MENU', self.fonts['default'], (0, 0, 0))
-        # text_rect = text_surface.get_rect(center=(canvas.get_width() // 2, canvas.get_height() // 2))
-        #
-        # pygame.draw.rect(canvas, (120, 120, 30, 200), text_rect, border_radius=30)
-        # canvas.blit(text_surface, text_rect)
 
     def draw_rocket(self, canvas):
         if self.steer is not None:
@@ -162,10 +141,9 @@ class Game(Screen):
                                                pos=lerp_vec2(emmit_l, emmit_r, random()),
                                                vel=vel.rotate_rad(angle),
                                                dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
-
         self.particles.step_and_draw()
 
 
 
 if __name__ == '__main__':
-    Game()
+    Example()
