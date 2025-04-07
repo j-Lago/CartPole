@@ -22,8 +22,8 @@ class Example(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.tabs = {
-            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color= (15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun = self.draw_main, shortcut=pygame.K_F2),
+            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun =self.draw_main, shortcut=pygame.K_F2),
             'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
         }
         self.active_tab = 'rocket'
@@ -51,7 +51,14 @@ class Example(BaseScreen):
         self.loop()
 
     def left_click(self, button: MouseButton):
-        pass
+        for _ in range(1000):
+            vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
+            self.particles.append(BallParticle(self.tabs['rocket'],
+                                               lerp_vec3(lerp_vec3((0, 60, 255), (60, 200, 200), random()),(255, 255, 255), random() * 0.5),
+                                               uniform(.003, .006),
+                                               pos=self.tabs['rocket'].screen_to_world_v2(button.press_pos),
+                                               vel=vel.rotate_rad(uniform(0.0, 2*math.pi)),
+                                               dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
 
     def right_click(self, button: MouseButton):
         pass

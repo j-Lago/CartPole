@@ -78,6 +78,10 @@ class Mouse:
         self.middle = MouseButton()
         self.scroll = MouseScroll()
 
+    @property
+    def pos(self):
+        return pygame.mouse.get_pos()
+
     def process_event(self, event, keys):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:

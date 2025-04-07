@@ -58,7 +58,10 @@ class Canvas(pygame.Surface):
         return Rect(round(rect[0] * self.scale + self.bias[0]), round(-rect[1] * self.scale + self.bias[1]), rect[2]*self.scale, rect[3]*self.scale)
 
     def screen_to_world_rect(self, rect: Rect) -> tuple[float, float, float, float]:
-        return (rect[0] - self.bias[0]) / self.scale, (-rect[1] - self.bias[1]) / self.scale, rect[2]/self.scale, rect[3]/self.scale
+        return (rect[0] - self.bias[0]) / self.scale, (-rect[1] + self.bias[1]) / self.scale, rect[2]/self.scale, rect[3]/self.scale  # todo: verificar
+
+    def screen_to_world_v2(self, vec: Vector2) -> Vector2:
+        return Vector2((vec[0] - self.bias[0]) / self.scale, (-vec[1] + self.bias[1]) / self.scale)  # todo: verificar
 
     def world_to_screen_points(self, points: Sequence) -> Sequence:
         return tuple(self.world_to_screen_v2(point) for point in points)
