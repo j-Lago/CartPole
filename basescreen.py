@@ -49,9 +49,9 @@ class BaseScreen:
         pygame.init()
 
         if self.fullscreen:
-            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+            self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
         else:
-            self.window = pygame.display.set_mode(window_size, self._flags)
+            self.window = Canvas(surface=pygame.display.set_mode(window_size, self._flags))
 
         self.cols = {
             'screen_bg': (30, 30, 30),
@@ -88,9 +88,9 @@ class BaseScreen:
                         if self.fullscreen:
                             pygame.display.quit()
                             pygame.display.init()
-                            self.window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                            self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
                         else:
-                            self.window = pygame.display.set_mode(self.window_size, self._flags)
+                            self.window = Canvas(surface=pygame.display.set_mode(self.window_size, self._flags))
                     elif event.key == pygame.K_a:
                         self.antialiasing = not self.antialiasing
 
@@ -127,7 +127,9 @@ class BaseScreen:
                              ]
 
                 info_pos = self.info_position
-                draw_text_list(self.window, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
+
+                # print(f'{self.window.surface.get_size()=}, {self.window.get_size()=}, {self.window.scale=}, {self.window.bias=}')
+                draw_text_list(self.window.surface, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
 
             pygame.display.flip()
             self.clock.tick(self.fps)
@@ -141,31 +143,29 @@ class BaseScreen:
 
 
 
-def blit_with_aspect_ratio(dest: Canvas | pygame.Surface, source: pygame.surface.Surface, antialiasing=True, offset: tuple[int, int] | None = None):
+def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offset: tuple[int, int] | None = None):
+    source_size = source.get_size()
+    dest_size = dest.get_size()
 
+    source_ratio = source_size[0] / source_size[1]
+    dest_ratio = dest_size[0] / dest_size[1]
 
-    source_width, source_height = source.get_size()
-    dest_width, dest_height = dest.get_size()
-
-    source_ratio = source_width / source_height
-    dest_ratio = dest_width / dest_height
-
-    if source.get_size() == dest.get_size():
+    if source_size == dest_size:
         scaled_surface = source.copy()
         if offset is None:
             offset = (0, 0)
     else:
         rescale = pygame.transform.smoothscale if antialiasing else pygame.transform.scale
         if source_ratio > dest_ratio:
-            new_width = dest_width
-            new_height = int(dest_width / source_ratio)
+            new_width = dest_size[0]
+            new_height = int(dest_size[0] / source_ratio)
         else:
-            new_height = dest_height
-            new_width = int(dest_height * source_ratio)
-        scaled_surface = rescale(source, (new_width, new_height))
+            new_height = dest_size[1]
+            new_width = int(dest_size[1] * source_ratio)
+        scaled_surface = rescale(source.surface, (new_width, new_height))
         if offset is None:
-            offset = (dest_width - new_width) // 2, (dest_height - new_height) // 2   # centralizada
-    dest.blit(scaled_surface, offset)
+            offset = (dest_size[0] - new_width) // 2, (dest_size[1] - new_height) // 2   # centralizada
+    dest.blit(scaled_surface, dest.screen_to_world_v2(offset))
 
 
 

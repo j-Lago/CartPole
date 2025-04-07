@@ -3,7 +3,7 @@ from datetime import datetime
 from canvas import Canvas
 from inputs import Joystick, JOYBUTTON
 import math
-from canvas import rotate_vec2s
+from canvas import rotate_vec2s, resolution_map
 from random import random, randint, uniform, choice
 from particles import BallParticle, Particles, TextParticle
 from pygame import Vector2
@@ -51,12 +51,16 @@ class Example(BaseScreen):
         self.loop()
 
     def left_click(self, button: MouseButton):
+        c = self.tabs[self.active_tab]
+        pos = resolution_map(self.tabs[self.active_tab], self.window, button.press_pos)
+        pos = self.tabs[self.active_tab].screen_to_world_v2(pos)
+        print(f'{self.window.get_size()=} {c.get_size()} | {button.press_pos=}, {c.scale=}, {c.bias=} -> {pos=}')
         for _ in range(1000):
             vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
             self.particles.append(BallParticle(self.tabs['rocket'],
                                                lerp_vec3(lerp_vec3((0, 60, 255), (60, 200, 200), random()),(255, 255, 255), random() * 0.5),
                                                uniform(.003, .006),
-                                               pos=self.tabs['rocket'].screen_to_world_v2(button.press_pos),
+                                               pos=pos,
                                                vel=vel.rotate_rad(uniform(0.0, 2*math.pi)),
                                                dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
 
@@ -138,7 +142,7 @@ class Example(BaseScreen):
         emmit_l = Vector2(-0.08, -0.082).rotate_rad(angle)
         emmit_r = Vector2(0.08, -0.082).rotate_rad(angle)
 
-        c, s = math.cos(angle), math.sin(angle)
+        # c, s = math.cos(angle), math.sin(angle)
 
         for _ in range(randint(round(20 * throttle), round(40 * throttle))):
             vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))

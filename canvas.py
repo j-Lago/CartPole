@@ -3,15 +3,18 @@ from pygame import Vector2, Rect
 from typing import Sequence
 from pygame import Color
 from typing import Callable
+from copy import copy
 import math
 from copy import deepcopy
+from typing import Self
 
 
-class Canvas(pygame.Surface):
+class Canvas:
     def __init__(self,
-                 size: Vector2 | tuple[int, int],
-                 flags: pygame.constants,
-                 bg_color: Color | tuple[int, int, int],
+                 size: Vector2 | tuple[int, int] = (0, 0),
+                 flags: pygame.constants = 0,
+                 surface: pygame.Surface | None = None,
+                 bg_color: Color | tuple[int, int, int] = (0, 0, 0),
                  draw_fun: Callable = None,
                  shortcut: pygame.constants = None,
                  scale: float | None = None,
@@ -19,37 +22,54 @@ class Canvas(pygame.Surface):
                  ):
 
 
-        super().__init__(size, flags)
+        # super().__init__(size, flags)
+        if surface is None:
+            self.surface = pygame.Surface(size, flags)
+            self.base_scale = min(*size) / 2
+            if scale is None:
+                scale = self.base_scale
+            if bias is None:
+                bias = (size[0] // 2, size[1] // 2)
+            self.scale = scale
+            self.bias = bias
+        else:
+            self.surface = surface
+            self.size = surface.get_size()
+            self.scale = 1.0
+            self.bias = (0, 0)
 
-        self.base_scale = min(*size) / 2
-        if scale is None:
-            scale = self.base_scale
-
-        if bias is None:
-            bias = (size[0] // 2, size[1] // 2)
 
         self.bg_color: Color = bg_color
         self.draw = draw_fun
         self.shortcut = shortcut
-        self.scale = scale
-        self.bias = bias
-        self.last_bias = bias
+
+        self.last_bias = self.bias
         self.ticks = 0
 
+    def copy(self):
+        return copy(self)
 
+    def set_alpha(self, value):
+        self.surface.set_alpha(value)
 
     @property
     def relative_scale(self):
         return self.scale / self.base_scale
 
+    def get_rect(self):
+        return self.surface.get_rect()
+
+    def get_size(self):
+        return self.surface.get_size()
+
     def draw_circle(self, color: Color | tuple[int, int, int], center: Vector2 | tuple[float, float], radius: float, width: int = 0, draw_top_right: bool = False, draw_top_left: bool = False, draw_bottom_left: bool = False, draw_bottom_right: bool = False):
-        return pygame.draw.circle(self, color, self.world_to_screen_v2(center), self.world_to_screen_f(radius), width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)
+        return pygame.draw.circle(self.surface, color, self.world_to_screen_v2(center), self.world_to_screen_f(radius), width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)
 
     def draw_line(self, color: Color | tuple[int, int, int], start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
-        return pygame.draw.line(self, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
+        return pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
     def draw_polygon(self, color: Color | tuple[int, int, int], points: Sequence, width: int = 0):
-        return pygame.draw.polygon(self, color, self.world_to_screen_points(points), width)
+        return pygame.draw.polygon(self.surface, color, self.world_to_screen_points(points), width)
 
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))
@@ -60,8 +80,9 @@ class Canvas(pygame.Surface):
     def screen_to_world_rect(self, rect: Rect) -> tuple[float, float, float, float]:
         return (rect[0] - self.bias[0]) / self.scale, (-rect[1] + self.bias[1]) / self.scale, rect[2]/self.scale, rect[3]/self.scale  # todo: verificar
 
-    def screen_to_world_v2(self, vec: Vector2) -> Vector2:
+    def screen_to_world_v2(self, vec: Vector2 | tuple[float, float]) -> Vector2:
         return Vector2((vec[0] - self.bias[0]) / self.scale, (-vec[1] + self.bias[1]) / self.scale)  # todo: verificar
+
 
     def world_to_screen_points(self, points: Sequence) -> Sequence:
         return tuple(self.world_to_screen_v2(point) for point in points)
@@ -72,14 +93,15 @@ class Canvas(pygame.Surface):
     def get_world_rect(self) -> tuple[float, float, float, float]:
         return self.screen_to_world_rect(self.get_rect())
 
-    def blit(self, source, dest, area=None, special_flags=0):
-        super().blit(source, self.world_to_screen_v2(dest), area, special_flags)
-    # def blit(self, rendered_text: pygame.Surface, pos, rescale=False):
-    #     if (self.fullscreen_mode or self.global_scale != 1) and rescale:
-    #         factor = min(self.fullscreen_scale_factor) * self.global_scale
-    #         rendered_text = pygame.transform.scale(rendered_text, (
-    #         rendered_text.get_width() * factor, rendered_text.get_height() * factor))
-    #     self.screen.blit(rendered_text, self.world_to_screen(pos))
+    def fill(self, color, rect=None, special_flags=0):
+        self.surface.fill(color, rect, special_flags)
+
+    def blit(self, source: Self | pygame.Surface, dest, area=None, special_flags=0):
+        # super().blit(source, self.world_to_screen_v2(dest), area, special_flags)
+        if isinstance(source, Canvas):
+            source = source.surface
+        return self.surface.blit(source, self.world_to_screen_v2(dest), area, special_flags)
+
 
 
 def rotate_around_v2(vec: Vector2, angle: float, center: Vector2 = (0.0, 0.0)):
@@ -90,3 +112,9 @@ def rotate_around_v2(vec: Vector2, angle: float, center: Vector2 = (0.0, 0.0)):
 
 def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle: float, center: Vector2 = (0.0, 0.0)) -> Sequence:
     return tuple(rotate_around_v2(vec, angle, center) for vec in vecs)
+
+
+def resolution_map(dest: Canvas, source: Canvas, source_pos: Vector2 | tuple[int, int]) -> Vector2:
+    dw, dh = dest.get_size()
+    sw, sh = source.get_size()
+    return Vector2(round(source_pos[0] / sw * dw), round(source_pos[1] / sh * sw))
