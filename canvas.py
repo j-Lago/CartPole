@@ -14,7 +14,7 @@ class Canvas:
                  size: Vector2 | tuple[int, int] = (0, 0),
                  flags: pygame.constants = 0,
                  surface: pygame.Surface | None = None,
-                 bg_color: Color | tuple[int, int, int] = (0, 0, 0),
+                 bg_color: Color | tuple[int, int, int] = (0, 0, 0, 0),
                  draw_fun: Callable = None,
                  shortcut: pygame.constants = None,
                  scale: float | None = None,
@@ -47,6 +47,7 @@ class Canvas:
         self.ticks = 0
 
     def draw(self):
+        self.fill(self.bg_color)
         self.draw_fun(canvas=self)
 
     def copy(self):

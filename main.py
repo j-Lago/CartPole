@@ -32,8 +32,12 @@ class Example(BaseScreen):
         self.last_active_tab = self.active_tab
         self.event_loop_callback = self.process_user_input_event
 
-        self.popup = PopUp(self.tabs['rocket'], pos=(0.15, 0.1), size=(400, 250), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
-        self.popup_plot = deque(maxlen=100)
+        self.popup = PopUp(self.tabs['rocket'], alpha=200, pos=(0.-1.4, 0.1), size=(400, 250), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
+        self.popup_plot = deque(maxlen=200)
+        self.popup_rolling = True
+        self.popup_freq = 4.0
+        self.popup_amp = 0.7
+        self.popup_t = 0.0
 
 
         self.steer = None
@@ -96,6 +100,9 @@ class Example(BaseScreen):
                 self.popup.pos = (self.popup.pos[0], self.popup.pos[1]+.05)
             elif event.key == pygame.K_DOWN:
                 self.popup.pos = (self.popup.pos[0], self.popup.pos[1]-.05)
+            elif event.key == pygame.K_r:
+                self.popup_plot.clear()
+                self.popup_rolling = not self.popup_rolling
 
     def draw_main(self, canvas: Canvas):
         center = canvas.bias
@@ -130,29 +137,47 @@ class Example(BaseScreen):
         rect = canvas.get_world_rect()
         xmin, xmax = rect[0], rect[0] + rect[2]
         ymin, ymax = rect[1] - rect[3], rect[1]
+        w = rect[2]
         N = self.popup_plot.maxlen
-        xscale = (xmax - xmin) / N
+        xscale = (xmax - xmin) / N / self.fps
         xbias = xmin
 
-        color=(0, 255, 0)
-        color_bf = lerp_vec3(color, (30, 30, 30), 0.9)
+        color=(0, 255, 255)
+        color_line = color
         color_grid = lerp_vec3(color, (30, 30, 30), 0.7)
-        # canvas.draw_rect(color_bf, rect, 0, 15)
+        color_bf = lerp_vec3(color, (30, 30, 30), 0.9)
+        width=2
+
+        canvas.draw_rect(color_bf, rect, 0, 15)
 
         canvas.draw_line(color_grid, (xmin, 0), (xmax, 0), 1)
         canvas.draw_line(color_grid, (0, ymin), (0, ymax), 1)
 
-        n = (self.ticks % N)
-        if n == 0:
-            self.popup_plot.clear()
-        x = n * xscale + xbias
-        y = 0.7*math.sin(x*3.5) + uniform(-.1, 0.1)
-        self.popup_plot.append((x, y))
-        seq = self.popup_plot
-        if len(seq)> 2:
-            canvas.draw_lines(color, False, seq, 1)
 
-        canvas.draw_rect(color, rect, 1, 15)
+        self.popup_freq += uniform(-0.02, 0.02)
+        self.popup_amp += uniform(-0.01, 0.01)
+        self.popup_t += self.fps
+
+        n = (self.ticks % N)
+        if n == 0 and not self.popup_rolling:
+            self.popup_plot.clear()
+        x = self.popup_t * xscale
+        y = self.popup_amp*math.sin(x*self.popup_freq) + uniform(-.1, 0.1)
+
+
+        if not self.popup_rolling:
+            seq = [(xx % w + xmin, yy) for xx, yy in self.popup_plot]
+        else:
+            seq = [( ( (xx + (w-x)) % w + xmin) , yy) for xx, yy in self.popup_plot]
+            seq = sorted(seq, key=lambda pair: pair[0])
+        self.popup_plot.append((x, y))
+
+
+
+        if len(seq)> 2:
+            canvas.draw_lines(color_line, False, seq, width)
+
+        canvas.draw_rect(color, rect, width, 15)
 
 
     def draw_rocket(self, canvas):
