@@ -10,7 +10,7 @@ from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
 from basescreen import BaseScreen, render_and_blit_message
 from mouse import MouseButton, MouseScroll, Mouse
-
+from popup import PopUp
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -29,6 +29,9 @@ class Example(BaseScreen):
         self.active_tab = 'rocket'
         self.last_active_tab = self.active_tab
         self.event_loop_callback = self.process_user_input_event
+
+        self.popup = PopUp(self.tabs['rocket'], pos=(0.1, 0.1), size=(300, 200), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
+
 
         self.steer = None
         self.throttle = None
@@ -81,6 +84,16 @@ class Example(BaseScreen):
         else:
             self.tabs[self.active_tab].last_bias = self.tabs[self.active_tab].bias
 
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                self.popup.pos = (self.popup.pos[0]-.05, self.popup.pos[1])
+            elif event.key == pygame.K_RIGHT:
+                self.popup.pos = (self.popup.pos[0]+.05, self.popup.pos[1])
+            elif event.key == pygame.K_UP:
+                self.popup.pos = (self.popup.pos[0], self.popup.pos[1]+.05)
+            elif event.key == pygame.K_DOWN:
+                self.popup.pos = (self.popup.pos[0], self.popup.pos[1]-.05)
+
     def draw_main(self, canvas: Canvas):
         center = canvas.bias
         width = 1
@@ -107,6 +120,15 @@ class Example(BaseScreen):
         prtsc.set_alpha(128)
         offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
         canvas.blit(prtsc, offset)
+
+
+    def draw_popup(self, canvas):
+        color=(0, 255, 0)
+        canvas.draw_rect(color, canvas.get_world_rect(), 1, 15)
+        canvas.draw_line(color, (-1.5, 0), (1.5, 0), 1)
+        canvas.draw_line(color, (0, -1.5), (0, 1.5), 1)
+        seq = ((0,0),(0.1,0.2),(0.2,0.5),(0.3, 0.8), (0.4, 0.6), (0.5, 0.3), (0.6, -0.4))
+        canvas.draw_lines(color, False, seq, 1)
 
 
     def draw_rocket(self, canvas):
@@ -153,6 +175,9 @@ class Example(BaseScreen):
                                                vel=vel.rotate_rad(angle),
                                                dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
         self.particles.step_and_draw()
+
+        self.popup.draw()
+        self.popup.blit_to_main()
 
 
 

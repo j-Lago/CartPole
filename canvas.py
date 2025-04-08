@@ -40,11 +40,14 @@ class Canvas:
 
 
         self.bg_color: Color = bg_color
-        self.draw = draw_fun
+        self.draw_fun = draw_fun
         self.shortcut = shortcut
 
         self.last_bias = self.bias
         self.ticks = 0
+
+    def draw(self):
+        self.draw_fun(canvas=self)
 
     def copy(self):
         return copy(self)
@@ -68,8 +71,14 @@ class Canvas:
     def draw_line(self, color: Color | tuple[int, int, int], start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
         return pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
+    def draw_lines(self, color: Color | tuple[int, int, int], closed: bool, points: Sequence[tuple[float, float]], width: int = 1):
+        return pygame.draw.lines(self.surface, color, closed, self.world_to_screen_points(points), width)
+
     def draw_polygon(self, color: Color | tuple[int, int, int], points: Sequence, width: int = 0):
         return pygame.draw.polygon(self.surface, color, self.world_to_screen_points(points), width)
+
+    def draw_rect(self, color: Color | tuple[int, int, int], rect: Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
+        return pygame.draw.rect(self.surface, color, self.world_to_screen_rect(rect), width, border_radius)
 
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))
@@ -97,7 +106,6 @@ class Canvas:
         self.surface.fill(color, rect, special_flags)
 
     def blit(self, source: Self | pygame.Surface, dest, area=None, special_flags=0):
-        # super().blit(source, self.world_to_screen_v2(dest), area, special_flags)
         if isinstance(source, Canvas):
             source = source.surface
         return self.surface.blit(source, self.world_to_screen_v2(dest), area, special_flags)

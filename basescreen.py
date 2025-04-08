@@ -109,7 +109,7 @@ class BaseScreen:
 
             canvas = self.tabs[self.active_tab]
             canvas.fill(self.tabs[self.active_tab].bg_color)
-            self.tabs[self.active_tab].draw(canvas)
+            canvas.draw()
 
             blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
 
