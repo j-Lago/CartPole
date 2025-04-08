@@ -43,8 +43,6 @@ class Canvas:
         self.bg_color: Color = bg_color
         self.draw_fun = draw_fun
         self.shortcut = shortcut
-
-        self.last_bias = self.bias
         self.ticks = 0
 
     def draw(self):
@@ -64,6 +62,12 @@ class Canvas:
 
     def get_rect(self):
         return self.surface.get_rect()
+
+    def get_width(self):
+        return self.surface.get_width()
+
+    def get_height(self):
+        return self.surface.get_height()
 
     def get_size(self):
         return self.surface.get_size()
@@ -95,6 +99,9 @@ class Canvas:
     def screen_to_world_v2(self, vec: Vector2 | tuple[float, float]) -> Vector2:
         return Vector2((vec[0] - self.bias[0]) / self.scale, (-vec[1] + self.bias[1]) / self.scale)  # todo: verificar
 
+    def screen_to_world_delta_v2(self, vec: Vector2 | tuple[float, float]) -> Vector2:
+        return Vector2(vec[0] / self.scale, -vec[1] / self.scale)
+
 
     def world_to_screen_points(self, points: Sequence) -> Sequence:
         return tuple(self.world_to_screen_v2(point) for point in points)
@@ -125,7 +132,7 @@ def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle:
     return tuple(rotate_around_v2(vec, angle, center) for vec in vecs)
 
 
-def resolution_map(dest: Canvas, source: Canvas, source_pos: Vector2 | tuple[int, int]) -> Vector2:
-    dw, dh = dest.get_size()
-    sw, sh = source.get_size()
-    return Vector2(round(source_pos[0] / sw * dw), round(source_pos[1] / sh * sw))
+# def resolution_map(dest: Canvas, source: Canvas, source_pos: Vector2 | tuple[int, int]) -> Vector2:
+#     dw, dh = dest.get_size()
+#     sw, sh = source.get_size()
+#     return Vector2(round(source_pos[0] / sw * dw), round(source_pos[1] / sh * sw))

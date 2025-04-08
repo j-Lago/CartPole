@@ -2,7 +2,7 @@ import pygame
 import sys
 from canvas import Canvas
 from mouse import Mouse
-
+from utils import remap
 
 class BaseScreen:
     def __init__(self, window_size: tuple[int, int] = (1600, 900),
@@ -66,6 +66,15 @@ class BaseScreen:
         self.tabs = dict()
         self.clock = pygame.time.Clock()
 
+    @property
+    def mouse_pos(self):
+        return self.mouse.pos
+
+    @property
+    def mouse_world_pos(self):
+        canvas = self.tabs[self.active_tab]
+        return canvas.screen_to_world_v2(remap(self.mouse.pos, self.window, canvas))
+
     def loop(self):
         while True:
             for event in pygame.event.get():
@@ -121,6 +130,7 @@ class BaseScreen:
                              f'canvas_res: {canvas.get_size()} px',
                              f'window_res: {self.window.get_size()} px',
                              f'mouse: {pygame.mouse.get_pos()} px',
+                             f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
                              f'global_scale: {self.tabs[self.active_tab].scale}',
                              f'global_bias: {self.tabs[self.active_tab].bias}',
                              *self.extra_info

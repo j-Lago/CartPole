@@ -44,6 +44,10 @@ class MouseButton:
         if self.drag_callback is not None:
             self.drag_callback(self)
 
+    def clear_drag_delta(self):
+        self.press_pos = self.drag_pos
+
+
     @property
     def drag_delta(self):
         return self.drag_pos[0]-self.press_pos[0], self.drag_pos[1]-self.press_pos[1]

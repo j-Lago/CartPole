@@ -3,7 +3,7 @@ from datetime import datetime
 from canvas import Canvas
 from inputs import Joystick, JOYBUTTON
 import math
-from canvas import rotate_vec2s, resolution_map
+from canvas import rotate_vec2s
 from random import random, randint, uniform, choice
 from particles import BallParticle, Particles, TextParticle
 from pygame import Vector2
@@ -14,7 +14,7 @@ from popup import PopUp
 import numpy as np
 from _collections import deque
 from itertools import islice
-
+from utils import remap
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -65,8 +65,7 @@ class Example(BaseScreen):
 
     def left_click(self, button: MouseButton):
         c = self.tabs[self.active_tab]
-        pos = resolution_map(self.tabs[self.active_tab], self.window, button.press_pos)
-        pos = self.tabs[self.active_tab].screen_to_world_v2(pos)
+        pos = self.mouse_world_pos
         print(f'{self.window.get_size()=} {c.get_size()} | {button.press_pos=}, {c.scale=}, {c.bias=} -> {pos=}')
         for _ in range(1000):
             vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
@@ -90,9 +89,15 @@ class Example(BaseScreen):
 
     def process_user_input_event(self, event):
         if self.mouse.right.dragging:
-            self.tabs[self.active_tab].bias = [int(self.mouse.right.drag_delta[0] + self.tabs[self.active_tab].last_bias[0]), int(self.mouse.right.drag_delta[1] + self.tabs[self.active_tab].last_bias[1])]
-        else:
-            self.tabs[self.active_tab].last_bias = self.tabs[self.active_tab].bias
+            self.tabs[self.active_tab].bias = (int(self.tabs[self.active_tab].bias[0] + self.mouse.right.drag_delta[0]), int(self.tabs[self.active_tab].bias[1] + self.mouse.right.drag_delta[1]))
+            self.mouse.right.clear_drag_delta()
+
+        if self.mouse.left.dragging and self.popup.collision(self.mouse_world_pos):
+            canvas = self.tabs[self.active_tab]
+            delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
+            # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
+            self.popup.pos = Vector2(self.popup.pos) + delta
+            self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
@@ -172,7 +177,7 @@ class Example(BaseScreen):
             self.popup_plot.clear()
 
         x = self.popup_t
-        y = self.popup_amp*math.sin(x*self.popup_freq) + uniform(-.1, 0.1)
+        y = self.popup_amp*math.sin(x*self.popup_freq) + 0.12*math.sin(x*self.popup_freq*2.7) + uniform(-.1, 0.1)
 
         start_index = max(0, len(self.popup_plot) - N)
 
@@ -182,17 +187,24 @@ class Example(BaseScreen):
             seq = [( ( (xx*xscale + (w-x*xscale)) % w + xbias) , yy) for xx, yy in islice(self.popup_plot, start_index, len(self.popup_plot))]
             seq = sorted(seq, key=lambda pair: pair[0])
 
-        print(len(seq))
         self.popup_plot.append((x, y))
 
 
         if len(seq)> 2:
             canvas.draw_lines(color_line, False, seq, width)
 
+        if self.popup.collision(self.mouse_world_pos):
+            color = (255, 255, 0)
+
         canvas.draw_rect(color, rect, width, 15)
 
 
     def draw_rocket(self, canvas):
+
+        self.extra_info = [
+
+        ]
+
         if self.steer is not None:
             self.steer.update()
             self.throttle.update()
