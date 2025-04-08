@@ -13,6 +13,8 @@ from mouse import MouseButton, MouseScroll, Mouse
 from popup import PopUp
 import numpy as np
 from _collections import deque
+from itertools import islice
+
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -33,11 +35,12 @@ class Example(BaseScreen):
         self.event_loop_callback = self.process_user_input_event
 
         self.popup = PopUp(self.tabs['rocket'], alpha=200, pos=(0.-1.4, 0.1), size=(500, 300), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
-        self.popup_plot = deque(maxlen=100)
+        self.popup_plot = deque(maxlen=400)
         self.popup_rolling = True
-        self.popup_freq = 2.0
+        self.popup_freq = 5
         self.popup_amp = 0.7
         self.popup_t = 0.0
+        self.popup_xscale = 1.0
 
 
         self.steer = None
@@ -105,6 +108,10 @@ class Example(BaseScreen):
                 self.popup_rolling = not self.popup_rolling
             elif event.key == pygame.K_v:
                 self.popup.visible = not self.popup.visible
+            elif event.key == pygame.K_KP_MULTIPLY:
+                self.popup_xscale *= 2
+            elif event.key == pygame.K_KP_DIVIDE:
+                self.popup_xscale /= 2
 
     def draw_main(self, canvas: Canvas):
         center = canvas.bias
@@ -140,8 +147,8 @@ class Example(BaseScreen):
         xmin, xmax = rect[0], rect[0] + rect[2]
         ymin, ymax = rect[1] - rect[3], rect[1]
         w = rect[2]
-        N = self.popup_plot.maxlen
-        xscale = (xmax - xmin) / N / self.fps
+        N = int(100 / self.popup_xscale)
+        xscale = (xmax - xmin) / 100 * self.fps * self.popup_xscale
         xbias = xmin
 
         color=(0, 255, 255)
@@ -156,24 +163,27 @@ class Example(BaseScreen):
         canvas.draw_line(color_grid, (0, ymin), (0, ymax), 1)
 
 
-        self.popup_freq += uniform(-0.02, 0.02)
-        self.popup_amp += uniform(-0.01, 0.01)
-        self.popup_t += self.fps
+        # self.popup_freq += uniform(-0.001, 0.001)
+        # self.popup_amp += uniform(-0.01, 0.01)
+        self.popup_t += 1/ self.fps
 
         n = (self.ticks % N)
         if n == 0 and not self.popup_rolling:
             self.popup_plot.clear()
-        x = self.popup_t * xscale
+
+        x = self.popup_t
         y = self.popup_amp*math.sin(x*self.popup_freq) + uniform(-.1, 0.1)
 
+        start_index = max(0, len(self.popup_plot) - N)
 
         if not self.popup_rolling:
-            seq = [(xx % w + xmin, yy) for xx, yy in self.popup_plot]
+            seq = [( ((xx*xscale % w) + xbias), yy) for xx, yy in islice(self.popup_plot, start_index, len(self.popup_plot))]
         else:
-            seq = [( ( (xx + (w-x)) % w + xmin) , yy) for xx, yy in self.popup_plot]
+            seq = [( ( (xx*xscale + (w-x*xscale)) % w + xbias) , yy) for xx, yy in islice(self.popup_plot, start_index, len(self.popup_plot))]
             seq = sorted(seq, key=lambda pair: pair[0])
-        self.popup_plot.append((x, y))
 
+        print(len(seq))
+        self.popup_plot.append((x, y))
 
 
         if len(seq)> 2:
