@@ -11,6 +11,8 @@ from lerp import lerp, lerp_vec2, lerp_vec3
 from basescreen import BaseScreen, render_and_blit_message
 from mouse import MouseButton, MouseScroll, Mouse
 from popup import PopUp
+import numpy as np
+from _collections import deque
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -30,7 +32,8 @@ class Example(BaseScreen):
         self.last_active_tab = self.active_tab
         self.event_loop_callback = self.process_user_input_event
 
-        self.popup = PopUp(self.tabs['rocket'], pos=(0.1, 0.1), size=(300, 200), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
+        self.popup = PopUp(self.tabs['rocket'], pos=(0.15, 0.1), size=(400, 250), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
+        self.popup_plot = deque(maxlen=100)
 
 
         self.steer = None
@@ -123,12 +126,33 @@ class Example(BaseScreen):
 
 
     def draw_popup(self, canvas):
+
+        rect = canvas.get_world_rect()
+        xmin, xmax = rect[0], rect[0] + rect[2]
+        ymin, ymax = rect[1] - rect[3], rect[1]
+        N = self.popup_plot.maxlen
+        xscale = (xmax - xmin) / N
+        xbias = xmin
+
         color=(0, 255, 0)
-        canvas.draw_rect(color, canvas.get_world_rect(), 1, 15)
-        canvas.draw_line(color, (-1.5, 0), (1.5, 0), 1)
-        canvas.draw_line(color, (0, -1.5), (0, 1.5), 1)
-        seq = ((0,0),(0.1,0.2),(0.2,0.5),(0.3, 0.8), (0.4, 0.6), (0.5, 0.3), (0.6, -0.4))
-        canvas.draw_lines(color, False, seq, 1)
+        color_bf = lerp_vec3(color, (30, 30, 30), 0.9)
+        color_grid = lerp_vec3(color, (30, 30, 30), 0.7)
+        # canvas.draw_rect(color_bf, rect, 0, 15)
+
+        canvas.draw_line(color_grid, (xmin, 0), (xmax, 0), 1)
+        canvas.draw_line(color_grid, (0, ymin), (0, ymax), 1)
+
+        n = (self.ticks % N)
+        if n == 0:
+            self.popup_plot.clear()
+        x = n * xscale + xbias
+        y = 0.7*math.sin(x*3.5) + uniform(-.1, 0.1)
+        self.popup_plot.append((x, y))
+        seq = self.popup_plot
+        if len(seq)> 2:
+            canvas.draw_lines(color, False, seq, 1)
+
+        canvas.draw_rect(color, rect, 1, 15)
 
 
     def draw_rocket(self, canvas):
