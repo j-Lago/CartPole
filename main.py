@@ -103,6 +103,8 @@ class Example(BaseScreen):
             elif event.key == pygame.K_r:
                 self.popup_plot.clear()
                 self.popup_rolling = not self.popup_rolling
+            elif event.key == pygame.K_v:
+                self.popup.visible = not self.popup.visible
 
     def draw_main(self, canvas: Canvas):
         center = canvas.bias

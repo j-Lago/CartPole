@@ -19,6 +19,7 @@ class Canvas:
                  shortcut: pygame.constants = None,
                  scale: float | None = None,
                  bias: Vector2 | tuple[float, float] | None = None,
+                 visible: bool = True,
                  ):
 
 
@@ -38,7 +39,7 @@ class Canvas:
             self.scale = 1.0
             self.bias = (0, 0)
 
-
+        self.visible = visible
         self.bg_color: Color = bg_color
         self.draw_fun = draw_fun
         self.shortcut = shortcut
@@ -48,7 +49,8 @@ class Canvas:
 
     def draw(self):
         self.fill(self.bg_color)
-        self.draw_fun(canvas=self)
+        if self.visible:
+            self.draw_fun(canvas=self)
 
     def copy(self):
         return copy(self)

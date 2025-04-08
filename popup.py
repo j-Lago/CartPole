@@ -8,6 +8,7 @@ class PopUp(Canvas):
         self.pos = pos
         self.set_alpha(alpha)
 
+
     def blit_to_main(self):
         dest = self.main_canvas
         dest.blit(self, self.pos)
