@@ -32,10 +32,10 @@ class Example(BaseScreen):
         self.last_active_tab = self.active_tab
         self.event_loop_callback = self.process_user_input_event
 
-        self.popup = PopUp(self.tabs['rocket'], alpha=200, pos=(0.-1.4, 0.1), size=(400, 250), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
-        self.popup_plot = deque(maxlen=200)
+        self.popup = PopUp(self.tabs['rocket'], alpha=200, pos=(0.-1.4, 0.1), size=(500, 300), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
+        self.popup_plot = deque(maxlen=100)
         self.popup_rolling = True
-        self.popup_freq = 4.0
+        self.popup_freq = 2.0
         self.popup_amp = 0.7
         self.popup_t = 0.0
 
@@ -49,7 +49,7 @@ class Example(BaseScreen):
             self.steer = Joystick(joystick, 2)
             self.throttle = Joystick(joystick, 4, normalization=lambda x: x)
 
-        self.particles = Particles(20000)
+        self.particles = Particles(500)
         self.text_particles = Particles(500)
         self.particles_fonts = [
             pygame.font.SysFont('Times', 28),
