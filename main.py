@@ -15,6 +15,7 @@ import numpy as np
 from _collections import deque
 from itertools import islice
 from utils import remap
+from scope import Scope
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -36,14 +37,11 @@ class Example(BaseScreen):
         self.last_active_tab = self.active_tab
         self.event_loop_callback = self.process_user_input_event
 
-        self.popup = PopUp(self.tabs['rocket'], alpha=200, pos=(0.-1.4, 0.1), size=(500, 300), flags=pygame.SRCALPHA, draw_fun=self.draw_popup)
-        self.popup_plot = deque(maxlen=400)
-        self.popup_rolling = True
-        self.popup_freq = 5
-        self.popup_amp = 0.7
-        self.popup_t = 0.0
-        self.popup_xscale = 1.0
-        self.popup_collision = False
+        self.scopes = {
+            'ch1': Scope(self.tabs['rocket'], alpha=200, color=(0, 255, 255), pos=(- 1.4, 0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], alpha=200, color=(255, 0, 255), pos=(0.4, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+        }
+
 
 
         self.steer = None
@@ -70,11 +68,7 @@ class Example(BaseScreen):
         pass
 
     def left_click(self, button: MouseButton):
-
-
-        c = self.tabs[self.active_tab]
         pos = self.mouse_world_pos
-        print(f'{self.window.get_size()=} {c.get_size()} | {button.press_pos=}, {c.scale=}, {c.bias=} -> {pos=}')
         for _ in range(1000):
             vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
             self.particles.append(BallParticle(self.tabs['rocket'],
@@ -103,31 +97,32 @@ class Example(BaseScreen):
             self.tabs[self.active_tab].bias = (int(self.tabs[self.active_tab].bias[0] + self.mouse.right.drag_delta[0]), int(self.tabs[self.active_tab].bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
-        if self.mouse.left.dragging and self.popup_collision:
-            canvas = self.tabs[self.active_tab]
-            delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
-            # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
-            self.popup.pos = Vector2(self.popup.pos) + delta
-            self.mouse.left.clear_drag_delta()
+        for scope in self.scopes.values():
+            if self.mouse.left.dragging and scope.focus:
+                canvas = self.tabs[self.active_tab]
+                delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
+                # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
+                scope.pos = Vector2(scope.pos) + delta
+                self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                self.popup.pos = (self.popup.pos[0]-.05, self.popup.pos[1])
+                pass
             elif event.key == pygame.K_RIGHT:
-                self.popup.pos = (self.popup.pos[0]+.05, self.popup.pos[1])
+                pass
             elif event.key == pygame.K_UP:
-                self.popup.pos = (self.popup.pos[0], self.popup.pos[1]+.05)
+                pass
             elif event.key == pygame.K_DOWN:
-                self.popup.pos = (self.popup.pos[0], self.popup.pos[1]-.05)
+                pass
             elif event.key == pygame.K_r:
-                self.popup_plot.clear()
-                self.popup_rolling = not self.popup_rolling
+                self.scopes.clear()
+                self.scopes.rolling = not self.scopes.rolling
             elif event.key == pygame.K_v:
-                self.popup.visible = not self.popup.visible
+                self.scopes.visible = not self.scopes.visible
             elif event.key == pygame.K_KP_MULTIPLY:
-                self.popup_xscale *= 2
+                self.scopes.x_scale *= 2
             elif event.key == pygame.K_KP_DIVIDE:
-                self.popup_xscale /= 2
+                self.scopes.x_scale /= 2
 
     def draw_main(self, canvas: Canvas):
         center = canvas.bias
@@ -157,65 +152,9 @@ class Example(BaseScreen):
         canvas.blit(prtsc, offset)
 
 
-    def draw_popup(self, canvas):
-
-        rect = canvas.get_world_rect()
-        xmin, xmax = rect[0], rect[0] + rect[2]
-        ymin, ymax = rect[1] - rect[3], rect[1]
-        w = rect[2]
-        N = int(100 / self.popup_xscale)
-        xscale = (xmax - xmin) / 100 * self.fps * self.popup_xscale
-        xbias = xmin
-
-        color=(0, 255, 255)
-        color_line = color
-        color_grid = lerp_vec3(color, (30, 30, 30), 0.7)
-        color_bf = lerp_vec3(color, (30, 30, 30), 0.9)
-        width=2
-
-        canvas.draw_rect(color_bf, rect, 0, 15)
-
-        canvas.draw_line(color_grid, (xmin, 0), (xmax, 0), 1)
-        canvas.draw_line(color_grid, (0, ymin), (0, ymax), 1)
-
-
-        # self.popup_freq += uniform(-0.001, 0.001)
-        # self.popup_amp += uniform(-0.01, 0.01)
-        self.popup_t += 1/ self.fps
-
-        n = (self.ticks % N)
-        if n == 0 and not self.popup_rolling:
-            self.popup_plot.clear()
-
-        x = self.popup_t
-        y = self.popup_amp*math.sin(x*self.popup_freq) + 0.12*math.sin(x*self.popup_freq*2.7) + uniform(-.1, 0.1)
-
-        start_index = max(0, len(self.popup_plot) - N)
-
-        if not self.popup_rolling:
-            seq = [( ((xx*xscale % w) + xbias), yy) for xx, yy in islice(self.popup_plot, start_index, len(self.popup_plot))]
-        else:
-            seq = [( ( (xx*xscale + (w-x*xscale)) % w + xbias) , yy) for xx, yy in islice(self.popup_plot, start_index, len(self.popup_plot))]
-            seq = sorted(seq, key=lambda pair: pair[0])
-
-        self.popup_plot.append((x, y))
-
-
-        if len(seq)> 2:
-            canvas.draw_lines(color_line, False, seq, width)
-
-        self.popup_collision = self.popup.collision(self.mouse_world_pos)
-        if self.popup_collision:
-            color = (255, 255, 0)
-
-        canvas.draw_rect(color, rect, width, 15)
-
-
     def draw_rocket(self, canvas):
 
         self.extra_info = [
-            f'------------------------',
-            f'{self.popup_collision=}',
         ]
 
         if self.steer is not None:
@@ -262,8 +201,27 @@ class Example(BaseScreen):
                                                dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
         self.particles.step_and_draw()
 
-        self.popup.draw()
-        self.popup.blit_to_main()
+        # --Scope-----------------------------
+        x = self.t
+        y = {
+            'ch1': 0.7 * math.sin(x * 5),
+            'ch2': 0.5 * math.sin(x * 3) + 0.2 * math.sin(x * 7),
+        }
+
+        any_on_focus = False
+
+        def another_in_focus(self_key):
+            for ikey, iscope in self.scopes.items():
+                if ikey != self_key and iscope.focus:
+                    return True
+            return False
+
+        for key, scope in self.scopes.items():
+            print(type(scope))
+            scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
+            scope.draw()
+            scope.append(x, y[key])
+            scope.blit_to_main()
 
 
 

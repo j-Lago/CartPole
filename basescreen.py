@@ -67,6 +67,10 @@ class BaseScreen:
         self.clock = pygame.time.Clock()
 
     @property
+    def t(self):
+        return self.ticks / self.fps
+
+    @property
     def mouse_pos(self):
         return self.mouse.pos
 
