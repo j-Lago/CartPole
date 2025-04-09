@@ -112,6 +112,7 @@ class BaseScreen:
                             if self.active_tab != tab_key:
                                 self.last_active_tab = self.active_tab
                                 self.active_tab = tab_key
+                                self.tabs[tab_key].got_focus()
 
                 if self.event_loop_callback is not None:
                     self.event_loop_callback(event)
@@ -189,17 +190,6 @@ def render_message(text, font, color):
     if len(color) == 4:
         text_surface.set_alpha(color[3])
     return text_surface
-
-
-def render_and_blit_message(canvas, text, font, color, relative_scale=1.0, **kwargs):
-    if len(kwargs) == 0:
-        kwargs['center'] = (canvas.get_width() // 2, canvas.get_height() // 2)
-    text_surface = render_message(text, font, color)
-    if relative_scale != 1:
-        text_surface = pygame.transform.smoothscale_by(text_surface, relative_scale)
-
-    text_rect = text_surface.get_rect(**kwargs)
-    canvas.blit(text_surface, text_rect)
 
 
 def draw_text_list(canvas, info_list, font, color, pos, vspace):

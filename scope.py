@@ -4,9 +4,11 @@ from _collections import deque
 from lerp import lerp_vec3
 import math
 from itertools import islice
+from utils import ColorsDiscIterator
+import colorsys
 
 class Scope(PopUp):
-    def __init__(self, *args, name: str = '', maxlen: int = 400, color=(255, 255, 255), line_colors=None, rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, **kwargs):
+    def __init__(self, *args, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.data = deque(maxlen=maxlen)
@@ -16,6 +18,7 @@ class Scope(PopUp):
         self.y_scale = y_scale
         self.color = color
         self.line_colors = line_colors
+        self.focus_color = focus_color
         self.focus = False
         self.draw_fun = self.default_draw
 
@@ -31,9 +34,9 @@ class Scope(PopUp):
             y = (y, )
         self.data.append((x, y))
 
-
     def clear(self):
         self.data.clear()
+        # print(f'{self.name} cleared')
 
 
     def default_draw(self, canvas: Canvas):
@@ -55,6 +58,9 @@ class Scope(PopUp):
         xbias = xmin
 
         color = self.color
+        ch, cs, cv = colorsys.rgb_to_hsv(color[0]/255, color[1]/255, color[2]/255)
+        if self.focus:
+            color = self.focus_color
 
         color_grid = lerp_vec3(color, (30, 30, 30), 0.7)
         color_bf = lerp_vec3(color, (30, 30, 30), 0.9)
@@ -83,7 +89,8 @@ class Scope(PopUp):
 
             if len(self.data) > 2:
                 for i in range(len(ys)):
-                    color_line = color if self.line_colors is None else self.line_colors[i]
+                    line_colors = self.line_colors if self.line_colors is not None else list(ColorsDiscIterator(len(ys), ch, cs, cv))
+                    color_line = line_colors[i]
 
                     data_slice = islice(self.data, max(0, len(self.data) - N), len(self.data) - 1)
                     if not self.rolling:
@@ -93,10 +100,9 @@ class Scope(PopUp):
                     seq = sorted(seq, key=lambda pair: pair[0])
 
                     canvas.draw_lines(color_line, False, seq, width)
-                    canvas.draw_circle(color_line, seq[-1], .035)
+                    # canvas.draw_circle(color_line, seq[-1], .035)
 
-        if self.focus:
-            color = (255, 255, 0)
+
 
         canvas.draw_rect(color, rect, width, 15)
 

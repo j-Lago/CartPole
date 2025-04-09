@@ -3,7 +3,7 @@ from pygame import Vector2, Rect, Vector3
 from typing import Sequence
 from pygame import Color
 from typing import Callable
-from copy import copy
+from copy import copy, deepcopy
 import math
 from copy import deepcopy
 from typing import Self
@@ -20,6 +20,7 @@ class Canvas:
                  scale: float | None = None,
                  bias: Vector2 | tuple[float, float] | None = None,
                  visible: bool = True,
+                 got_focus_callback: Callable = None
                  ):
 
 
@@ -40,10 +41,15 @@ class Canvas:
             self.bias = (0, 0)
 
         self.visible = visible
+        self.got_focus_callback = got_focus_callback
         self.bg_color: Color = bg_color
         self.draw_fun = draw_fun
         self.shortcut = shortcut
         self.ticks = 0
+
+    def got_focus(self):
+        if self.got_focus_callback is not None:
+            self.got_focus_callback(self)
 
     def draw(self):
         self.fill(self.bg_color)
@@ -51,7 +57,9 @@ class Canvas:
             self.draw_fun(canvas=self)
 
     def copy(self):
-        return copy(self)
+        ret = copy(self)
+        ret.surface = self.surface.copy()
+        return ret
 
     def set_alpha(self, value):
         self.surface.set_alpha(value)

@@ -8,14 +8,15 @@ from random import random, randint, uniform, choice
 from particles import BallParticle, Particles, TextParticle
 from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
-from basescreen import BaseScreen, render_and_blit_message
+from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
 from popup import PopUp
 import numpy as np
 from _collections import deque
 from itertools import islice
-from utils import remap
+from utils import remap, ColorsDiscIterator
 from scope import Scope
+
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -36,11 +37,16 @@ class Example(BaseScreen):
         self.active_tab = 'rocket'
         self.last_active_tab = self.active_tab
         self.event_loop_callback = self.process_user_input_event
+        self.tabs['rocket'].got_focus_callback = self.rocket_got_focus_callback
 
+        focus_color = (255, 255, 0)
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], name='ch1', alpha=200, color=(0, 255, 255), pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='ch2', alpha=200, color=(0, 255, 255), line_colors=[(255, 127, 0), (255, 0, 127), (90, 255, 127)], pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch1': Scope(self.tabs['rocket'], name='ch1', alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='ch2', alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
         }
+
+        self.hue_ncols_exemple = 10
+        self.hue_shift_exemple = 0
 
 
 
@@ -111,9 +117,10 @@ class Example(BaseScreen):
             elif event.key == pygame.K_RIGHT:
                 pass
             elif event.key == pygame.K_UP:
-                pass
+                self.hue_ncols_exemple += 1
             elif event.key == pygame.K_DOWN:
-                pass
+                if self.hue_ncols_exemple > 2:
+                    self.hue_ncols_exemple -= 1
             elif event.key == pygame.K_r:
                 self.scopes['ch1'].clear()
                 self.scopes['ch1'].rolling = not self.scopes['ch1'].rolling
@@ -135,6 +142,8 @@ class Example(BaseScreen):
                 self.scopes['ch2'].x_scale /= 2
 
     def draw_main(self, canvas: Canvas):
+
+
         center = canvas.bias
         width = 1
         M = 10
@@ -152,14 +161,24 @@ class Example(BaseScreen):
         canvas.draw_circle((0, 0, 255), (+1, +1), radius)
         canvas.draw_circle((255, 255, 0), (+1, -1), radius)
 
-        render_and_blit_message(canvas, datetime.now().strftime("%H:%M:%S"), self.fonts['default'],
-                                (240, 240, 180, 128), relative_scale=self.tabs[self.active_tab].relative_scale, center=center)
+        self.hue_shift_exemple += 3 / 360
+        d = .5
+        r = radius
+        cols_iter = ColorsDiscIterator(self.hue_ncols_exemple, self.hue_shift_exemple, 1.0, 0.9)
+        for i, col in enumerate(cols_iter):
+            ang = i * 2 * math.pi / len(cols_iter)
+            canvas.draw_circle(col, (d * math.cos(ang), d * math.sin(ang)), r)
 
     def draw_menu(self, canvas):
         prtsc = self.tabs[self.last_active_tab].copy()
         prtsc.set_alpha(128)
         offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
         canvas.blit(prtsc, offset)
+
+
+    def rocket_got_focus_callback(self, canvas: Canvas):
+        for key, scope in self.scopes.items():
+            scope.clear()
 
 
     def draw_rocket(self, canvas):
@@ -214,8 +233,8 @@ class Example(BaseScreen):
         # --Scope-----------------------------
         x = self.t
         y = {
-            'ch1': 0.7 * math.sin(x * 5),
-            'ch2': (0.5 * math.sin(x * 3) + 0.2 * math.sin(x * 7), 0.7 * math.sin(x * 5) + 0.1 * math.sin(x * 8), 0.9*math.cos(x * 1.78) + uniform(-0.05, 0.05)),
+            'ch1': 0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
+            'ch2': (0.5 * math.sin(x * 3) + 0.2 * math.sin(x * 6.8)+ uniform(-0.05, 0.05), 0.7 * math.sin(x * 5.3) + 0.1 * math.sin(x * 8) + uniform(-0.05, 0.05)),
         }
 
         any_on_focus = False
