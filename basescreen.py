@@ -131,6 +131,7 @@ class BaseScreen:
                              f'window_res: {self.window.get_size()} px',
                              f'mouse: {pygame.mouse.get_pos()} px',
                              f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
+                             f'global_relative_scale: {self.tabs[self.active_tab].relative_scale}',
                              f'global_scale: {self.tabs[self.active_tab].scale}',
                              f'global_bias: {self.tabs[self.active_tab].bias}',
                              *self.extra_info

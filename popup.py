@@ -12,7 +12,7 @@ class PopUp(Canvas):
 
     def collision(self, pos) -> bool:
         _, _, w, h = self.get_rect()
-        return collision_point_rect(pos, (self.pos[0], self.pos[1], w/self.main_canvas.scale, h/self.main_canvas.scale))
+        return collision_point_rect(pos, (self.pos[0], self.pos[1], w*self.main_canvas.relative_scale/self.main_canvas.scale, h*self.main_canvas.relative_scale/self.main_canvas.scale))
 
     def blit_to_main(self):
         dest = self.main_canvas
