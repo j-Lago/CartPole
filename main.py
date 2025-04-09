@@ -24,6 +24,7 @@ class Example(BaseScreen):
         self.mouse.right.press_callback = self.right_click
         self.mouse.scroll.up_callback = self.scroll_up
         self.mouse.scroll.down_callback = self.scroll_down
+        self.left_drag_qualifier = False
 
         self.tabs = {
             'rocket': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
@@ -92,7 +93,12 @@ class Example(BaseScreen):
             self.tabs[self.active_tab].bias = (int(self.tabs[self.active_tab].bias[0] + self.mouse.right.drag_delta[0]), int(self.tabs[self.active_tab].bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
-        if self.mouse.left.dragging and self.popup.collision(self.mouse_world_pos):
+        if self.popup.collision(self.mouse_world_pos):
+            self.left_drag_qualifier = True
+        if not self.mouse.left.pressed:
+            self.left_drag_qualifier = True
+
+        if self.mouse.left.dragging and self.mouse.left.pressed:
             canvas = self.tabs[self.active_tab]
             delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
             # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
