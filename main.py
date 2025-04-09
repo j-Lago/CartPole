@@ -21,10 +21,11 @@ class Example(BaseScreen):
         super().__init__(*args, **kwargs)
 
         self.mouse.left.press_callback = self.left_click
+        self.mouse.left.release_callback = self.left_release
         self.mouse.right.press_callback = self.right_click
+        self.mouse.right.release_callback = self.right_release
         self.mouse.scroll.up_callback = self.scroll_up
         self.mouse.scroll.down_callback = self.scroll_down
-        self.left_drag_qualifier = False
 
         self.tabs = {
             'rocket': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
@@ -42,6 +43,7 @@ class Example(BaseScreen):
         self.popup_amp = 0.7
         self.popup_t = 0.0
         self.popup_xscale = 1.0
+        self.popup_collision = False
 
 
         self.steer = None
@@ -64,7 +66,12 @@ class Example(BaseScreen):
 
         self.loop()
 
+    def left_release(self, button: MouseButton):
+        pass
+
     def left_click(self, button: MouseButton):
+
+
         c = self.tabs[self.active_tab]
         pos = self.mouse_world_pos
         print(f'{self.window.get_size()=} {c.get_size()} | {button.press_pos=}, {c.scale=}, {c.bias=} -> {pos=}')
@@ -80,6 +87,9 @@ class Example(BaseScreen):
     def right_click(self, button: MouseButton):
         pass
 
+    def right_release(self, button: MouseButton):
+        pass
+
     def scroll_up(self, scroll: MouseScroll):
         if scroll.up_keys[pygame.K_LCTRL]:
             self.tabs[self.active_tab].scale /= 1.1
@@ -89,16 +99,11 @@ class Example(BaseScreen):
             self.tabs[self.active_tab].scale *= 1.1
 
     def process_user_input_event(self, event):
-        if self.mouse.right.dragging:
+        if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
             self.tabs[self.active_tab].bias = (int(self.tabs[self.active_tab].bias[0] + self.mouse.right.drag_delta[0]), int(self.tabs[self.active_tab].bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
-        if self.popup.collision(self.mouse_world_pos):
-            self.left_drag_qualifier = True
-        if not self.mouse.left.pressed:
-            self.left_drag_qualifier = True
-
-        if self.mouse.left.dragging and self.mouse.left.pressed:
+        if self.mouse.left.dragging and self.popup_collision:
             canvas = self.tabs[self.active_tab]
             delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
             # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
@@ -199,7 +204,8 @@ class Example(BaseScreen):
         if len(seq)> 2:
             canvas.draw_lines(color_line, False, seq, width)
 
-        if self.popup.collision(self.mouse_world_pos):
+        self.popup_collision = self.popup.collision(self.mouse_world_pos)
+        if self.popup_collision:
             color = (255, 255, 0)
 
         canvas.draw_rect(color, rect, width, 15)
@@ -208,7 +214,8 @@ class Example(BaseScreen):
     def draw_rocket(self, canvas):
 
         self.extra_info = [
-
+            f'------------------------',
+            f'{self.popup_collision=}',
         ]
 
         if self.steer is not None:
