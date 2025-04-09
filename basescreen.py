@@ -13,7 +13,7 @@ class BaseScreen:
                  fps: float = 60.0,
                  antialiasing: bool = True,
                  fullscreen: bool = False,
-                 flags: int = pygame.RESIZABLE
+                 flags: int = pygame.RESIZABLE | pygame.HWSURFACE
                  ):
         """
         Inicializa uma janela pygame.
@@ -42,8 +42,8 @@ class BaseScreen:
         self.canvas_size = canvas_size
         self.fps = fps
 
-        self.mm_fps = MediaMovel(60)
-        self.mm_frame_time = MediaMovel(60)
+        self.mm_fps = MediaMovel(20)
+        self.mm_frame_time = MediaMovel(20)
 
         self.ticks = 0
         self.extra_info = []

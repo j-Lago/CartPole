@@ -25,9 +25,9 @@ class Example(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.tabs = {
-            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(30, 45, 30), draw_fun =self.draw_main, shortcut=pygame.K_F2),
-            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
+            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), draw_fun =self.draw_main, shortcut=pygame.K_F2),
+            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
         }
         self.active_tab = 'rocket'
         self.last_active_tab = self.active_tab
@@ -35,9 +35,10 @@ class Example(BaseScreen):
         self.tabs['rocket'].got_focus_callback = self.rocket_got_focus_callback
 
         focus_color = (255, 255, 0)
+        flags = pygame.HWSURFACE   #pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], name='ch1', fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='ch2', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch1': Scope(self.tabs['rocket'], name='ch1', fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=flags, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='ch2', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=flags, maxlen=400),
         }
 
         self.hue_ncols_exemple = 10
