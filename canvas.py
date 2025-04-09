@@ -16,6 +16,7 @@ class Canvas:
                  surface: pygame.Surface | None = None,
                  bg_color: Color | tuple[int, int, int] = (0, 0, 0, 0),
                  draw_fun: Callable = None,
+                 fonts: dict | None = None,
                  shortcut: pygame.constants = None,
                  scale: float | None = None,
                  bias: Vector2 | tuple[float, float] | None = None,
@@ -40,6 +41,7 @@ class Canvas:
             self.scale = 1.0
             self.bias = (0, 0)
 
+        self.fonts = fonts
         self.visible = visible
         self.got_focus_callback = got_focus_callback
         self.bg_color: Color = bg_color
@@ -115,6 +117,8 @@ class Canvas:
             case 'bottomright': text_rect.bottomright = pos
             case 'midbottom'  : text_rect.midbottom = pos
             case 'midtop'     : text_rect.midtop = pos
+            case 'midleft'    : text_rect.midleft = pos
+            case 'midright'   : text_rect.midright = pos
             case _: ValueError(f"Anchor '{anchor}' não suportado.")
 
         self.blit(rendered_text, self.screen_to_world_rect(text_rect))

@@ -13,7 +13,7 @@ class Scope(PopUp):
 
         self.fps = fps
         self.data = deque(maxlen=maxlen)
-        self.name = name
+        self.title = name
         self.rolling = rolling
         self.x_scale = x_scale
         self.y_scale = y_scale
@@ -108,6 +108,8 @@ class Scope(PopUp):
 
                     canvas.draw_lines(color_line, False, seq, width)
                     # canvas.draw_circle(color_line, seq[-1], .045)
+
+        canvas.draw_text(color=color, font=self.main_canvas.fonts['small'], text=self.title, pos=(0, 1), anchor='midtop')
 
 
 

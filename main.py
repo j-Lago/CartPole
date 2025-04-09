@@ -25,9 +25,9 @@ class Example(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.tabs = {
-            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), draw_fun =self.draw_color_wheel, shortcut=pygame.K_F2),
-            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
+            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_F2),
+            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_F3)
         }
         self.active_tab = 'rocket'
         self.last_active_tab = self.active_tab
@@ -37,15 +37,15 @@ class Example(BaseScreen):
         focus_color = (255, 255, 0)
         flags = pygame.HWSURFACE   #pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], name='ch1', fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=flags, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='ch2', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=flags, maxlen=400),
+            'ch1': Scope(self.tabs['rocket'], name='frame time', fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='inputs', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
         self.hue_shift_exemple = 0
         self.hue_radius_exemple = 0.55
 
-        self.particle_en = False
+        self.particle_en = True
 
 
 
@@ -160,7 +160,7 @@ class Example(BaseScreen):
             ang = i * 2 * math.pi / len(cols_iter)
             canvas.draw_circle(col, (self.hue_radius_exemple * math.cos(ang), self.hue_radius_exemple * math.sin(ang)), r)
 
-        canvas.draw_text(color=(255, 255, 255), font=self.fonts['default'], text='Use as setas!', pos=(0, 0))
+        canvas.draw_text(color=(255, 255, 255), font=self.fonts['default'], text='Use as setas!', pos=(0, 0), anchor='center')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, +1', pos=(-1, +1), anchor='midtop')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, +1', pos=(+1, +1), anchor='midtop')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
@@ -231,7 +231,7 @@ class Example(BaseScreen):
         # --Scope-----------------------------
         x = self.t
         y = {
-            'ch1': (self.mm_frame_time.value * self.fps * 0.9 - 0.9, self.last_active_frame_time * self.fps * 0.9 - 0.9),
+            'ch1': self.last_active_frame_time * self.fps - 1, #(self.mm_frame_time.value * self.fps - 1, self.last_active_frame_time * self.fps - 1),
             'ch2': (throttle, angle),
         }
 
