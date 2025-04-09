@@ -38,8 +38,8 @@ class Example(BaseScreen):
         self.event_loop_callback = self.process_user_input_event
 
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], alpha=200, color=(0, 255, 255), pos=(- 1.4, 0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], alpha=200, color=(255, 0, 255), pos=(0.4, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch1': Scope(self.tabs['rocket'], name='ch1', alpha=200, color=(0, 255, 255), pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='ch2', alpha=200, color=(0, 255, 255), line_colors=[(255, 127, 0), (255, 0, 127), (90, 255, 127)], pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
         }
 
 
@@ -115,14 +115,24 @@ class Example(BaseScreen):
             elif event.key == pygame.K_DOWN:
                 pass
             elif event.key == pygame.K_r:
-                self.scopes.clear()
-                self.scopes.rolling = not self.scopes.rolling
+                self.scopes['ch1'].clear()
+                self.scopes['ch1'].rolling = not self.scopes['ch1'].rolling
             elif event.key == pygame.K_v:
-                self.scopes.visible = not self.scopes.visible
+                self.scopes['ch1'].visible = not self.scopes['ch1'].visible
             elif event.key == pygame.K_KP_MULTIPLY:
-                self.scopes.x_scale *= 2
+                self.scopes['ch1'].x_scale *= 2
             elif event.key == pygame.K_KP_DIVIDE:
-                self.scopes.x_scale /= 2
+                self.scopes['ch1'].x_scale /= 2
+
+            elif event.key == pygame.K_t:
+                self.scopes['ch2'].clear()
+                self.scopes['ch2'].rolling = not self.scopes['ch2'].rolling
+            elif event.key == pygame.K_b:
+                self.scopes['ch2'].visible = not self.scopes['ch2'].visible
+            elif event.key == pygame.K_KP_PLUS:
+                self.scopes['ch2'].x_scale *= 2
+            elif event.key == pygame.K_KP_MINUS:
+                self.scopes['ch2'].x_scale /= 2
 
     def draw_main(self, canvas: Canvas):
         center = canvas.bias
@@ -205,7 +215,7 @@ class Example(BaseScreen):
         x = self.t
         y = {
             'ch1': 0.7 * math.sin(x * 5),
-            'ch2': 0.5 * math.sin(x * 3) + 0.2 * math.sin(x * 7),
+            'ch2': (0.5 * math.sin(x * 3) + 0.2 * math.sin(x * 7), 0.7 * math.sin(x * 5) + 0.1 * math.sin(x * 8), 0.9*math.cos(x * 1.78) + uniform(-0.05, 0.05)),
         }
 
         any_on_focus = False
@@ -217,10 +227,13 @@ class Example(BaseScreen):
             return False
 
         for key, scope in self.scopes.items():
-            print(type(scope))
+
+
+            # print(key, x, y[key])
+            scope.append(x, y[key])
+
             scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
             scope.draw()
-            scope.append(x, y[key])
             scope.blit_to_main()
 
 
