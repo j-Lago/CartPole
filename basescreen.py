@@ -13,7 +13,7 @@ class BaseScreen:
                  fps: float = 60.0,
                  antialiasing: bool = True,
                  fullscreen: bool = False,
-                 flags: int = pygame.RESIZABLE | pygame.HWSURFACE
+                 flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
                  ):
         """
         Inicializa uma janela pygame.
@@ -71,8 +71,9 @@ class BaseScreen:
         }
 
         self.fonts = {
-            'info': pygame.font.SysFont('Consolas', 26),
-            'default': pygame.font.SysFont('Courier New', 200),
+            'info': pygame.font.SysFont('Consolas', 22),
+            'small': pygame.font.SysFont('Courier New', 28),
+            'default': pygame.font.SysFont('Courier New', 72),
         }
 
         self.tabs = dict()

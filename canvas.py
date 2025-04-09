@@ -86,14 +86,38 @@ class Canvas:
     def draw_line(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
         return pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
+    def draw_aaline(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
+        return pygame.draw.aaline(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
+
     def draw_lines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Sequence[tuple[float, float]], width: int = 1):
         return pygame.draw.lines(self.surface, color, closed, self.world_to_screen_points(points), width)
+
+    def draw_aalines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Sequence[tuple[float, float]], width: int = 1):
+        return pygame.draw.aalines(self.surface, color, closed, self.world_to_screen_points(points), width)
 
     def draw_polygon(self, color: Color | tuple[int, int, int] | Vector3, points: Sequence, width: int = 0):
         return pygame.draw.polygon(self.surface, color, self.world_to_screen_points(points), width)
 
     def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
         return pygame.draw.rect(self.surface, color, self.world_to_screen_rect(rect), width, border_radius)
+
+    def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center'):
+        rendered_text = font.render(text, True, color)
+        text_rect = rendered_text.get_rect()
+
+        pos = self.world_to_screen_v2(pos)
+
+        match anchor:
+            case 'center'     : text_rect.center = pos
+            case 'topleft'    : text_rect.topleft = pos
+            case 'topright'   : text_rect.topright = pos
+            case 'bottomleft' : text_rect.bottomleft = pos
+            case 'bottomright': text_rect.bottomright = pos
+            case 'midbottom'  : text_rect.midbottom = pos
+            case 'midtop'     : text_rect.midtop = pos
+            case _: ValueError(f"Anchor '{anchor}' não suportado.")
+
+        self.blit(rendered_text, self.screen_to_world_rect(text_rect))
 
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))

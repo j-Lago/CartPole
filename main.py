@@ -26,7 +26,7 @@ class Example(BaseScreen):
 
         self.tabs = {
             'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), draw_fun =self.draw_main, shortcut=pygame.K_F2),
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), draw_fun =self.draw_color_wheel, shortcut=pygame.K_F2),
             'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), draw_fun=self.draw_menu, shortcut=pygame.K_F3)
         }
         self.active_tab = 'rocket'
@@ -41,8 +41,9 @@ class Example(BaseScreen):
             'ch2': Scope(self.tabs['rocket'], name='ch2', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=flags, maxlen=400),
         }
 
-        self.hue_ncols_exemple = 10
+        self.hue_ncols_exemple = 20
         self.hue_shift_exemple = 0
+        self.hue_radius_exemple = 0.55
 
         self.particle_en = False
 
@@ -104,9 +105,9 @@ class Example(BaseScreen):
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                pass
+                self.hue_radius_exemple -= 0.05
             elif event.key == pygame.K_RIGHT:
-                pass
+                self.hue_radius_exemple += 0.05
             elif event.key == pygame.K_UP:
                 self.hue_ncols_exemple += 1
             elif event.key == pygame.K_DOWN:
@@ -135,7 +136,7 @@ class Example(BaseScreen):
             elif event.key == pygame.K_g:
                 self.particle_en = not self.particle_en
 
-    def draw_main(self, canvas: Canvas):
+    def draw_color_wheel(self, canvas: Canvas):
         width = 1
         M = 10
         grid_color = (100, 100, 100)
@@ -144,7 +145,7 @@ class Example(BaseScreen):
         for m in range(2 * M + 1):
             canvas.draw_line(grid_color, (-2, -1 + m / M), (2, -1 + m / M), width=width)
 
-        radius = 0.1
+        radius = 0.12
         for n in range(11):
             canvas.draw_circle((180, 255, 180), (+0, +0), radius * n, width=1)
         canvas.draw_circle((255, 0, 0), (-1, -1), radius)
@@ -153,12 +154,17 @@ class Example(BaseScreen):
         canvas.draw_circle((255, 255, 0), (+1, -1), radius)
 
         self.hue_shift_exemple += 3 / 360
-        d = .5
         r = radius
         cols_iter = ColorsDiscIterator(self.hue_ncols_exemple, self.hue_shift_exemple, 1.0, 0.9)
         for i, col in enumerate(cols_iter):
             ang = i * 2 * math.pi / len(cols_iter)
-            canvas.draw_circle(col, (d * math.cos(ang), d * math.sin(ang)), r)
+            canvas.draw_circle(col, (self.hue_radius_exemple * math.cos(ang), self.hue_radius_exemple * math.sin(ang)), r)
+
+        canvas.draw_text(color=(255, 255, 255), font=self.fonts['default'], text='Use as setas!', pos=(0, 0))
+        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, +1', pos=(-1, +1), anchor='midtop')
+        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, +1', pos=(+1, +1), anchor='midtop')
+        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
+        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, -1', pos=(+1, -1), anchor='midbottom')
 
     def draw_menu(self, canvas):
         prtsc = self.tabs[self.last_active_tab].copy()

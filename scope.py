@@ -107,7 +107,7 @@ class Scope(PopUp):
                     seq = sorted(seq, key=lambda pair: pair[0])
 
                     canvas.draw_lines(color_line, False, seq, width)
-                    # canvas.draw_circle(color_line, seq[-1], .035)
+                    # canvas.draw_circle(color_line, seq[-1], .045)
 
 
 
