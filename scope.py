@@ -92,10 +92,12 @@ class Scope(PopUp):
             if xx < xx0 and not self.rolling:
                 self.clear()
 
+            if self.line_colors is None:
+                self.line_colors = list(ColorsDiscIterator(len(ys), ch, cs, cv))
+
             if len(self.data) > 2:
                 for i in range(len(ys)):
-                    line_colors = self.line_colors if self.line_colors is not None else list(ColorsDiscIterator(len(ys), ch, cs, cv))
-                    color_line = line_colors[i]
+                    color_line = self.line_colors[i]
 
                     data_slice = islice(self.data, max(0, len(self.data) - N), len(self.data) - 1)
                     if not self.rolling:

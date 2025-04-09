@@ -43,6 +43,8 @@ class Example(BaseScreen):
         self.hue_ncols_exemple = 10
         self.hue_shift_exemple = 0
 
+        self.particle_en = False
+
 
 
         self.steer = None
@@ -55,7 +57,7 @@ class Example(BaseScreen):
             self.throttle = Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
 
         self.particles = Particles(400)
-        self.text_particles = Particles(350)
+        self.text_particles = Particles(300)
         self.particles_fonts = [
             pygame.font.SysFont('Times', 28),
             pygame.font.SysFont('Times', 34),
@@ -129,10 +131,10 @@ class Example(BaseScreen):
             elif event.key == pygame.K_KP_MINUS:
                 self.scopes['ch2'].x_scale /= 2
 
+            elif event.key == pygame.K_g:
+                self.particle_en = not self.particle_en
+
     def draw_main(self, canvas: Canvas):
-
-
-        center = canvas.bias
         width = 1
         M = 10
         grid_color = (100, 100, 100)
@@ -183,8 +185,8 @@ class Example(BaseScreen):
             angle = 0.0
             throttle = self.throttle_min
 
-        if self.ticks % 2 == 0:
-            for _ in range(int(11*60/self.fps)):
+        if self.particle_en:
+            for _ in range(int(5*60/self.fps)):
                 self.text_particles.append(
                     TextParticle(canvas,
                                  color=lerp_vec3((90, 250, 90), (30, 90, 30), random()),
@@ -201,15 +203,16 @@ class Example(BaseScreen):
 
         # c, s = math.cos(angle), math.sin(angle)
 
-        for _ in range(int(randint(round(15 * throttle), round(30 * throttle)) * 60/self.fps)):
-            vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
-            self.particles.append(BallParticle(canvas,
-                                               lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),(255, 255, 255), random() * 0.5),
-                                               uniform(.003, .006),
-                                               pos=lerp_vec2(emmit_l, emmit_r, random()),
-                                               vel=vel.rotate_rad(angle),
-                                               dt=1 / self.fps, lifetime=uniform(.2, .4), g=0))
-        self.particles.step_and_draw()
+        if self.particle_en:
+            for _ in range(int(randint(round(15 * throttle), round(30 * throttle)) * 60/self.fps)):
+                vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
+                self.particles.append(BallParticle(canvas,
+                                                   lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),(255, 255, 255), random() * 0.5),
+                                                   uniform(.003, .006),
+                                                   pos=lerp_vec2(emmit_l, emmit_r, random()),
+                                                   vel=vel.rotate_rad(angle),
+                                                   dt=1 / self.fps, lifetime=uniform(.2, .4), g=0))
+            self.particles.step_and_draw()
 
         canvas.draw_polygon((90, 90, 100), rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
         canvas.draw_polygon((120, 120, 130),
@@ -221,7 +224,7 @@ class Example(BaseScreen):
         # --Scope-----------------------------
         x = self.t
         y = {
-            'ch1': self.last_frame_time / 100 * 1.8 - 0.9,   #0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
+            'ch1': (self.mm_frame_time.value * self.fps * 0.9 - 0.9, self.last_active_frame_time * self.fps * 0.9 - 0.9),
             'ch2': (throttle, angle),
         }
 
