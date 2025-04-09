@@ -42,7 +42,7 @@ class Example(BaseScreen):
         focus_color = (255, 255, 0)
         self.scopes = {
             'ch1': Scope(self.tabs['rocket'], name='ch1', alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='ch2', alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='ch2', alpha=200, color=(55, 255, 200), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
         }
 
         self.hue_ncols_exemple = 10
@@ -234,7 +234,7 @@ class Example(BaseScreen):
         x = self.t
         y = {
             'ch1': 0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
-            'ch2': (0.5 * math.sin(x * 3) + 0.2 * math.sin(x * 6.8)+ uniform(-0.05, 0.05), 0.7 * math.sin(x * 5.3) + 0.1 * math.sin(x * 8) + uniform(-0.05, 0.05)),
+            'ch2': (throttle, angle),
         }
 
         any_on_focus = False

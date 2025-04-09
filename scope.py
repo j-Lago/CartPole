@@ -54,7 +54,6 @@ class Scope(PopUp):
         # m_ymin, m_ymax = m_rect[1] - m_rect[3], m_rect[1]
 
         xscale = (xmax - xmin) / L * 60 * self.x_scale
-        yscale = (ymax - ymin) / 2  *  self.y_scale
         xbias = xmin
 
         color = self.color
@@ -84,6 +83,11 @@ class Scope(PopUp):
             xx = remap_x(x, xscale, xbias, w)
             xx0 = remap_x(x0, xscale, xbias, w)
 
+            y_scales = self.y_scale
+            if isinstance(y_scales, float | int):
+                y_scales = (y_scales,)*len(ys)
+            y_scales = tuple((ymax - ymin) / 2  * ys  for ys in y_scales)
+
             if xx < xx0 and not self.rolling:
                 self.clear()
 
@@ -94,9 +98,9 @@ class Scope(PopUp):
 
                     data_slice = islice(self.data, max(0, len(self.data) - N), len(self.data) - 1)
                     if not self.rolling:
-                        seq = [(remap_x(xx, xscale, xbias, w), yy[i] * yscale) for xx, yy in data_slice]
+                        seq = [(remap_x(xx, xscale, xbias, w), yy[i] * y_scales[i]) for xx, yy in data_slice]
                     else:
-                        seq = [(remap_x(xx, xscale, xbias, w, shift= w - x * xscale), yy[i] * yscale) for xx, yy in data_slice]
+                        seq = [(remap_x(xx, xscale, xbias, w, shift= w - x * xscale), yy[i] * y_scales[i]) for xx, yy in data_slice]
                     seq = sorted(seq, key=lambda pair: pair[0])
 
                     canvas.draw_lines(color_line, False, seq, width)
