@@ -29,6 +29,8 @@ class BaseScreen:
         :param antialiasing: define se será ou não aplicado antialiasing no redimensionamento da janela. Não tem efeito se window_size == canvas_size
         :param fullscreen: inicia no modo fullscreen
         """
+        pygame.init()
+
         self._flags = flags
         self.fullscreen = fullscreen
         self.antialiasing = antialiasing
@@ -46,7 +48,7 @@ class BaseScreen:
 
         self.mouse = Mouse()
 
-        pygame.init()
+
 
         if self.fullscreen:
             self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))

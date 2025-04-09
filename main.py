@@ -16,6 +16,7 @@ from _collections import deque
 from itertools import islice
 from utils import remap, ColorsDiscIterator
 from scope import Scope
+import psutil
 
 
 class Example(BaseScreen):
@@ -176,7 +177,10 @@ class Example(BaseScreen):
 
     def draw_rocket(self, canvas):
 
+        cpu_usage = max(psutil.cpu_percent(percpu=True))
+
         self.extra_info = [
+            f'cpu_usage: {cpu_usage:.1f} %',
         ]
 
         if self.steer is not None:
@@ -226,7 +230,7 @@ class Example(BaseScreen):
         # --Scope-----------------------------
         x = self.t
         y = {
-            'ch1': 0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
+            'ch1': cpu_usage / 100 * 1.8 - 0.9,   #0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
             'ch2': (throttle, angle),
         }
 
@@ -251,4 +255,4 @@ class Example(BaseScreen):
 
 
 if __name__ == '__main__':
-    Example(fps=60)
+    Example(fps=30)
