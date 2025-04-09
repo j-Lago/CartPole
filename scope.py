@@ -8,9 +8,10 @@ from utils import ColorsDiscIterator
 import colorsys
 
 class Scope(PopUp):
-    def __init__(self, *args, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, **kwargs):
+    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.fps = fps
         self.data = deque(maxlen=maxlen)
         self.name = name
         self.rolling = rolling
@@ -53,7 +54,7 @@ class Scope(PopUp):
         # m_xmin, m_xmax = m_rect[0], m_rect[0] + m_rect[2]
         # m_ymin, m_ymax = m_rect[1] - m_rect[3], m_rect[1]
 
-        xscale = (xmax - xmin) / L * 60 * self.x_scale
+        xscale = (xmax - xmin) / L * self.fps * self.x_scale
         xbias = xmin
 
         color = self.color

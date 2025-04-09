@@ -41,8 +41,8 @@ class Example(BaseScreen):
 
         focus_color = (255, 255, 0)
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], name='ch1', alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='ch2', alpha=200, color=(55, 255, 200), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch1': Scope(self.tabs['rocket'], name='ch1', fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='ch2', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(500, 300), flags=pygame.SRCALPHA, maxlen=400),
         }
 
         self.hue_ncols_exemple = 10
@@ -57,10 +57,10 @@ class Example(BaseScreen):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
             self.steer = Joystick(joystick, 2)
-            self.throttle = Joystick(joystick, 4, normalization=lambda x: x)
+            self.throttle = Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
 
-        self.particles = Particles(500)
-        self.text_particles = Particles(500)
+        self.particles = Particles(400)
+        self.text_particles = Particles(350)
         self.particles_fonts = [
             pygame.font.SysFont('Times', 28),
             pygame.font.SysFont('Times', 34),
@@ -75,14 +75,7 @@ class Example(BaseScreen):
 
     def left_click(self, button: MouseButton):
         pos = self.mouse_world_pos
-        for _ in range(1000):
-            vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
-            self.particles.append(BallParticle(self.tabs['rocket'],
-                                               lerp_vec3(lerp_vec3((0, 60, 255), (60, 200, 200), random()),(255, 255, 255), random() * 0.5),
-                                               uniform(.003, .006),
-                                               pos=pos,
-                                               vel=vel.rotate_rad(uniform(0.0, 2*math.pi)),
-                                               dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
+
 
     def right_click(self, button: MouseButton):
         pass
@@ -196,17 +189,32 @@ class Example(BaseScreen):
             throttle = self.throttle_min
 
         if self.ticks % 2 == 0:
-            for _ in range(11):
+            for _ in range(int(11*60/self.fps)):
                 self.text_particles.append(
                     TextParticle(canvas,
                                  color=lerp_vec3((90, 250, 90), (30, 90, 30), random()),
                                  text=choice(self.letters),
                                  font=choice(self.particles_fonts),
                                  pos=(uniform(-1.8, 1.8), 1.1),
-                                 vel=(0, -0.8), dt=1/self.fps, g=-98, lifetime=2,
+                                 vel=(0, -2), dt=1/self.fps, g=0, lifetime=2,
                                  ))
         self.text_particles.step_and_draw()
 
+
+        emmit_l = Vector2(-0.075, -0.04).rotate_rad(angle)
+        emmit_r = Vector2(0.075, -0.04).rotate_rad(angle)
+
+        # c, s = math.cos(angle), math.sin(angle)
+
+        for _ in range(int(randint(round(15 * throttle), round(30 * throttle)) * 60/self.fps)):
+            vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
+            self.particles.append(BallParticle(canvas,
+                                               lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),(255, 255, 255), random() * 0.5),
+                                               uniform(.003, .006),
+                                               pos=lerp_vec2(emmit_l, emmit_r, random()),
+                                               vel=vel.rotate_rad(angle),
+                                               dt=1 / self.fps, lifetime=uniform(.2, .4), g=0))
+        self.particles.step_and_draw()
 
         canvas.draw_polygon((90, 90, 100), rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
         canvas.draw_polygon((120, 120, 130),
@@ -214,21 +222,6 @@ class Example(BaseScreen):
 
         canvas.draw_circle((255, 200, 60), (0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
         canvas.draw_circle((0, 0, 0), (0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
-
-        emmit_l = Vector2(-0.08, -0.082).rotate_rad(angle)
-        emmit_r = Vector2(0.08, -0.082).rotate_rad(angle)
-
-        # c, s = math.cos(angle), math.sin(angle)
-
-        for _ in range(randint(round(20 * throttle), round(40 * throttle))):
-            vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
-            self.particles.append(BallParticle(canvas,
-                                               lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),(255, 255, 255), random() * 0.5),
-                                               uniform(.003, .006),
-                                               pos=lerp_vec2(emmit_l, emmit_r, random()),
-                                               vel=vel.rotate_rad(angle),
-                                               dt=1 / self.fps, lifetime=uniform(.2, .6), g=0))
-        self.particles.step_and_draw()
 
         # --Scope-----------------------------
         x = self.t
@@ -258,4 +251,4 @@ class Example(BaseScreen):
 
 
 if __name__ == '__main__':
-    Example()
+    Example(fps=60)
