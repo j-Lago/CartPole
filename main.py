@@ -1,5 +1,4 @@
 import pygame
-from datetime import datetime
 from canvas import Canvas
 from inputs import Joystick, JOYBUTTON
 import math
@@ -10,13 +9,8 @@ from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
 from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
-from popup import PopUp
-import numpy as np
-from _collections import deque
-from itertools import islice
 from utils import remap, ColorsDiscIterator
 from scope import Scope
-import psutil
 
 
 class Example(BaseScreen):
@@ -177,10 +171,7 @@ class Example(BaseScreen):
 
     def draw_rocket(self, canvas):
 
-        cpu_usage = max(psutil.cpu_percent(percpu=True))
-
         self.extra_info = [
-            f'cpu_usage: {cpu_usage:.1f} %',
         ]
 
         if self.steer is not None:
@@ -230,7 +221,7 @@ class Example(BaseScreen):
         # --Scope-----------------------------
         x = self.t
         y = {
-            'ch1': cpu_usage / 100 * 1.8 - 0.9,   #0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
+            'ch1': self.last_frame_time / 100 * 1.8 - 0.9,   #0.7 * math.sin(x * 5)+ uniform(-0.05, 0.05),
             'ch2': (throttle, angle),
         }
 
@@ -255,4 +246,4 @@ class Example(BaseScreen):
 
 
 if __name__ == '__main__':
-    Example(fps=30)
+    Example(fps=60)

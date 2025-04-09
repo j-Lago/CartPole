@@ -45,6 +45,8 @@ class BaseScreen:
         self.last_active_tab = None
         self.show_info = False
         self.info_position = (30, 30)
+        self.last_frame_time = 0.0
+        self.real_fps = 0.0
 
         self.mouse = Mouse()
 
@@ -130,7 +132,7 @@ class BaseScreen:
             blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
 
             if self.show_info:
-                info_list = [f'fps: {self.clock.get_fps():.1f} Hz',
+                info_list = [f'fps: {self.real_fps:.1f} Hz',
                              f'sim_time: {self.ticks / self.fps:.1f} s',
                              f'antialiasing: {self.antialiasing}',
                              f'active_tab: {self.active_tab} ({self.tabs[self.active_tab].ticks / self.fps:.1f} s)',
@@ -141,6 +143,7 @@ class BaseScreen:
                              f'global_relative_scale: {self.tabs[self.active_tab].relative_scale}',
                              f'global_scale: {self.tabs[self.active_tab].scale}',
                              f'global_bias: {self.tabs[self.active_tab].bias}',
+                             f'frame_time: {self.last_frame_time*1000:.2f} ms ({self.last_frame_time*self.fps * 100: .2f} %)',
                              *self.extra_info
                              ]
 
@@ -150,9 +153,10 @@ class BaseScreen:
                 draw_text_list(self.window.surface, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
 
             pygame.display.flip()
-            self.clock.tick(self.fps)
             self.ticks += 1
             self.tabs[self.active_tab].ticks += 1
+            self.real_fps = self.clock.get_fps()
+            self.last_frame_time = self.clock.tick(self.fps) * .001
 
 
 
