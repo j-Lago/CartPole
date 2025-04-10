@@ -18,57 +18,8 @@ class BaseScreen:
                  fullscreen: bool = False,
                  flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
                  ):
-        """
-        Inicializa uma janela pygame.
-        Alguns atalhos de teclado são pre-configurados:
-            F10 ativa/destiva antialiasing
-            F11 alterna entre modo fullscreen e windoned
-            F12 mostra informações da renderização da aplicação
-            alt+F4 fecha a aplicação
-            ctr+scroll zoom
-            right mouse drag
-            F1..F3 altera o canvas (tabs) que será renderizado (apenas exemplo, todo: retirar depois)
-
-        :param window_size: tamanho inicial da janela para o modo windoned
-        :param canvas_size: tamanho da superficie de renderização. Essa superficie ao final de cada frame será redimensionada para o tamanho atual da janela
-        :param fps: taxa de quadros por segundo
-        :param antialiasing: define se será ou não aplicado antialiasing no redimensionamento da janela. Não tem efeito se window_size == canvas_size
-        :param fullscreen: inicia no modo fullscreen
-        """
 
         pygame.init()
-
-
-
-        self._flags = flags
-        self.fullscreen = fullscreen
-        self.antialiasing = antialiasing
-        self.window_size = window_size
-        self.canvas_size = canvas_size
-        self.fps = fps
-
-        self.mm_fps = MediaMovel(20)
-        self.mm_frame_time = MediaMovel(20)
-
-        self.ticks = 0
-        self.extra_info = []
-        self.event_loop_callback = None
-        self.active_canvas_key = None
-        self.last_active_canvas_key = None
-        self.info_position = (30, 30)
-        self.last_active_frame_time = 0.0
-        self.real_fps = self.fps
-        self.last_time = time.perf_counter()
-
-        self.mouse = Mouse()
-
-
-
-        if self.fullscreen:
-            self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
-        else:
-            self.window = Canvas(surface=pygame.display.set_mode(window_size, self._flags))
-
 
         self.cols = {
             'bg': (30, 30, 30),
@@ -82,16 +33,45 @@ class BaseScreen:
             'default': pygame.font.SysFont('Courier New', 72),
         }
 
-        self.info_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250), flags=flags,
-                                    color=self.cols['info'], text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
+        self._flags = flags
+        self.fullscreen = fullscreen
 
+        self.fps = fps
+        self.real_fps = self.fps
+        self.ticks = 0
+        self.last_time = time.perf_counter()
+        self.last_active_frame_time = 0.0
+        self.mm_fps = MediaMovel(20)
+        self.mm_frame_time = MediaMovel(20)
+
+        self.antialiasing = antialiasing
+        self.window_size = window_size
+        self.canvas_size = canvas_size
+        self.event_loop_callback = None
+
+        self.popups = dict()
+        self.canvases = dict()
+        self.active_canvas_key = None
+        self.last_active_canvas_key = None
+
+        self.info_position = (30, 30)
+        self.mouse = Mouse()
+
+        if self.fullscreen:
+            self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
+        else:
+            self.window = Canvas(surface=pygame.display.set_mode(window_size, self._flags))
+
+        self.extra_info = []
+        self.info_popup = PopUpText(self.window, alpha=200, pos=(10, -10), flags=flags,
+                                    color=self.cols['info'], text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
+        self.extra_help = []
         self.base_help = [
             f' F1: help',
             f'F12: toggle info',
             f'F11: fullsceen/windowned',
             f'F10: toggle antialiasing',
         ]
-        self.extra_help = []
         self.help_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250), flags=flags,
                                     color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
                                     border_radius=13, border_width=2)
@@ -101,9 +81,6 @@ class BaseScreen:
             'help': self.help_popup
         }
 
-        self.popups = dict()
-
-        self.canvases = dict()
         self.clock = pygame.time.Clock()
 
     @property
@@ -212,9 +189,6 @@ class BaseScreen:
             self.mm_fps.append(self.real_fps)
             self.mm_frame_time.append(self.last_active_frame_time)
 
-
-
-
             pygame.display.flip()
             self.ticks += 1
             self.active_canvas.ticks += 1
@@ -225,22 +199,6 @@ class BaseScreen:
             self.real_fps = self.clock.get_fps()
             self.clock.tick(self.fps)
             self.last_time = time.perf_counter()
-
-
-
-
-        for n, info in enumerate(infos):
-            canvas.blit(renders[n], canvas.screen_to_world_rect(rects[n]))
-            print(y_max)
-
-
-
-
-
-
-
-
-
 
 
 def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offset: tuple[int, int] | None = None):
@@ -269,24 +227,24 @@ def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offs
 
 
 
-def render_message(text, font, color):
-    text_surface = font.render(text, True, color[:3])
-    if len(color) == 4:
-        text_surface.set_alpha(color[3])
-    return text_surface
+# def render_message(text, font, color):
+#     text_surface = font.render(text, True, color[:3])
+#     if len(color) == 4:
+#         text_surface.set_alpha(color[3])
+#     return text_surface
+#
+#
+# def draw_text_list(canvas, info_list, font, color, pos, vspace):
+#     for l, info in enumerate(info_list):
+#         info_render = font.render(info, True, color)
+#         canvas.blit(info_render, (pos[0], pos[1] + vspace * l))
 
 
-def draw_text_list(canvas, info_list, font, color, pos, vspace):
-    for l, info in enumerate(info_list):
-        info_render = font.render(info, True, color)
-        canvas.blit(info_render, (pos[0], pos[1] + vspace * l))
-
-
-def world_to_screen(vec2: tuple[float, float], scale: tuple[float, float] | float, bias: tuple[float, float]) -> tuple[int, int]:
-    if isinstance(scale, float | int):
-        scale = (scale, scale)
-    screen_x = round(vec2[0] * scale[0] + bias[0])
-    screen_y = round(-vec2[1] * scale[1] + bias[1])
-    return screen_x, screen_y
+# def world_to_screen(vec2: tuple[float, float], scale: tuple[float, float] | float, bias: tuple[float, float]) -> tuple[int, int]:
+#     if isinstance(scale, float | int):
+#         scale = (scale, scale)
+#     screen_x = round(vec2[0] * scale[0] + bias[0])
+#     screen_y = round(-vec2[1] * scale[1] + bias[1])
+#     return screen_x, screen_y
 
 
