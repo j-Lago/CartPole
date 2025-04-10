@@ -8,7 +8,7 @@ from utils import ColorsDiscIterator
 import colorsys
 
 class Scope(PopUp):
-    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, **kwargs):
+    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, border_width: int = 2, border_radius: int = 13, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fps = fps
@@ -22,6 +22,8 @@ class Scope(PopUp):
         self.focus_color = focus_color
         self.focus = False
         self.draw_fun = self.default_draw
+        self.border_width = border_width
+        self.border_radius = border_radius
 
     def __len__(self):
         return len(self.data)
@@ -64,7 +66,6 @@ class Scope(PopUp):
 
         color_grid = lerp_vec3(color, (30, 30, 30), 0.7)
         color_bf = lerp_vec3(color, (30, 30, 30), 0.9)
-        width = 2
 
         canvas.draw_rect(color_bf, rect, 0, 15)
 
@@ -106,12 +107,12 @@ class Scope(PopUp):
                         seq = [(remap_x(xx, xscale, xbias, w, shift= w - x * xscale), yy[i] * y_scales[i]) for xx, yy in data_slice]
                     seq = sorted(seq, key=lambda pair: pair[0])
 
-                    canvas.draw_lines(color_line, False, seq, width)
+                    canvas.draw_lines(color_line, False, seq, self.border_width)
                     # canvas.draw_circle(color_line, seq[-1], .045)
 
         canvas.draw_text(color=color, font=self.main_canvas.fonts['small'], text=self.title, pos=(0, 1), anchor='midtop')
 
 
 
-        canvas.draw_rect(color, rect, width, 15)
+        canvas.draw_rect(color, rect, self.border_width, 15)
 

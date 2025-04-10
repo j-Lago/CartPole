@@ -11,7 +11,7 @@ from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
 from utils import remap, ColorsDiscIterator
 from scope import Scope
-
+from popup import PopUp
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -46,6 +46,8 @@ class Example(BaseScreen):
         self.hue_radius_exemple = 0.55
 
         self.particle_en = True
+
+
 
 
 
@@ -135,6 +137,8 @@ class Example(BaseScreen):
 
             elif event.key == pygame.K_g:
                 self.particle_en = not self.particle_en
+
+
 
     def draw_color_wheel(self, canvas: Canvas):
         width = 1

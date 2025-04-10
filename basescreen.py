@@ -6,6 +6,9 @@ from canvas import Canvas
 from mouse import Mouse
 from utils import remap
 from filters import MediaMovel
+from popup import PopUp, PopUpText
+from pygame import Vector2
+from lerp import lerp_vec3
 
 class BaseScreen:
     def __init__(self, window_size: tuple[int, int] = (1600, 900),
@@ -35,6 +38,8 @@ class BaseScreen:
 
         pygame.init()
 
+
+
         self._flags = flags
         self.fullscreen = fullscreen
         self.antialiasing = antialiasing
@@ -50,7 +55,6 @@ class BaseScreen:
         self.event_loop_callback = None
         self.active_tab = None
         self.last_active_tab = None
-        self.show_info = False
         self.info_position = (30, 30)
         self.last_active_frame_time = 0.0
         self.real_fps = 0.0
@@ -65,6 +69,7 @@ class BaseScreen:
         else:
             self.window = Canvas(surface=pygame.display.set_mode(window_size, self._flags))
 
+
         self.cols = {
             'screen_bg': (30, 30, 30),
             'info': (220, 200, 90),
@@ -75,6 +80,9 @@ class BaseScreen:
             'small': pygame.font.SysFont('Courier New', 28),
             'default': pygame.font.SysFont('Courier New', 72),
         }
+
+        self.info_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
+                                    color=(255, 128, 128), text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
 
         self.tabs = dict()
         self.clock = pygame.time.Clock()
@@ -108,7 +116,7 @@ class BaseScreen:
                     if event.key == pygame.K_F10:
                         self.antialiasing = not self.antialiasing
                     elif event.key == pygame.K_F12:
-                        self.show_info = not self.show_info
+                        self.info_popup.visible = not self.info_popup.visible
                     elif event.key == pygame.K_F11:
                         self.fullscreen = not self.fullscreen
                         if self.fullscreen:
@@ -135,34 +143,36 @@ class BaseScreen:
             self.window.fill(self.cols['screen_bg'])
 
             canvas = self.tabs[self.active_tab]
-            canvas.fill(self.tabs[self.active_tab].bg_color)
+            canvas.fill(self.tabs[self.active_tab]._bg_color)
             canvas.draw()
 
             blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
 
+            self.info_popup.main_canvas = self.window
+            self.info_popup.draw()
+            self.info_popup.blit_to_main()
+
             self.mm_fps.append(self.real_fps)
             self.mm_frame_time.append(self.last_active_frame_time)
-            if self.show_info:
-                info_list = [f'fps: {self.mm_fps.value:.1f} Hz',
-                             f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
-                             f'sim_time: {self.ticks / self.fps:.1f} s',
-                             f'antialiasing: {self.antialiasing}',
-                             f'active_tab: {self.active_tab} ({self.tabs[self.active_tab].ticks / self.fps:.1f} s)',
-                             f'canvas_res: {canvas.get_size()} px',
-                             f'window_res: {self.window.get_size()} px',
-                             f'mouse: {pygame.mouse.get_pos()} px',
-                             f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
-                             f'global_relative_scale: {self.tabs[self.active_tab].relative_scale}',
-                             f'global_scale: {self.tabs[self.active_tab].scale}',
-                             f'global_bias: {self.tabs[self.active_tab].bias}',
 
-                             *self.extra_info
-                             ]
+            self.info_popup.text = [
+                f'fps: {self.mm_fps.value:.1f} Hz',
+                f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
+                f'sim_time: {self.ticks / self.fps:.1f} s',
+                f'antialiasing: {self.antialiasing}',
+                f'active_tab: {self.active_tab} ({self.tabs[self.active_tab].ticks / self.fps:.1f} s)',
+                f'canvas_res: {canvas.get_size()} px',
+                f'window_res: {self.window.get_size()} px',
+                f'mouse: {pygame.mouse.get_pos()} px',
+                f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
+                f'global_relative_scale: {self.tabs[self.active_tab].relative_scale}',
+                f'global_scale: {self.tabs[self.active_tab].scale}',
+                f'global_bias: {self.tabs[self.active_tab].bias}',
+                *self.extra_info
+                ]
 
-                info_pos = self.info_position
-
-                # print(f'{self.window.surface.get_size()=}, {self.window.get_size()=}, {self.window.scale=}, {self.window.bias=}')
-                draw_text_list(self.window.surface, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
+                # info_pos = self.info_position
+                # draw_text_list(self.window.surface, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
 
             pygame.display.flip()
             self.ticks += 1
@@ -174,6 +184,14 @@ class BaseScreen:
             self.real_fps = self.clock.get_fps()
             self.clock.tick(self.fps)
             self.last_time = time.perf_counter()
+
+
+
+
+        for n, info in enumerate(infos):
+            canvas.blit(renders[n], canvas.screen_to_world_rect(rects[n]))
+            print(y_max)
+
 
 
 

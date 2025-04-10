@@ -26,6 +26,7 @@ class Canvas:
 
 
         # super().__init__(size, flags)
+        self.base_scale = 1.0
         if surface is None:
             self.surface = pygame.Surface(size, flags)
             self.base_scale = min(*size) / 2
@@ -44,19 +45,24 @@ class Canvas:
         self.fonts = fonts
         self.visible = visible
         self.got_focus_callback = got_focus_callback
-        self.bg_color: Color = bg_color
+        self._bg_color: Color = bg_color
         self.draw_fun = draw_fun
         self.shortcut = shortcut
         self.ticks = 0
+        self._default_alpha = self.surface.get_alpha()
 
     def got_focus(self):
         if self.got_focus_callback is not None:
             self.got_focus_callback(self)
 
     def draw(self):
-        self.fill(self.bg_color)
+        self.fill(self._bg_color)
         if self.visible:
+            if self._default_alpha != self.surface.get_alpha():
+                self.surface.set_alpha(self._default_alpha)
             self.draw_fun(canvas=self)
+        else:
+            self.surface.set_alpha(0)
 
     def copy(self):
         ret = copy(self)
@@ -65,6 +71,7 @@ class Canvas:
 
     def set_alpha(self, value):
         self.surface.set_alpha(value)
+        self._default_alpha = self.surface.get_alpha()
 
     @property
     def relative_scale(self):
@@ -122,6 +129,7 @@ class Canvas:
             case _: ValueError(f"Anchor '{anchor}' não suportado.")
 
         self.blit(rendered_text, self.screen_to_world_rect(text_rect))
+        return text_rect
 
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))
@@ -152,6 +160,8 @@ class Canvas:
         self.surface.fill(color, rect, special_flags)
 
     def blit(self, source: Self | pygame.Surface, dest, area=None, special_flags=0):
+        if not self.visible:
+            return 0, 0, 0, 0
         if isinstance(source, Canvas):
             source = source.surface
         return self.surface.blit(source, self.world_to_screen_v2(dest), area, special_flags)
