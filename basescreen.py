@@ -76,7 +76,8 @@ class BaseScreen:
         }
 
         self.fonts = {
-            'info': pygame.font.SysFont('Consolas', 22),
+            'info': pygame.font.SysFont('Consolas', 24),
+            'tiny': pygame.font.SysFont('Courier New', 22),
             'small': pygame.font.SysFont('Courier New', 28),
             'default': pygame.font.SysFont('Courier New', 72),
         }

@@ -2,13 +2,13 @@ from canvas import Canvas
 from popup import PopUp
 from _collections import deque
 from lerp import lerp_vec3
-import math
+from pygame import Vector2
 from itertools import islice
 from utils import ColorsDiscIterator
 import colorsys
 
 class Scope(PopUp):
-    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, border_width: int = 2, border_radius: int = 13, **kwargs):
+    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, legend=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, border_width: int = 2, border_radius: int = 13, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fps = fps
@@ -24,6 +24,18 @@ class Scope(PopUp):
         self.draw_fun = self.default_draw
         self.border_width = border_width
         self.border_radius = border_radius
+        self._legends = None
+        self.set_legend(legend)
+
+    @property
+    def get_legend(self):
+        return self._legends
+
+    def set_legend(self, leg):
+        if leg is not None:
+            if isinstance(leg, str):
+                leg = (leg, )
+            self._legends = leg
 
     def __len__(self):
         return len(self.data)
@@ -51,10 +63,6 @@ class Scope(PopUp):
         ymin, ymax = rect[1] - rect[3], rect[1]
         w = rect[2]
         N = int(L / self.x_scale)
-
-        # m_rect = self.main_canvas.get_world_rect()
-        # m_xmin, m_xmax = m_rect[0], m_rect[0] + m_rect[2]
-        # m_ymin, m_ymax = m_rect[1] - m_rect[3], m_rect[1]
 
         xscale = (xmax - xmin) / L * self.fps * self.x_scale
         xbias = xmin
@@ -94,7 +102,10 @@ class Scope(PopUp):
                 self.clear()
 
             if self.line_colors is None:
-                self.line_colors = list(ColorsDiscIterator(len(ys), ch, cs, cv))
+                if len(ys) == 1:
+                    self.line_colors = list(ColorsDiscIterator(len(ys), ch, cs, cv))
+                else:
+                    self.line_colors = list(ColorsDiscIterator(len(ys), 1-ch/(3*len(ys)), 1, 1))
 
             if len(self.data) > 2:
                 for i in range(len(ys)):
@@ -111,7 +122,12 @@ class Scope(PopUp):
                     # canvas.draw_circle(color_line, seq[-1], .045)
 
         canvas.draw_text(color=color, font=self.main_canvas.fonts['small'], text=self.title, pos=(0, 1), anchor='midtop')
-
+        y_pad = 4
+        x_pad = 5
+        if self._legends is not None and self.line_colors is not None:
+            for i, leg in enumerate(reversed(self._legends)):
+                _, _, _, h = canvas.draw_text(color=self.line_colors[i], font=self.main_canvas.fonts['tiny'], text=self._legends[i], pos=Vector2(0,-2)+canvas.screen_to_world_v2((x_pad, -y_pad)), anchor='bottomleft')
+                y_pad += h
 
 
         canvas.draw_rect(color, rect, self.border_width, 15)

@@ -37,8 +37,8 @@ class Example(BaseScreen):
         focus_color = (255, 255, 0)
         flags = pygame.HWSURFACE   #pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], name='frame time', fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='inputs', fps=self.fps, alpha=200, color=(55, 255, 200), line_colors=((255,128,128),(128,128,255)), y_scale=(0.9, 1.7), focus_color=focus_color, pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
+            'ch1': Scope(self.tabs['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
+            'ch2': Scope(self.tabs['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=(55, 255, 200), y_scale=(0.9, 1.7, 1.0), focus_color=focus_color, pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
@@ -236,11 +236,9 @@ class Example(BaseScreen):
         x = self.t
         total_frame_time = 1/self.real_fps if self.real_fps != 0 else 0
         y = {
-            'ch1': (total_frame_time * self.fps - 1, self.last_active_frame_time * self.fps - 1), #(self.mm_frame_time.value * self.fps - 1, self.last_active_frame_time * self.fps - 1),
+            'ch1': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1), #(self.mm_frame_time.value * self.fps - 1, self.last_active_frame_time * self.fps - 1),
             'ch2': (throttle, angle),
         }
-
-        any_on_focus = False
 
         def another_in_focus(self_key):
             for ikey, iscope in self.scopes.items():
@@ -249,11 +247,7 @@ class Example(BaseScreen):
             return False
 
         for key, scope in self.scopes.items():
-
-
-            # print(key, x, y[key])
             scope.append(x, y[key])
-
             scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
             scope.draw()
             scope.blit_to_main()
