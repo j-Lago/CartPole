@@ -34,7 +34,8 @@ class Game():
                  DO_NOT_RENDER: bool = False,
                  STEP_BY_STEP: bool = False,
                  verbose: bool = False,
-                 training_mode = False,):
+                 training_mode = False,
+                 flags = pygame.HWSURFACE):
 
 
 
@@ -43,6 +44,7 @@ class Game():
             raise ValueError(f"Valor fps={fps} inválido. Apenas 30 e 60 são suportados.")
 
         self.fps = fps
+        self.flags = flags
         self.duration = game_duration
         self.MAX_POWER = max_power
         self.save_file_name =  save_file
@@ -60,9 +62,9 @@ class Game():
 
         if window_size is None:
             screen_info = pygame.display.Info()
-            self.screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h), pygame.FULLSCREEN)
+            self.screen = pygame.display.set_mode((screen_info.current_w, screen_info.current_h), pygame.FULLSCREEN | self.flags)
         else:
-            self.screen = pygame.display.set_mode(window_size)
+            self.screen = pygame.display.set_mode(window_size, self.flags)
 
         self.last_screen = copy(self.screen)
 
