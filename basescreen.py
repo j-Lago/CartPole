@@ -85,26 +85,15 @@ class BaseScreen:
         self.info_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
                                     color=(255, 128, 128), text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
 
-        help_text = [
+        self.base_help = [
             f' F1: help',
             f'F12: toggle info',
             f'F11: fullsceen/windowned',
             f'F10: toggle antialiasing',
-            f'  1: tab rocket example',
-            f'  2: tab hue dic example',
-            f'  3: tab pause example',
-            f'  v: ',
-            f'  b: ',
-            f'  +: ',
-            f'  -: ',
-            f'  *: ',
-            f'  /: ',
-            f'  r: ',
-            f'  t: ',
-            f'  g: ',
         ]
+        self.extra_help = []
         self.help_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
-                                    color=(255, 128, 128), text=help_text, font=self.fonts['info'], visible=False,
+                                    color=(255, 128, 128), text='', font=self.fonts['info'], visible=False,
                                     border_radius=13, border_width=2)
 
         self.tabs = dict()
@@ -184,6 +173,8 @@ class BaseScreen:
             else:
                 self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
 
+            if self.help_popup.visible:
+                self.help_popup.text = self.base_help + self.extra_help
             self.help_popup.draw()
             self.help_popup.blit_to_main()
 
@@ -206,11 +197,8 @@ class BaseScreen:
                 f'global_relative_scale: {self.tabs[self.active_tab].relative_scale:.2f}',
                 f'global_scale: {self.tabs[self.active_tab].scale:.2f}',
                 f'global_bias: {self.tabs[self.active_tab].bias}',
-                *self.extra_info
-                ]
+                ] + self.extra_info
 
-                # info_pos = self.info_position
-                # draw_text_list(self.window.surface, info_list, self.fonts['info'], self.cols['info'], info_pos, 26)
 
             pygame.display.flip()
             self.ticks += 1

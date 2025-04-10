@@ -47,10 +47,6 @@ class Example(BaseScreen):
 
         self.particle_en = True
 
-
-
-
-
         self.steer = None
         self.throttle = None
         self.throttle_min = 0.05
@@ -68,6 +64,23 @@ class Example(BaseScreen):
             pygame.font.SysFont('Times', 40),
         ]
         self.letters = [chr(i) for i in range(945, 970) if i != 962]  #choice(('0', '1')), #choice(tuple(chr(i) for i in range(97, 123))),
+
+        self.extra_help = [
+            f'────────────────────────',
+            f'  1: tab rocket example',
+            f'  2: tab hue dic example',
+            f'  3: tab pause example',
+            f'  v: ',
+            f'  b: ',
+            f'  +: ',
+            f'  -: ',
+            f'  *: ',
+            f'  /: ',
+            f'  r: ',
+            f'  t: ',
+            f'  g: ',
+        ]
+
 
         self.loop()
 
