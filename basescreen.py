@@ -57,7 +57,7 @@ class BaseScreen:
         self.last_active_tab = None
         self.info_position = (30, 30)
         self.last_active_frame_time = 0.0
-        self.real_fps = 0.0
+        self.real_fps = self.fps
         self.last_time = time.perf_counter()
 
         self.mouse = Mouse()
