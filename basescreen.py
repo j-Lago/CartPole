@@ -53,8 +53,8 @@ class BaseScreen:
         self.ticks = 0
         self.extra_info = []
         self.event_loop_callback = None
-        self.active_tab = None
-        self.last_active_tab = None
+        self.active_canvas_key = None
+        self.last_active_canvas_key = None
         self.info_position = (30, 30)
         self.last_active_frame_time = 0.0
         self.real_fps = self.fps
@@ -96,8 +96,19 @@ class BaseScreen:
                                     color=(255, 128, 128), text='', font=self.fonts['info'], visible=False,
                                     border_radius=13, border_width=2)
 
-        self.tabs = dict()
+        self.final_window_popups = {
+            'info': self.info_popup,
+            'help': self.help_popup
+        }
+
+        self.popups = dict()
+
+        self.canvases = dict()
         self.clock = pygame.time.Clock()
+
+    @property
+    def active_canvas(self):
+        return self.canvases[self.active_canvas_key]
 
     @property
     def t(self):
@@ -109,7 +120,7 @@ class BaseScreen:
 
     @property
     def mouse_world_pos(self):
-        canvas = self.tabs[self.active_tab]
+        canvas = self.active_canvas
         return canvas.screen_to_world_v2(remap(self.mouse.pos, self.window, canvas))
 
     def loop(self):
@@ -142,12 +153,12 @@ class BaseScreen:
                     elif event.key == pygame.K_a:
                         self.antialiasing = not self.antialiasing
 
-                    for tab_key in self.tabs:
-                        if event.key == self.tabs[tab_key].shortcut:
-                            if self.active_tab != tab_key:
-                                self.last_active_tab = self.active_tab
-                                self.active_tab = tab_key
-                                self.tabs[tab_key].got_focus()
+                    for tab_key in self.canvases:
+                        if event.key == self.canvases[tab_key].shortcut:
+                            if self.active_canvas_key != tab_key:
+                                self.last_active_canvas_key = self.active_canvas_key
+                                self.active_canvas_key = tab_key
+                                self.canvases[tab_key].got_focus()
 
                 if self.event_loop_callback is not None:
                     self.event_loop_callback(event)
@@ -156,53 +167,57 @@ class BaseScreen:
             # draw
             self.window.fill(self.cols['screen_bg'])
 
-            canvas = self.tabs[self.active_tab]
-            canvas.fill(self.tabs[self.active_tab]._bg_color)
+            canvas = self.active_canvas
+            canvas.fill(self.active_canvas._bg_color)
             canvas.draw()
 
-            blit_with_aspect_ratio(self.window, self.tabs[self.active_tab], self.antialiasing)
+            for popup in self.popups.values():
+                popup.draw()
+                popup.blit_to_main()
+
+            blit_with_aspect_ratio(self.window, self.active_canvas, self.antialiasing)
 
             self.info_popup.main_canvas = self.window
-            self.info_popup.draw()
-            self.info_popup.blit_to_main()
-
             self.help_popup.main_canvas = self.window
             if self.info_popup.visible:
                 rect = self.info_popup.get_rect()
                 self.help_popup.pos = self.window.screen_to_world_v2((10, 20+rect[3]))
+                self.info_popup.text = [
+                    # f'╭───╮',
+                    # f'│F12│ to hide info',
+                    # f'╰───╯',
+                    f'fps: {self.mm_fps.value:.1f} Hz',
+                    f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
+                    f'sim_time: {self.ticks / self.fps:.1f} s',
+                    f'antialiasing: {self.antialiasing}',
+                    f'active_tab: {self.active_canvas_key} ({self.active_canvas.ticks / self.fps:.1f} s)',
+                    f'canvas_res: {canvas.get_size()} px',
+                    f'window_res: {self.window.get_size()} px',
+                    f'mouse: {pygame.mouse.get_pos()} px',
+                    f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
+                    f'global_relative_scale: {self.active_canvas.relative_scale:.2f}',
+                    f'global_scale: {self.active_canvas.scale:.2f}',
+                    f'global_bias: {self.active_canvas.bias}',
+                    ] + self.extra_info
             else:
                 self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
 
             if self.help_popup.visible:
                 self.help_popup.text = self.base_help + self.extra_help
-            self.help_popup.draw()
-            self.help_popup.blit_to_main()
+
+            for popup in self.final_window_popups.values():
+                popup.draw()
+                popup.blit_to_main()
 
             self.mm_fps.append(self.real_fps)
             self.mm_frame_time.append(self.last_active_frame_time)
 
-            self.info_popup.text = [
-                # f'╭───╮',
-                # f'│F12│ to hide info',
-                # f'╰───╯',
-                f'fps: {self.mm_fps.value:.1f} Hz',
-                f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
-                f'sim_time: {self.ticks / self.fps:.1f} s',
-                f'antialiasing: {self.antialiasing}',
-                f'active_tab: {self.active_tab} ({self.tabs[self.active_tab].ticks / self.fps:.1f} s)',
-                f'canvas_res: {canvas.get_size()} px',
-                f'window_res: {self.window.get_size()} px',
-                f'mouse: {pygame.mouse.get_pos()} px',
-                f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
-                f'global_relative_scale: {self.tabs[self.active_tab].relative_scale:.2f}',
-                f'global_scale: {self.tabs[self.active_tab].scale:.2f}',
-                f'global_bias: {self.tabs[self.active_tab].bias}',
-                ] + self.extra_info
+
 
 
             pygame.display.flip()
             self.ticks += 1
-            self.tabs[self.active_tab].ticks += 1
+            self.active_canvas.ticks += 1
 
             t = time.perf_counter()
             self.last_active_frame_time = (t - self.last_time)

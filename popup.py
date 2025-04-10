@@ -22,8 +22,8 @@ class PopUp(Canvas):
 
 
 class PopUpText(PopUp):
-    def __init__(self, *args, color: tuple[int, int, int], font: pygame.font.Font, text: list[str] | str, border_width: int = 1, border_radius: int = 0, fill_color: tuple[int, int, int] | None = None, pad: tuple[int, int] = (10, 10), **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, color: tuple[int, int, int], font: pygame.font.Font, text: list[str] | str, size=(1, 1), border_width: int = 1, border_radius: int = 0, fill_color: tuple[int, int, int] | None = None, pad: tuple[int, int] = (10, 10), **kwargs):
+        super().__init__(*args, size=size, **kwargs)
 
         if isinstance(text, str):
             text = [text]
@@ -44,6 +44,9 @@ class PopUpText(PopUp):
 
 
     def default_draw(self, canvas: Canvas):
+
+        if isinstance(self.text, str):
+            self.text = [self.text]
 
         rects = []
         renders = []

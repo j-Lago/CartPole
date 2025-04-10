@@ -11,7 +11,7 @@ from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
 from utils import remap, ColorsDiscIterator
 from scope import Scope
-from popup import PopUp
+from popup import PopUp, PopUpText
 
 class Example(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -24,21 +24,21 @@ class Example(BaseScreen):
         self.mouse.scroll.up_callback = self.scroll_up
         self.mouse.scroll.down_callback = self.scroll_down
 
-        self.tabs = {
+        self.canvases = {
             'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
             'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
             'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
         }
-        self.active_tab = 'rocket'
-        self.last_active_tab = self.active_tab
+        self.active_canvas_key = 'rocket'
+        self.last_active_canvas_key = self.active_canvas_key
         self.event_loop_callback = self.process_user_input_event
-        self.tabs['rocket'].got_focus_callback = self.rocket_got_focus_callback
+        self.canvases['rocket'].got_focus_callback = self.rocket_got_focus_callback
 
         focus_color = (255, 255, 0)
         flags = pygame.HWSURFACE   #pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.tabs['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
-            'ch2': Scope(self.tabs['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=(55, 255, 200), y_scale=(0.9, 1.7, 1.0), focus_color=focus_color, pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
+            'ch1': Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
+            'ch2': Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=(55, 255, 200), y_scale=(0.9, 1.7, 1.0), focus_color=focus_color, pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
@@ -88,31 +88,43 @@ class Example(BaseScreen):
         pass
 
     def left_click(self, button: MouseButton):
-        pos = self.mouse_world_pos
-
+        key = 'left_click'
+        if key in self.popups.keys():
+            del self.popups[key]
 
     def right_click(self, button: MouseButton):
-        pass
+        pos = self.mouse_world_pos
+
+        key = 'left_click'
+        text = f'{pos[0]:.2f}, {pos[1]:.2f}'
+        if key in self.popups.keys():
+            self.popups[key].text = text
+            self.popups[key].pos = pos
+        else:
+            self.popups[key] = PopUpText(self.canvases['rocket'], alpha=180, pos=pos,
+                                         color=(255, 255, 0), text=text, font=self.fonts['info'], visible=True, border_radius=0, border_width=1)
+
+
 
     def right_release(self, button: MouseButton):
         pass
 
     def scroll_up(self, scroll: MouseScroll):
         if scroll.up_keys[pygame.K_LCTRL]:
-            self.tabs[self.active_tab].scale /= 1.1
+            self.active_canvas.scale /= 1.1
 
     def scroll_down(self, scroll: MouseScroll):
         if scroll.down_keys[pygame.K_LCTRL]:
-            self.tabs[self.active_tab].scale *= 1.1
+            self.active_canvas.scale *= 1.1
 
     def process_user_input_event(self, event):
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
-            self.tabs[self.active_tab].bias = (int(self.tabs[self.active_tab].bias[0] + self.mouse.right.drag_delta[0]), int(self.tabs[self.active_tab].bias[1] + self.mouse.right.drag_delta[1]))
+            self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]), int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
         for scope in self.scopes.values():
             if self.mouse.left.dragging and scope.focus:
-                canvas = self.tabs[self.active_tab]
+                canvas = self.active_canvas
                 delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
                 scope.pos = Vector2(scope.pos) + delta
@@ -184,7 +196,7 @@ class Example(BaseScreen):
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, -1', pos=(+1, -1), anchor='midbottom')
 
     def draw_menu(self, canvas):
-        prtsc = self.tabs[self.last_active_tab].copy()
+        prtsc = self.canvases[self.last_active_canvas_key].copy()
         prtsc.set_alpha(128)
         offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
         canvas.blit(prtsc, offset)
