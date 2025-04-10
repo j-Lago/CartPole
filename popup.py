@@ -22,7 +22,7 @@ class PopUp(Canvas):
 
 
 class PopUpText(PopUp):
-    def __init__(self, *args, color: tuple[int, int, int], font: pygame.font.Font, text: list[str] | str, size=(1, 1), border_width: int = 1, border_radius: int = 0, fill_color: tuple[int, int, int] | None = None, pad: tuple[int, int] = (10, 10), **kwargs):
+    def __init__(self, *args, color: tuple[int, int, int], font: pygame.font.Font, text: list[str] | str, size=(1, 1), border_width: int = 1, border_radius: int = 0, fill_color: tuple[int, int, int] | None = None, pad: tuple[int, int] = (10, 10), bg_lerp_factor: float = 0.9, **kwargs):
         super().__init__(*args, size=size, **kwargs)
 
         if isinstance(text, str):
@@ -31,8 +31,9 @@ class PopUpText(PopUp):
 
         self.font = font
         self.color = color
+        self.bg_lerp_factor = bg_lerp_factor
         if fill_color is None:
-            fill_color = lerp_vec3(self.color, self.main_canvas._bg_color, 0.9)
+            fill_color = lerp_vec3(self.color, self.main_canvas._bg_color, self.bg_lerp_factor)
         self.fill_color = fill_color
         self.border_radius = border_radius
         self.border_width = border_width

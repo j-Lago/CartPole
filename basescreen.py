@@ -71,8 +71,8 @@ class BaseScreen:
 
 
         self.cols = {
-            'screen_bg': (30, 30, 30),
-            'info': (220, 200, 90),
+            'bg': (30, 30, 30),
+            'info': (255, 128, 128),
         }
 
         self.fonts = {
@@ -82,8 +82,8 @@ class BaseScreen:
             'default': pygame.font.SysFont('Courier New', 72),
         }
 
-        self.info_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
-                                    color=(255, 128, 128), text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
+        self.info_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250), flags=flags,
+                                    color=self.cols['info'], text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
 
         self.base_help = [
             f' F1: help',
@@ -92,8 +92,8 @@ class BaseScreen:
             f'F10: toggle antialiasing',
         ]
         self.extra_help = []
-        self.help_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
-                                    color=(255, 128, 128), text='', font=self.fonts['info'], visible=False,
+        self.help_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250), flags=flags,
+                                    color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
                                     border_radius=13, border_width=2)
 
         self.final_window_popups = {
@@ -165,7 +165,7 @@ class BaseScreen:
 
 
             # draw
-            self.window.fill(self.cols['screen_bg'])
+            self.window.fill(self.cols['bg'])
 
             canvas = self.active_canvas
             canvas.fill(self.active_canvas._bg_color)

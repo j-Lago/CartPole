@@ -25,20 +25,21 @@ class Example(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.canvases = {
-            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
-            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
+            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
+            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
         }
         self.active_canvas_key = 'rocket'
         self.last_active_canvas_key = self.active_canvas_key
         self.event_loop_callback = self.process_user_input_event
         self.canvases['rocket'].got_focus_callback = self.rocket_got_focus_callback
 
-        focus_color = (255, 255, 0)
+        self.cols['focus'] = (255, 255, 0)
+        self.cols['scope'] = (55, 255, 200)
         flags = pygame.HWSURFACE   #pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=(55, 255, 200), focus_color=focus_color, pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
-            'ch2': Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=(55, 255, 200), y_scale=(0.9, 1.7, 1.0), focus_color=focus_color, pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
+            'ch1': Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
+            'ch2': Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
