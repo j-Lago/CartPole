@@ -13,7 +13,8 @@ from utils import remap, ColorsDiscIterator
 from scope import Scope
 from popup import PopUp, PopUpText
 
-class Example(BaseScreen):
+
+class Demo(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -25,9 +26,9 @@ class Example(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.canvases = {
-            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
-            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
+            'rocket': Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
+            'test'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
+            'menu'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
         }
         self.active_canvas_key = 'rocket'
         self.last_active_canvas_key = self.active_canvas_key
@@ -81,9 +82,6 @@ class Example(BaseScreen):
             f'  t: ',
             f'  g: ',
         ]
-
-
-        self.loop()
 
     def left_release(self, button: MouseButton):
         pass
@@ -281,4 +279,4 @@ class Example(BaseScreen):
 
 
 if __name__ == '__main__':
-    Example(fps=60)
+    Demo(fps=60)

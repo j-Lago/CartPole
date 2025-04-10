@@ -1,5 +1,4 @@
 import time
-
 import pygame
 import sys
 from canvas import Canvas
@@ -10,7 +9,18 @@ from popup import PopUp, PopUpText
 from pygame import Vector2
 from lerp import lerp_vec3
 
-class BaseScreen:
+
+class MetaLoopCall(type):
+    """
+    Garante que BaseScreen.loop seja chamado apos o instanciamento de uma subclasse de BaseScreen
+    """
+    def __call__(cls, *args, **kwargs):
+        instance = super().__call__(*args, **kwargs)
+        instance.loop()
+        return instance
+
+
+class BaseScreen(metaclass=MetaLoopCall):
     def __init__(self, window_size: tuple[int, int] = (1600, 900),
                  canvas_size: tuple[int, int] = (1920, 1080),
                  fps: float = 60.0,
@@ -31,6 +41,7 @@ class BaseScreen:
             'tiny': pygame.font.SysFont('Courier New', 22),
             'small': pygame.font.SysFont('Courier New', 28),
             'default': pygame.font.SysFont('Courier New', 72),
+            'big': pygame.font.SysFont('Courier New', 144),
         }
 
         self._flags = flags
@@ -83,8 +94,11 @@ class BaseScreen:
 
         self.clock = pygame.time.Clock()
 
+
     @property
     def active_canvas(self):
+        if self.active_canvas_key is None:
+            self.active_canvas_key = next(iter(self.canvases.keys()))
         return self.canvases[self.active_canvas_key]
 
     @property
@@ -142,63 +156,66 @@ class BaseScreen:
 
 
             # draw
-            self.window.fill(self.cols['bg'])
+            self._draw()
 
-            canvas = self.active_canvas
-            canvas.fill(self.active_canvas._bg_color)
-            canvas.draw()
+    def _draw(self):
+        self.window.fill(self.cols['bg'])
 
-            for popup in self.popups.values():
-                popup.draw()
-                popup.blit_to_main()
+        canvas = self.active_canvas
+        canvas.fill(self.active_canvas._bg_color)
+        canvas.draw()
 
-            blit_with_aspect_ratio(self.window, self.active_canvas, self.antialiasing)
+        for popup in self.popups.values():
+            popup.draw()
+            popup.blit_to_main()
 
-            self.info_popup.main_canvas = self.window
-            self.help_popup.main_canvas = self.window
-            if self.info_popup.visible:
-                rect = self.info_popup.get_rect()
-                self.help_popup.pos = self.window.screen_to_world_v2((10, 20+rect[3]))
-                self.info_popup.text = [
-                    # f'╭───╮',
-                    # f'│F12│ to hide info',
-                    # f'╰───╯',
-                    f'fps: {self.mm_fps.value:.1f} Hz',
-                    f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
-                    f'sim_time: {self.ticks / self.fps:.1f} s',
-                    f'antialiasing: {self.antialiasing}',
-                    f'active_tab: {self.active_canvas_key} ({self.active_canvas.ticks / self.fps:.1f} s)',
-                    f'canvas_res: {canvas.get_size()} px',
-                    f'window_res: {self.window.get_size()} px',
-                    f'mouse: {pygame.mouse.get_pos()} px',
-                    f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
-                    f'global_relative_scale: {self.active_canvas.relative_scale:.2f}',
-                    f'global_scale: {self.active_canvas.scale:.2f}',
-                    f'global_bias: {self.active_canvas.bias}',
-                    ] + self.extra_info
-            else:
-                self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
+        blit_with_aspect_ratio(self.window, self.active_canvas, self.antialiasing)
 
-            if self.help_popup.visible:
-                self.help_popup.text = self.base_help + self.extra_help
+        self.info_popup.main_canvas = self.window
+        self.help_popup.main_canvas = self.window
+        if self.info_popup.visible:
+            rect = self.info_popup.get_rect()
+            self.help_popup.pos = self.window.screen_to_world_v2((10, 20+rect[3]))
+            self.info_popup.text = [
+                # f'╭───╮',
+                # f'│F12│ to hide info',
+                # f'╰───╯',
+                f'fps: {self.mm_fps.value:.1f} Hz',
+                f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
+                f'sim_time: {self.ticks / self.fps:.1f} s',
+                f'antialiasing: {self.antialiasing}',
+                f'active_tab: {self.active_canvas_key} ({self.active_canvas.ticks / self.fps:.1f} s)',
+                f'canvas_res: {canvas.get_size()} px',
+                f'window_res: {self.window.get_size()} px',
+                f'mouse: {pygame.mouse.get_pos()} px',
+                f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
+                f'global_relative_scale: {self.active_canvas.relative_scale:.2f}',
+                f'global_scale: {self.active_canvas.scale:.2f}',
+                f'global_bias: {self.active_canvas.bias}',
+                ] + self.extra_info
+        else:
+            self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
 
-            for popup in self.final_window_popups.values():
-                popup.draw()
-                popup.blit_to_main()
+        if self.help_popup.visible:
+            self.help_popup.text = self.base_help + self.extra_help
 
-            self.mm_fps.append(self.real_fps)
-            self.mm_frame_time.append(self.last_active_frame_time)
+        for popup in self.final_window_popups.values():
+            popup.draw()
+            popup.blit_to_main()
 
-            pygame.display.flip()
-            self.ticks += 1
-            self.active_canvas.ticks += 1
+        self.mm_fps.append(self.real_fps)
+        self.mm_frame_time.append(self.last_active_frame_time)
 
-            t = time.perf_counter()
-            self.last_active_frame_time = (t - self.last_time)
+        pygame.display.flip()
+        self.ticks += 1
+        self.active_canvas.ticks += 1
 
-            self.real_fps = self.clock.get_fps()
-            self.clock.tick(self.fps)
-            self.last_time = time.perf_counter()
+        t = time.perf_counter()
+        self.last_active_frame_time = (t - self.last_time)
+
+        self.real_fps = self.clock.get_fps()
+        self.clock.tick(self.fps)
+        self.last_time = time.perf_counter()
 
 
 def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offset: tuple[int, int] | None = None):

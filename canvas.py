@@ -15,17 +15,21 @@ class Canvas:
                  flags: pygame.constants = 0,
                  surface: pygame.Surface | None = None,
                  bg_color: Color | tuple[int, int, int] = (0, 0, 0, 0),
-                 draw_fun: Callable = None,
                  fonts: dict | None = None,
-                 shortcut: pygame.constants = None,
                  scale: float | None = None,
                  bias: Vector2 | tuple[float, float] | None = None,
                  visible: bool = True,
+                 shortcut: pygame.constants = None,
+                 draw_fun: Callable = None,
                  got_focus_callback: Callable = None
                  ):
-
-
-        # super().__init__(size, flags)
+        self.fonts = fonts
+        self.visible = visible
+        self.got_focus_callback = got_focus_callback
+        self._bg_color: Color = bg_color
+        self.draw_fun = draw_fun
+        self.shortcut = shortcut
+        self.ticks = 0
         self.base_scale = 1.0
         if surface is None:
             self.surface = pygame.Surface(size, flags)
@@ -42,14 +46,9 @@ class Canvas:
             self.scale = 1.0
             self.bias = (0, 0)
 
-        self.fonts = fonts
-        self.visible = visible
-        self.got_focus_callback = got_focus_callback
-        self._bg_color: Color = bg_color
-        self.draw_fun = draw_fun
-        self.shortcut = shortcut
-        self.ticks = 0
         self._last_alpha = self.surface.get_alpha()
+
+
 
     def got_focus(self):
         if self.got_focus_callback is not None:
