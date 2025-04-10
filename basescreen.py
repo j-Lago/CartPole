@@ -26,6 +26,8 @@ class BaseScreen(metaclass=MetaLoopCall):
                  fps: float = 60.0,
                  antialiasing: bool = True,
                  fullscreen: bool = False,
+                 font_family: str = 'Courier New',
+                 font_base_size: int = 26,
                  flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
                  ):
 
@@ -37,11 +39,12 @@ class BaseScreen(metaclass=MetaLoopCall):
         }
 
         self.fonts = {
-            'info': pygame.font.SysFont('Consolas', 24),
-            'tiny': pygame.font.SysFont('Courier New', 22),
-            'small': pygame.font.SysFont('Courier New', 28),
-            'default': pygame.font.SysFont('Courier New', 72),
-            'big': pygame.font.SysFont('Courier New', 144),
+            'info': pygame.font.SysFont('Consolas', 22),
+            'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.8)),
+            'small': pygame.font.SysFont(font_family, round(font_base_size)),
+            'default': pygame.font.SysFont(font_family, round(font_base_size*2)),
+            'big': pygame.font.SysFont(font_family, round(font_base_size*4)),
+            'huge': pygame.font.SysFont(font_family, round(font_base_size*8)),
         }
 
         self._flags = flags
@@ -184,14 +187,14 @@ class BaseScreen(metaclass=MetaLoopCall):
                 f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
                 f'sim_time: {self.ticks / self.fps:.1f} s',
                 f'antialiasing: {self.antialiasing}',
-                f'active_tab: {self.active_canvas_key} ({self.active_canvas.ticks / self.fps:.1f} s)',
+                f"active_canvas: '{self.active_canvas_key}' ({self.active_canvas.ticks / self.fps:.1f} s)",
                 f'canvas_res: {canvas.get_size()} px',
                 f'window_res: {self.window.get_size()} px',
-                f'mouse: {pygame.mouse.get_pos()} px',
+                f'mouse_window: {pygame.mouse.get_pos()} px',
                 f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
-                f'global_relative_scale: {self.active_canvas.relative_scale:.2f}',
-                f'global_scale: {self.active_canvas.scale:.2f}',
-                f'global_bias: {self.active_canvas.bias}',
+                f'canvas_bias: {self.active_canvas.bias}',
+                f'canvas_scale: {self.active_canvas.scale:.1f}',
+                f'canvas_relative_scale: {self.active_canvas.relative_scale:.2f}',
                 ] + self.extra_info
         else:
             self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
