@@ -84,6 +84,28 @@ class BaseScreen:
         self.info_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
                                     color=(255, 128, 128), text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
 
+        help_text = [
+            f' F1: help',
+            f'F12: toggle info',
+            f'F11: fullsceen/windowned',
+            f'F10: toggle antialiasing',
+            f'  1: tab rocket example',
+            f'  2: tab hue dic example',
+            f'  3: tab pause example',
+            f'  v: ',
+            f'  b: ',
+            f'  +: ',
+            f'  -: ',
+            f'  *: ',
+            f'  /: ',
+            f'  r: ',
+            f'  t: ',
+            f'  g: ',
+        ]
+        self.help_popup = PopUpText(self.window, alpha=180, pos=(10, -10), size=(400, 250), flags=flags,
+                                    color=(255, 128, 128), text=help_text, font=self.fonts['info'], visible=False,
+                                    border_radius=13, border_width=2)
+
         self.tabs = dict()
         self.clock = pygame.time.Clock()
 
@@ -113,6 +135,8 @@ class BaseScreen:
                     screen = pygame.display.set_mode(event.size, self._flags)
                     self.window_size = screen.get_size()
                 elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F1:
+                        self.help_popup.visible = not self.help_popup.visible
                     if event.key == pygame.K_F10:
                         self.antialiasing = not self.antialiasing
                     elif event.key == pygame.K_F12:
@@ -152,10 +176,23 @@ class BaseScreen:
             self.info_popup.draw()
             self.info_popup.blit_to_main()
 
+            self.help_popup.main_canvas = self.window
+            if self.info_popup.visible:
+                rect = self.info_popup.get_rect()
+                self.help_popup.pos = self.window.screen_to_world_v2((10, 20+rect[3]))
+            else:
+                self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
+
+            self.help_popup.draw()
+            self.help_popup.blit_to_main()
+
             self.mm_fps.append(self.real_fps)
             self.mm_frame_time.append(self.last_active_frame_time)
 
             self.info_popup.text = [
+                # f'╭───╮',
+                # f'│F12│ to hide info',
+                # f'╰───╯',
                 f'fps: {self.mm_fps.value:.1f} Hz',
                 f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
                 f'sim_time: {self.ticks / self.fps:.1f} s',
@@ -165,8 +202,8 @@ class BaseScreen:
                 f'window_res: {self.window.get_size()} px',
                 f'mouse: {pygame.mouse.get_pos()} px',
                 f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
-                f'global_relative_scale: {self.tabs[self.active_tab].relative_scale}',
-                f'global_scale: {self.tabs[self.active_tab].scale}',
+                f'global_relative_scale: {self.tabs[self.active_tab].relative_scale:.2f}',
+                f'global_scale: {self.tabs[self.active_tab].scale:.2f}',
                 f'global_bias: {self.tabs[self.active_tab].bias}',
                 *self.extra_info
                 ]

@@ -49,7 +49,7 @@ class Canvas:
         self.draw_fun = draw_fun
         self.shortcut = shortcut
         self.ticks = 0
-        self._default_alpha = self.surface.get_alpha()
+        self._last_alpha = self.surface.get_alpha()
 
     def got_focus(self):
         if self.got_focus_callback is not None:
@@ -58,8 +58,8 @@ class Canvas:
     def draw(self):
         self.fill(self._bg_color)
         if self.visible:
-            if self._default_alpha != self.surface.get_alpha():
-                self.surface.set_alpha(self._default_alpha)
+            if self._last_alpha != self.surface.get_alpha():
+                self.surface.set_alpha(self._last_alpha)
             self.draw_fun(canvas=self)
         else:
             self.surface.set_alpha(0)
@@ -71,7 +71,7 @@ class Canvas:
 
     def set_alpha(self, value):
         self.surface.set_alpha(value)
-        self._default_alpha = self.surface.get_alpha()
+        self._last_alpha = self.surface.get_alpha()
 
     @property
     def relative_scale(self):
@@ -113,9 +113,7 @@ class Canvas:
     def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center'):
         rendered_text = font.render(text, True, color)
         text_rect = rendered_text.get_rect()
-
         pos = self.world_to_screen_v2(pos)
-
         match anchor:
             case 'center'     : text_rect.center = pos
             case 'topleft'    : text_rect.topleft = pos
@@ -127,7 +125,6 @@ class Canvas:
             case 'midleft'    : text_rect.midleft = pos
             case 'midright'   : text_rect.midright = pos
             case _: ValueError(f"Anchor '{anchor}' não suportado.")
-
         self.blit(rendered_text, self.screen_to_world_rect(text_rect))
         return text_rect
 
@@ -163,9 +160,10 @@ class Canvas:
         if not self.visible:
             return 0, 0, 0, 0
         if isinstance(source, Canvas):
+            if not source.visible:
+                return 0, 0, 0, 0
             source = source.surface
         return self.surface.blit(source, self.world_to_screen_v2(dest), area, special_flags)
-
 
 
 def rotate_around_v2(vec: Vector2, angle: float, center: Vector2 = (0.0, 0.0)):

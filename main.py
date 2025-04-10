@@ -25,9 +25,9 @@ class Example(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.tabs = {
-            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_F1),
-            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_F2),
-            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_F3)
+            'rocket': Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
+            'test'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(30, 45, 30), fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
+            'menu'  : Canvas(self.canvas_size, pygame.SRCALPHA | pygame.HWSURFACE, bg_color=(15, 15, 15), fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
         }
         self.active_tab = 'rocket'
         self.last_active_tab = self.active_tab
