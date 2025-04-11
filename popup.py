@@ -1,13 +1,13 @@
 import pygame.transform
-
 from canvas import Canvas
 from utils import collision_point_rect
 from lerp import lerp_vec3
 from pygame import Vector2
 
+
 class PopUp(Canvas):
-    def __init__(self, main_canvas: Canvas, *args, pos=(0, 0), alpha=255, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, main_canvas: Canvas, *args, pos=(0, 0), alpha=255, flags=pygame.HWSURFACE | pygame.SRCALPHA, **kwargs):
+        super().__init__(*args, flags=flags, **kwargs)
         self.main_canvas = main_canvas
         self.pos = pos
         self.set_alpha(alpha)

@@ -37,10 +37,10 @@ class Demo(BaseScreen):
 
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
-        flags = pygame.HWSURFACE   #pygame.SRCALPHA
+        # flags = pygame.HWSURFACE | pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), flags=flags, maxlen=400),
-            'ch2': Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), flags=flags, maxlen=400),
+            'ch1': Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
+            'ch2': Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
@@ -101,7 +101,8 @@ class Demo(BaseScreen):
             self.popups[key].pos = pos
         else:
             self.popups[key] = PopUpText(self.canvases['rocket'], alpha=180, pos=pos,
-                                         color=(255, 255, 0), text=text, font=self.fonts['info'], visible=True, border_radius=0, border_width=1)
+                                         color=(255, 255, 0), text=text, font=self.fonts['info'],
+                                         visible=True, border_radius=0, border_width=1)
 
 
 
@@ -210,7 +211,6 @@ class Demo(BaseScreen):
             r = math.cos(h * th) * 0.5
             canvas.draw_circle(color, (r * math.cos(th), r * math.sin(th)), .08)
         canvas.draw_text(yellow, self.fonts['huge'], f'PAUSED!', (0, 0))
-
 
     def rocket_got_focus_callback(self, canvas: Canvas):
         for key, scope in self.scopes.items():

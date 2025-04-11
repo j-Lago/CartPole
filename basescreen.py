@@ -77,7 +77,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             self.window = Canvas(surface=pygame.display.set_mode(window_size, self._flags))
 
         self.extra_info = []
-        self.info_popup = PopUpText(self.window, alpha=200, pos=(10, -10), flags=flags,
+        self.info_popup = PopUpText(self.window, alpha=200, pos=(10, -10),
                                     color=self.cols['info'], text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
         self.extra_help = []
         self.base_help = [
@@ -86,7 +86,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             f'F11: fullsceen/windowned',
             f'F10: toggle antialiasing',
         ]
-        self.help_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250), flags=flags,
+        self.help_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250),
                                     color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
                                     border_radius=13, border_width=2)
 
