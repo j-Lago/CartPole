@@ -109,23 +109,31 @@ class Canvas:
     def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
         return pygame.draw.rect(self.surface, color, self.world_to_screen_rect(rect), width, border_radius)
 
-    def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center'):
-        rendered_text = font.render(text, True, color)
+    def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center', shift: Vector2 | tuple[float, float] = (0, 0)):
+        rendered_text = self.render_text(color, font, text)
+        if not isinstance(shift, Vector2):
+            shift = Vector2(shift)
+        return self.blit_text(rendered_text, shift+pos, anchor)
+
+    def render_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str):
+        return font.render(text, True, color)
+
+    def blit_text(self, rendered_text, pos: Vector2 | tuple[float, float], anchor='center'):
         text_rect = rendered_text.get_rect()
         pos = self.world_to_screen_v2(pos)
         match anchor:
-            case 'center'     : text_rect.center = pos
-            case 'topleft'    : text_rect.topleft = pos
-            case 'topright'   : text_rect.topright = pos
-            case 'bottomleft' : text_rect.bottomleft = pos
+            case 'center': text_rect.center = pos
+            case 'topleft': text_rect.topleft = pos
+            case 'topright': text_rect.topright = pos
+            case 'bottomleft': text_rect.bottomleft = pos
             case 'bottomright': text_rect.bottomright = pos
-            case 'midbottom'  : text_rect.midbottom = pos
-            case 'midtop'     : text_rect.midtop = pos
-            case 'midleft'    : text_rect.midleft = pos
-            case 'midright'   : text_rect.midright = pos
+            case 'midbottom': text_rect.midbottom = pos
+            case 'midtop': text_rect.midtop = pos
+            case 'midleft': text_rect.midleft = pos
+            case 'midright': text_rect.midright = pos
             case _: ValueError(f"Anchor '{anchor}' não suportado.")
         self.blit(rendered_text, self.screen_to_world_rect(text_rect))
-        return text_rect
+        return self.screen_to_world_rect(text_rect)
 
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))

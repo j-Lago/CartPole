@@ -1,25 +1,19 @@
-import lerp
+from pygame import Vector2
 from basescreen import BaseScreen
 from canvas import Canvas
-from math import sin, cos, pi, fmod
-from lerp import lerp_vec3
+
 
 class MinimalDemo(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.canvases['main'] = Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
+        self.mouse.set_visible(False)
 
     def draw_main(self, canvas: Canvas):
-        blue = (30, 60, 255)
-        red = (255, 30, 60)
-        yellow = (255, 200, 30)
-        for n in range(N := 400):
-            color = lerp_vec3(blue, red, n/N)
-            th = fmod(self.t*2, 2*pi)+3*pi*n/N
-            h = cos(self.t/2) + 2
-            r = cos(h*th) * 0.5
-            canvas.draw_circle(color, (r * cos(th), r * sin(th)), .08)
-        canvas.draw_text(yellow, self.fonts['huge'], f'{self.t:.1f}s', (0, 0))
+        mouse_pointer = self.mouse_world_pos
+        canvas.draw_text((255, 190, 30), self.fonts['huge'], f'{self.t:.1f}s', (0, 0))
+        canvas.draw_circle((200, 200, 200), mouse_pointer, .02)
+        canvas.draw_text((200, 200, 200), self.fonts['small'], f'({mouse_pointer[0]:.2f}, {mouse_pointer[1]:.2f})', mouse_pointer, anchor='midtop', shift=(0, -0.03))
 
 
 

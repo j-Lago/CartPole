@@ -26,7 +26,7 @@ class BaseScreen(metaclass=MetaLoopCall):
                  fps: float = 60.0,
                  antialiasing: bool = True,
                  fullscreen: bool = False,
-                 font_family: str = 'Courier New',
+                 font_family: str = 'Consolas',
                  font_base_size: int = 26,
                  flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
                  ):
@@ -42,7 +42,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             'info': pygame.font.SysFont('Consolas', 22),
             'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.8)),
             'small': pygame.font.SysFont(font_family, round(font_base_size)),
-            'default': pygame.font.SysFont(font_family, round(font_base_size*2)),
+            'normal': pygame.font.SysFont(font_family, round(font_base_size*2)),
             'big': pygame.font.SysFont(font_family, round(font_base_size*4)),
             'huge': pygame.font.SysFont(font_family, round(font_base_size*8)),
         }
@@ -109,11 +109,11 @@ class BaseScreen(metaclass=MetaLoopCall):
         return self.ticks / self.fps
 
     @property
-    def mouse_pos(self):
+    def mouse_pos(self) -> Vector2:
         return self.mouse.pos
 
     @property
-    def mouse_world_pos(self):
+    def mouse_world_pos(self) -> Vector2:
         canvas = self.active_canvas
         return canvas.screen_to_world_v2(remap(self.mouse.pos, self.window, canvas))
 

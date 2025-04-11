@@ -200,6 +200,17 @@ class Demo(BaseScreen):
         offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
         canvas.blit(prtsc, offset)
 
+        blue = (30, 60, 255)
+        red = (255, 30, 60)
+        yellow = (255, 200, 30)
+        for n in range(N := 400):
+            color = lerp_vec3(blue, red, n / N)
+            th = math.fmod(self.t * 2, 2 * math.pi) + 3 * math.pi * n / N
+            h = math.cos(self.t / 2) + 2
+            r = math.cos(h * th) * 0.5
+            canvas.draw_circle(color, (r * math.cos(th), r * math.sin(th)), .08)
+        canvas.draw_text(yellow, self.fonts['huge'], f'{self.t:.1f}s', (0, 0))
+
 
     def rocket_got_focus_callback(self, canvas: Canvas):
         for key, scope in self.scopes.items():

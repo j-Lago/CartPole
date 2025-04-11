@@ -1,7 +1,8 @@
 
-
 import pygame
 from copy import copy
+from pygame import Vector2
+
 
 class MouseButton:
     def __init__(self):
@@ -82,9 +83,12 @@ class Mouse:
         self.middle = MouseButton()
         self.scroll = MouseScroll()
 
+    def set_visible(self, visibility):
+        pygame.mouse.set_visible(visibility)
+
     @property
     def pos(self):
-        return pygame.mouse.get_pos()
+        return Vector2(pygame.mouse.get_pos())
 
     def process_event(self, event, keys):
         if event.type == pygame.MOUSEBUTTONDOWN:
