@@ -27,8 +27,8 @@ class Demo(BaseScreen):
 
         self.canvases = {
             'rocket': Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
-            'test'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_2),
-            'menu'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_3)
+            'menu': Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_2),
+            'test'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_3),
         }
         self.active_canvas_key = 'rocket'
         self.last_active_canvas_key = self.active_canvas_key
@@ -188,7 +188,7 @@ class Demo(BaseScreen):
             ang = i * 2 * math.pi / len(cols_iter)
             canvas.draw_circle(col, (self.hue_radius_exemple * math.cos(ang), self.hue_radius_exemple * math.sin(ang)), r)
 
-        canvas.draw_text(color=(255, 255, 255), font=self.fonts['default'], text='Use as setas!', pos=(0, 0), anchor='center')
+        canvas.draw_text(color=(255, 255, 255), font=self.fonts['big'], text='Use as setas!', pos=(0, 0), anchor='center')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, +1', pos=(-1, +1), anchor='midtop')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, +1', pos=(+1, +1), anchor='midtop')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
@@ -209,7 +209,7 @@ class Demo(BaseScreen):
             h = math.cos(self.t / 2) + 2
             r = math.cos(h * th) * 0.5
             canvas.draw_circle(color, (r * math.cos(th), r * math.sin(th)), .08)
-        canvas.draw_text(yellow, self.fonts['huge'], f'{self.t:.1f}s', (0, 0))
+        canvas.draw_text(yellow, self.fonts['huge'], f'PAUSED!', (0, 0))
 
 
     def rocket_got_focus_callback(self, canvas: Canvas):
