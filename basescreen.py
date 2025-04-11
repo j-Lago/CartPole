@@ -139,8 +139,10 @@ class BaseScreen(metaclass=MetaLoopCall):
                     elif event.key == pygame.K_F11:
                         self.fullscreen = not self.fullscreen
                         if self.fullscreen:
+                            _mouse_visibility = pygame.mouse.get_visible()
                             pygame.display.quit()
                             pygame.display.init()
+                            pygame.mouse.set_visible(_mouse_visibility)
                             self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
                         else:
                             self.window = Canvas(surface=pygame.display.set_mode(self.window_size, self._flags))
