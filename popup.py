@@ -13,7 +13,7 @@ class PopUp(Canvas):
         self.set_alpha(alpha)
 
     def collision(self, pos) -> bool:
-        _, _, w, h = self.get_rect()
+        _, _, w, h = self.surface.get_rect()
         return collision_point_rect(pos, (self.pos[0], self.pos[1], w*self.main_canvas.relative_scale/self.main_canvas.scale, h*self.main_canvas.relative_scale/self.main_canvas.scale))
 
     def blit_to_main(self):
@@ -69,7 +69,7 @@ class PopUpText(PopUp):
 
         canvas.surface = pygame.transform.scale(canvas.surface, (x_max + self.pad[0] * 2, y_max + self.pad[1]))
 
-        rect = canvas.get_world_rect()
+        rect = canvas.get_rect()
         canvas.draw_rect(self.fill_color, rect, 0, self.border_radius)
 
         for n in range(len(self.text)):

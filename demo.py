@@ -12,11 +12,15 @@ from mouse import MouseButton, MouseScroll, Mouse
 from utils import remap, ColorsDiscIterator
 from scope import Scope
 from popup import PopUp, PopUpText
+from pathlib import Path
 
 
 class Demo(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.rel_path = Path(__file__).parent
+        self.assets_path = self.rel_path / 'assets'
+
 
         self.mouse.left.press_callback = self.left_click
         self.mouse.left.release_callback = self.left_release
@@ -30,8 +34,7 @@ class Demo(BaseScreen):
             'menu': Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_2),
             'test'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_3),
         }
-        self.active_canvas_key = 'rocket'
-        self.last_active_canvas_key = self.active_canvas_key
+
         self.event_loop_callback = self.process_user_input_event
         self.canvases['rocket'].got_focus_callback = self.rocket_got_focus_callback
 
@@ -70,8 +73,8 @@ class Demo(BaseScreen):
         self.extra_help = [
             f'────────────────────────',
             f'  1: tab rocket example',
-            f'  2: tab hue dic example',
-            f'  3: tab pause example',
+            f'  2: tab pause example',
+            f'  3: tab hue dic example',
             f'  v: ',
             f'  b: ',
             f'  +: ',
@@ -83,8 +86,23 @@ class Demo(BaseScreen):
             f'  g: ',
         ]
 
+        self.sounds['beep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.6)
+        self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=1.0)
+
+        self.sounds['jet'].play(loops=-1)
+
+        self.pre_draw_callback = self.pre_draw
+
+
+    def pre_draw(self):
+        if self.active_canvas_key != 'rocket':
+            self.sounds['jet'].set_volume(0)
+
+
+
+
     def left_release(self, button: MouseButton):
-        pass
+        self.sounds['beep'].play()
 
     def left_click(self, button: MouseButton):
         key = 'left_click'
@@ -195,10 +213,10 @@ class Demo(BaseScreen):
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, -1', pos=(+1, -1), anchor='midbottom')
 
-    def draw_menu(self, canvas):
+    def draw_menu(self, canvas: Canvas):
         prtsc = self.canvases[self.last_active_canvas_key].copy()
         prtsc.set_alpha(128)
-        offset = (-canvas.get_world_rect()[2] / 2, canvas.get_world_rect()[3] / 2)
+        offset = (canvas.xmin, canvas.ymax)
         canvas.blit(prtsc, offset)
 
         blue = (30, 60, 255)
@@ -217,7 +235,7 @@ class Demo(BaseScreen):
             scope.clear()
 
 
-    def draw_rocket(self, canvas):
+    def draw_rocket(self, canvas: Canvas):
 
         self.extra_info = [
         ]
@@ -230,6 +248,8 @@ class Demo(BaseScreen):
         else:
             angle = 0.0
             throttle = self.throttle_min
+
+        self.sounds['jet'].set_volume(throttle)
 
         if self.particle_en:
             for _ in range(int(5*60/self.fps)):

@@ -7,9 +7,14 @@ vec4 = tuple[float, float, float, float]
 
 
 def remap(point: vec2, origin: vec4 | Canvas | pygame.Surface, dest: vec4 | Canvas | pygame.Surface) -> vec2:
-    if isinstance(origin, Canvas | pygame.Surface):
+    if isinstance(origin, Canvas):
+        origin = origin.surface.get_rect()
+    elif isinstance(origin, pygame.Surface):
         origin = origin.get_rect()
-    if isinstance(dest, Canvas | pygame.Surface):
+
+    if isinstance(dest, Canvas):
+        dest = dest.surface.get_rect()
+    elif isinstance(dest, pygame.Surface):
         dest = dest.get_rect()
 
     ox, oy = point

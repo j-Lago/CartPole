@@ -60,7 +60,7 @@ class Scope(PopUp):
 
         L = 100
 
-        rect = canvas.get_world_rect()
+        rect = canvas.get_rect()
         xmin, xmax = rect[0], rect[0] + rect[2]
         ymin, ymax = rect[1] - rect[3], rect[1]
         w = rect[2]

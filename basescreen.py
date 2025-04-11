@@ -8,7 +8,7 @@ from filters import MediaMovel
 from popup import PopUp, PopUpText
 from pygame import Vector2
 from lerp import lerp_vec3
-
+from pathlib import Path
 
 class MetaLoopCall(type):
     """
@@ -62,6 +62,8 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.window_size = window_size
         self.canvas_size = canvas_size
         self.event_loop_callback = None
+        self.pre_draw_callback = None
+        self.post_draw_callback = None
 
         self.popups = dict()
         self.canvases = dict()
@@ -96,6 +98,18 @@ class BaseScreen(metaclass=MetaLoopCall):
         }
 
         self.clock = pygame.time.Clock()
+
+        #sounds
+        self.mixer = pygame.mixer
+        self.mixer.init()
+        self.sounds = dict()
+
+    def load_sound(self, file_path: Path, volume: float | tuple[float, float] = 1):
+        sound = self.mixer.Sound(file_path)
+        if sound is None:
+            raise FileNotFoundError(f"Não foi possível carregar o arquivos '{file_path}'.")
+        sound.set_volume(volume)
+        return sound
 
 
     @property
@@ -155,13 +169,20 @@ class BaseScreen(metaclass=MetaLoopCall):
                                 self.last_active_canvas_key = self.active_canvas_key
                                 self.active_canvas_key = tab_key
                                 self.canvases[tab_key].got_focus()
+                                # print(self.last_active_canvas_key, '->', self.active_canvas_key)
 
                 if self.event_loop_callback is not None:
                     self.event_loop_callback(event)
 
 
             # draw
+            if self.pre_draw_callback is not None:
+                self.pre_draw_callback()
+
             self._draw()
+
+            if self.post_draw_callback is not None:
+                self.post_draw_callback()
 
     def _draw(self):
         self.window.fill(self.cols['bg'])
@@ -179,7 +200,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.info_popup.main_canvas = self.window
         self.help_popup.main_canvas = self.window
         if self.info_popup.visible:
-            rect = self.info_popup.get_rect()
+            rect = self.info_popup.surface.get_rect()
             self.help_popup.pos = self.window.screen_to_world_v2((10, 20+rect[3]))
             self.info_popup.text = [
                 # f'╭───╮',

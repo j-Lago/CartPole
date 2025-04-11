@@ -76,8 +76,8 @@ class Canvas:
     def relative_scale(self):
         return self.scale / self.base_scale
 
-    def get_rect(self):
-        return self.surface.get_rect()
+    # def get_rect(self):
+    #     return self.surface.get_rect()
 
     def get_width(self):
         return self.surface.get_width()
@@ -157,8 +157,28 @@ class Canvas:
     def world_to_screen_f(self, dist: float) -> int:
         return round(dist * self.scale)
 
-    def get_world_rect(self) -> tuple[float, float, float, float]:
-        return self.screen_to_world_rect(self.get_rect())
+    def get_rect(self) -> tuple[float, float, float, float]:
+        return self.screen_to_world_rect(self.surface.get_rect())
+
+    @property
+    def xmin(self) -> float:
+        rect  = self.get_rect()
+        return rect[0]
+
+    @property
+    def ymin(self) -> float:
+        rect  = self.get_rect()
+        return -rect[1]
+
+    @property
+    def xmax(self) -> float:
+        rect  = self.get_rect()
+        return rect[0] + rect[2]
+
+    @property
+    def ymax(self) -> float:
+        rect  = self.get_rect()
+        return -rect[1] + rect[3]
 
     def fill(self, color, rect=None, special_flags=0):
         self.surface.fill(color, rect, special_flags)
