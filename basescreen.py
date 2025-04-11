@@ -31,7 +31,12 @@ class BaseScreen(metaclass=MetaLoopCall):
                  flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
                  ):
 
-        pygame.init()
+        try:
+            pygame.quit()
+        except Exception as e:
+            print(e)
+        finally:
+            pygame.init()
 
         self.cols = {
             'bg': (30, 30, 30),
