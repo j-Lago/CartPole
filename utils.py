@@ -16,11 +16,15 @@ def points_from_rect(rect=Vec4) -> Points:
     x0, y0, w, h = rect
     return (x0, y0), (x0, y0 - h), (x0 + w, y0 - h), (x0 + w, y0)
 
-def external_rect_from_points(points: Points) -> Vec4:
-    min_x = min(p[0] for p in points)
-    max_x = max(p[0] for p in points)
-    min_y = min(p[1] for p in points)
-    max_y = max(p[1] for p in points)
+
+def outer_rect(points: Points) -> Vec4:
+    min_x, max_x = float('inf'), float('-inf')
+    min_y, max_y = float('inf'), float('-inf')
+    for p in points:
+        min_x = min(min_x, p[0])
+        max_x = max(max_x, p[0])
+        min_y = min(min_y, p[1])
+        max_y = max(max_y, p[1])
     return min_x, max_y, max_x - min_x, max_y - min_y
 
 

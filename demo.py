@@ -9,11 +9,12 @@ from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
 from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
-from utils import remap, ColorsDiscIterator, external_rect_from_points
+from utils import remap, ColorsDiscIterator, outer_rect
 from scope import Scope
 from popup import PopUp, PopUpText
 from pathlib import Path
 from utils import points_from_rect, RotateMatrix
+from image import Image
 
 
 class Demo(BaseScreen):
@@ -277,8 +278,12 @@ class Demo(BaseScreen):
         # jet : todo: refacto 'função rotate_image_around(img, angle, center)'
         bias_throttle = (throttle + 0.25)
         img: pygame.Surface = pygame.transform.scale_by(self.images['jet'], bias_throttle*uniform(0.8, 1.2)*canvas.relative_scale)
-        img_screen_rect = img.get_rect()
 
+        pivot = canvas.screen_to_world_v2(canvas.center_pixels() + (0, 30 * canvas.relative_scale))
+
+        #fixme: Image(canvas, img).rotate_rad_around(angle, pivot).blit()
+
+        img_screen_rect = img.get_rect()
         screen_pivot = canvas.center_pixels() + (0, 30*canvas.relative_scale)
         img_screen_rect.midtop = screen_pivot
         img_rect = canvas.screen_to_world_rect(img_screen_rect)
@@ -289,8 +294,9 @@ class Demo(BaseScreen):
 
         rot_points = RotateMatrix(angle) * points
 
-        ext_rect = external_rect_from_points(rot_points)
+        ext_rect = outer_rect(rot_points)
         ext_points = points_from_rect(ext_rect)
+
 
         canvas.blit(pygame.transform.rotate(img, math.degrees(angle)), ext_rect)
 
