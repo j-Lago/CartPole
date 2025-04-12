@@ -9,15 +9,17 @@ from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
 from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
-from utils import remap, ColorsDiscIterator
+from utils import remap, ColorsDiscIterator, external_rect_from_points
 from scope import Scope
 from popup import PopUp, PopUpText
 from pathlib import Path
+from utils import points_from_rect, RotateMatrix
 
 
 class Demo(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
 
@@ -61,7 +63,7 @@ class Demo(BaseScreen):
             self.steer = Joystick(joystick, 2)
             self.throttle = Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
 
-        self.particles = Particles(400)
+        self.particles = Particles(100)
         self.text_particles = Particles(300)
         self.particles_fonts = [
             pygame.font.SysFont('Times', 28),
@@ -72,6 +74,8 @@ class Demo(BaseScreen):
 
         self.extra_help = [
             f'────────────────────────',
+            f' F7: enable/disable particles',
+            f' F8: show/hide external rects',
             f'  1: tab rocket example',
             f'  2: tab pause example',
             f'  3: tab hue dic example',
@@ -87,9 +91,12 @@ class Demo(BaseScreen):
         ]
 
         self.sounds['beep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.6)
-        self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=1.0)
-
+        self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)
         self.sounds['jet'].play(loops=-1)
+
+        self.images['jet'] = pygame.transform.smoothscale_by(pygame.transform.rotate(self.load_image(self.assets_path / 'jet.png'), 90), 0.5)
+
+        self.show_external_rects = False
 
         self.pre_draw_callback = self.pre_draw
 
@@ -149,6 +156,10 @@ class Demo(BaseScreen):
                 self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F8:
+                self.show_external_rects = not self.show_external_rects
+            elif event.key == pygame.K_F7:
+                self.particle_en = not self.particle_en
             if event.key == pygame.K_LEFT:
                 self.hue_radius_exemple -= 0.05
             elif event.key == pygame.K_RIGHT:
@@ -177,9 +188,6 @@ class Demo(BaseScreen):
                 self.scopes['ch2'].x_scale *= 2
             elif event.key == pygame.K_KP_MINUS:
                 self.scopes['ch2'].x_scale /= 2
-
-            elif event.key == pygame.K_g:
-                self.particle_en = not self.particle_en
 
 
 
@@ -234,7 +242,6 @@ class Demo(BaseScreen):
         for key, scope in self.scopes.items():
             scope.clear()
 
-
     def draw_rocket(self, canvas: Canvas):
 
         self.extra_info = [
@@ -264,30 +271,66 @@ class Demo(BaseScreen):
         self.text_particles.step_and_draw()
 
 
-        emmit_l = Vector2(-0.075, -0.04).rotate_rad(angle)
-        emmit_r = Vector2(0.075, -0.04).rotate_rad(angle)
 
-        # c, s = math.cos(angle), math.sin(angle)
 
+        # jet : todo: refacto 'função rotate_image_around(img, angle, center)'
+        bias_throttle = (throttle + 0.25)
+        img: pygame.Surface = pygame.transform.scale_by(self.images['jet'], bias_throttle*uniform(0.8, 1.2)*canvas.relative_scale)
+        img_screen_rect = img.get_rect()
+
+        screen_pivot = canvas.center_pixels() + (0, 30*canvas.relative_scale)
+        img_screen_rect.midtop = screen_pivot
+        img_rect = canvas.screen_to_world_rect(img_screen_rect)
+
+        pivot = canvas.screen_to_world_v2(screen_pivot)
+
+        points = points_from_rect(img_rect)
+
+        rot_points = RotateMatrix(angle) * points
+
+        ext_rect = external_rect_from_points(rot_points)
+        ext_points = points_from_rect(ext_rect)
+
+        canvas.blit(pygame.transform.rotate(img, math.degrees(angle)), ext_rect)
+
+        # jet particles
+        emmit_l = Vector2(-0.05*bias_throttle, -0.04).rotate_rad(angle)
+        emmit_r = Vector2(0.05*bias_throttle, -0.04).rotate_rad(angle)
         if self.particle_en:
-            for _ in range(int(randint(round(15 * throttle), round(30 * throttle)) * 60/self.fps)):
-                vel = Vector2(uniform(-0.07, .07), uniform(-1.9, -3.8))
+            for _ in range(int(randint(round(8 * bias_throttle), round(10 * bias_throttle)) * 60 / self.fps)):
+                vel = Vector2(uniform(-0.2, .07), uniform(-5, -8)) * bias_throttle
                 self.particles.append(BallParticle(canvas,
-                                                   lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),(255, 255, 255), random() * 0.5),
+                                                   lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),
+                                                             (255, 255, 255), random() * 0.5),
                                                    uniform(.003, .006),
                                                    pos=lerp_vec2(emmit_l, emmit_r, random()),
                                                    vel=vel.rotate_rad(angle),
-                                                   dt=1 / self.fps, lifetime=uniform(.2, .4), g=0))
+                                                   dt=1 / self.fps, lifetime=uniform(.1, .15), g=0))
             self.particles.step_and_draw()
 
-        canvas.draw_polygon((90, 90, 100), rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
+
+        # rocket
+        canvas.draw_polygon((90, 90, 100),
+                            rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
         canvas.draw_polygon((120, 120, 130),
                             ((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)))
 
         canvas.draw_circle((255, 200, 60), (0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
         canvas.draw_circle((0, 0, 0), (0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
 
-        # --Scope-----------------------------
+
+        # extrenal rects for debug
+        if self.show_external_rects:
+            canvas.draw_polygon((0, 255, 255), points, 2)
+            canvas.draw_circle((0, 255, 255), points[0], .015)
+            canvas.draw_polygon((255, 0, 255), rot_points, 2)
+            canvas.draw_circle((255, 0, 255), rot_points[0], .015)
+            canvas.draw_polygon((255, 0, 0), ext_points, 2)
+            canvas.draw_circle((255, 0, 0), ext_points[0], .015)
+
+
+
+        # scope
         x = self.t
         total_frame_time = 1/self.real_fps if self.real_fps != 0 else 0
         y = {

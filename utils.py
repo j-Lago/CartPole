@@ -1,12 +1,31 @@
+import math
+
 import pygame
 from canvas import Canvas
 import colorsys
 
-vec2 = tuple[float, float]
-vec4 = tuple[float, float, float, float]
+
+Vec2 = tuple[float, float] | pygame.Vector2
+Vec3 = tuple[float, float, float] | pygame.Vector2
+Vec4 = tuple[float, float, float, float]
+Point = Vec2
+Points = tuple[Point, ...]
 
 
-def remap(point: vec2, origin: vec4 | Canvas | pygame.Surface, dest: vec4 | Canvas | pygame.Surface) -> vec2:
+def points_from_rect(rect=Vec4) -> Points:
+    x0, y0, w, h = rect
+    return (x0, y0), (x0, y0 - h), (x0 + w, y0 - h), (x0 + w, y0)
+
+def external_rect_from_points(points: Points) -> Vec4:
+    min_x = min(p[0] for p in points)
+    max_x = max(p[0] for p in points)
+    min_y = min(p[1] for p in points)
+    max_y = max(p[1] for p in points)
+    return min_x, max_y, max_x - min_x, max_y - min_y
+
+
+
+def remap(point: Vec2, origin: Vec4 | Canvas | pygame.Surface, dest: Vec4 | Canvas | pygame.Surface) -> Vec2:
     if isinstance(origin, Canvas):
         origin = origin.surface.get_rect()
     elif isinstance(origin, pygame.Surface):
@@ -33,7 +52,9 @@ def remap(point: vec2, origin: vec4 | Canvas | pygame.Surface, dest: vec4 | Canv
     return dx, dy
 
 
-def collision_point_rect(point: vec2, rect: vec4) -> bool:
+
+
+def collision_point_rect(point: Vec2, rect: Vec4) -> bool:
     return rect[0] < point[0] < rect[0] + rect[2] and rect[1] > point[1] > rect[1] - rect[3]
 
 
@@ -70,8 +91,41 @@ class Mat2x2:
 
     def __mul__(self, other):
         match other:
-            case complex(): return complex(other.real*self[0, 0] + other.imag*self[0, 1], other.real*self[1, 0] + other.imag*self[1, 1])
-            case float() | int(): return Mat2x2(other*self[0, 0], other*self[0, 1], other*self[1, 0], other*self[1, 1])
+            case complex():
+                return complex(other.real*self[0, 0] + other.imag*self[0, 1], other.real*self[1, 0] + other.imag*self[1, 1])
+            case (a, b) if isinstance(a, float) and isinstance(b, float):
+                return other[0]*self[0, 0] + other[1]*self[0, 1], other[0]*self[1, 0] + other[1]*self[1, 1]
+            case float() | int():
+                return Mat2x2(other*self[0, 0], other*self[0, 1], other*self[1, 0], other*self[1, 1])
+            case [*points] | (*points, ) if all(isinstance(item, tuple) for item in points):
+                return tuple(self*p for p in points)
+            case _:
+                raise ValueError(f"Não é possível multiplicar Mat2x2 por {type(other)}")
 
     def __str__(self):
         return str(self._values)
+
+
+class RotateMatrix(Mat2x2):
+    def __init__(self, angle_rad: float):
+        c, s = math.cos(angle_rad), math.sin(angle_rad)
+        super().__init__(c, -s, s, c)
+
+        self._angle_rad = angle_rad
+
+    @property
+    def angle_rad(self):
+        return self._angle_rad
+
+    @angle_rad.setter
+    def angle_rad(self, value):
+        c, s = math.cos(value), math.sin(value)
+        self._values = (c, -s, s, c)
+
+    @property
+    def angle_deg(self):
+        return self._angle_rad * 180 / math.pi
+
+    @angle_deg.setter
+    def angle_deg(self, value):
+        self.angle_rad = value / 180 * math.pi

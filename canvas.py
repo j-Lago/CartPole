@@ -135,6 +135,13 @@ class Canvas:
         self.blit(rendered_text, self.screen_to_world_rect(text_rect))
         return self.screen_to_world_rect(text_rect)
 
+    @property
+    def center(self):
+        return Vector2(0, 0)
+
+    def center_pixels(self):
+        return self.world_to_screen_v2(Vector2(0, 0))
+
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))
 

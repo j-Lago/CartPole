@@ -104,17 +104,21 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self.clock = pygame.time.Clock()
 
-        #sounds
+        # sounds
         self.mixer = pygame.mixer
         self.mixer.init()
         self.sounds = dict()
 
-    def load_sound(self, file_path: Path, volume: float | tuple[float, float] = 1):
+        # images
+        self.images = dict()
+
+    def load_sound(self, file_path: Path, volume: float = 1):
         sound = self.mixer.Sound(file_path)
-        if sound is None:
-            raise FileNotFoundError(f"Não foi possível carregar o arquivos '{file_path}'.")
         sound.set_volume(volume)
         return sound
+
+    def load_image(self, file_path: Path):
+        return pygame.image.load(file_path)
 
 
     @property
