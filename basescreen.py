@@ -6,13 +6,13 @@ from mouse import Mouse
 from utils import remap
 from filters import MediaMovel
 from popup import PopUp, PopUpText
-from pygame import Vector2
-from lerp import lerp_vec3
+from pygame import Vector2, Rect
 from pathlib import Path
+
 
 class MetaLoopCall(type):
     """
-    Garante que BaseScreen.loop seja chamado apos o instanciamento de uma subclasse de BaseScreen
+    Garante que BaseScreen.loop() seja chamado apos o instanciamento de uma subclasse de BaseScreen
     """
     def __call__(cls, *args, **kwargs):
         instance = super().__call__(*args, **kwargs)
