@@ -65,13 +65,15 @@ class Demo(BaseScreen):
             self.throttle = Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
 
         self.particles = Particles(100)
-        self.text_particles = Particles(350)
+        self.text_particles = Particles(300)
         self.particles_fonts = [
-            pygame.font.SysFont('Times', 28),
-            pygame.font.SysFont('Times', 42),
-            pygame.font.SysFont('Times', 64),
+            pygame.font.SysFont('Times', 22),
+            pygame.font.SysFont('Times', 36),
+            pygame.font.SysFont('Times', 54),
+            pygame.font.SysFont('Times', 68),
         ]
-        self.letters = [chr(i) for i in range(945, 970) if i != 962]  #choice(('0', '1')), #choice(tuple(chr(i) for i in range(97, 123))),
+
+        self.letters = [chr(i) for i in range(945, 970) if i != 962]
 
         self.extra_help = [
             f'────────────────────────',
