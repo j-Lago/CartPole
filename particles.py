@@ -47,7 +47,7 @@ class Particle():
             self.vel_y = self.vel_y * self.decay + 0.5 * self.g * self.dt**2
 
         self.ticks += 1
-        if self.ticks * self.dt > self.lifetime:
+        if self.ticks * self.dt > self.lifetime and self.lifetime > 0:
             self.alive = False
 
 

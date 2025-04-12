@@ -56,7 +56,7 @@ class Demo(BaseScreen):
 
         self.steer = None
         self.throttle = None
-        self.throttle_min = 0.05
+        self.throttle_min = 0.1
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
@@ -64,11 +64,11 @@ class Demo(BaseScreen):
             self.throttle = Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
 
         self.particles = Particles(100)
-        self.text_particles = Particles(300)
+        self.text_particles = Particles(350)
         self.particles_fonts = [
             pygame.font.SysFont('Times', 28),
-            pygame.font.SysFont('Times', 34),
-            pygame.font.SysFont('Times', 40),
+            pygame.font.SysFont('Times', 42),
+            pygame.font.SysFont('Times', 64),
         ]
         self.letters = [chr(i) for i in range(945, 970) if i != 962]  #choice(('0', '1')), #choice(tuple(chr(i) for i in range(97, 123))),
 
@@ -259,14 +259,15 @@ class Demo(BaseScreen):
         self.sounds['jet'].set_volume(throttle)
 
         if self.particle_en:
-            for _ in range(int(5*60/self.fps)):
+            for _ in range(int(2*60/self.fps)):
+                font_index = randint(0, len(self.particles_fonts)-1)
                 self.text_particles.append(
                     TextParticle(canvas,
                                  color=lerp_vec3((90, 250, 90), (30, 90, 30), random()),
                                  text=choice(self.letters),
-                                 font=choice(self.particles_fonts),
-                                 pos=(uniform(-1.8, 1.8), 1.1),
-                                 vel=(0, -2), dt=1/self.fps, g=0, lifetime=2,
+                                 font=self.particles_fonts[font_index],
+                                 pos=(uniform(-1.8, 1.8), 1.05),
+                                 vel=(0, -0.8-font_index*.2), dt=1/self.fps, g=0, lifetime=-1,
                                  ))
         self.text_particles.step_and_draw()
 
