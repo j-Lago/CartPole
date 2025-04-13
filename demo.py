@@ -99,7 +99,7 @@ class Demo(BaseScreen):
 
         self.images['jet'] = pygame.transform.smoothscale_by(pygame.transform.rotate(self.load_image(self.assets_path / 'jet.png'), 90), 0.5)
 
-        self.show_external_rects = False
+        self.show_outer_rects = False
 
         self.pre_draw_callback = self.pre_draw
 
@@ -126,7 +126,7 @@ class Demo(BaseScreen):
         text = f'{pos[0]:.2f}, {pos[1]:.2f}'
         if key in self.popups.keys():
             self.popups[key].text = text
-            self.popups[key].pos = pos
+            self.popups[key]._pos = pos
         else:
             self.popups[key] = PopUpText(self.canvases['rocket'], alpha=180, pos=pos,
                                          color=(255, 255, 0), text=text, font=self.fonts['info'],
@@ -160,7 +160,7 @@ class Demo(BaseScreen):
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F8:
-                self.show_external_rects = not self.show_external_rects
+                self.show_outer_rects = not self.show_outer_rects
             elif event.key == pygame.K_F7:
                 self.particle_en = not self.particle_en
             if event.key == pygame.K_LEFT:
@@ -278,6 +278,11 @@ class Demo(BaseScreen):
 
 
         # jet : todo: refacto 'função rotate_image_around(img, angle, center)'
+
+        cimg = Image(canvas, self.images['jet'])
+        cimg.blit()
+
+
         bias_throttle = (throttle + 0.25)
         img: pygame.Surface = pygame.transform.scale_by(self.images['jet'], bias_throttle*uniform(0.8, 1.2)*canvas.relative_scale)
 
@@ -329,7 +334,7 @@ class Demo(BaseScreen):
 
 
         # extrenal rects for debug
-        if self.show_external_rects:
+        if self.show_outer_rects:
             canvas.draw_polygon((0, 255, 255), points, 2)
             canvas.draw_circle((0, 255, 255), points[0], .015)
             canvas.draw_polygon((255, 0, 255), rot_points, 2)

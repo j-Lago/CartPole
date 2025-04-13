@@ -8,9 +8,9 @@ class MouseButton:
     def __init__(self):
         self.press_time = None
         self.release_time = None
-        self.press_pos = None
-        self.release_pos = None
-        self.drag_pos = None
+        self.presspos = None
+        self.releasepos = None
+        self.dragpos = None
         self.press_keys = None
         self.release_keys = None
         self.drag_keys = None
@@ -23,7 +23,7 @@ class MouseButton:
     def press(self, pos, keys):
         self.press_keys = copy(keys)
         self.press_time = pygame.time.get_ticks()
-        self.press_pos = pos
+        self.presspos = pos
         self.pressed = True
         if self.press_callback is not None:
             self.press_callback(self)
@@ -31,27 +31,27 @@ class MouseButton:
     def release(self, pos, keys):
         self.release_keys = copy(keys)
         self.release_time = pygame.time.get_ticks()
-        self.release_pos = pos
+        self.releasepos = pos
         self.pressed = False
-        self.drag_pos = pos
+        self.dragpos = pos
         self.dragging = False
         if self.release_callback is not None:
             self.release_callback(self)
 
     def drag(self, pos, keys):
         self.drag_keys = copy(keys)
-        self.drag_pos = pos
+        self.dragpos = pos
         self.dragging = True
         if self.drag_callback is not None:
             self.drag_callback(self)
 
     def clear_drag_delta(self):
-        self.press_pos = self.drag_pos
+        self.presspos = self.dragpos
 
 
     @property
     def drag_delta(self):
-        return self.drag_pos[0]-self.press_pos[0], self.drag_pos[1]-self.press_pos[1]
+        return self.dragpos[0]-self.presspos[0], self.dragpos[1]-self.presspos[1]
 
 
 class MouseScroll:
@@ -60,18 +60,18 @@ class MouseScroll:
         self.down_callback = None
         self.up_keys = None
         self.down_keys = None
-        self.up_pos = None
-        self.down_pos = None
+        self.uppos = None
+        self.downpos = None
 
     def up(self, pos, keys):
         self.up_keys = copy(keys)
-        self.up_pos = pos
+        self.uppos = pos
         if self.up_callback is not None:
             self.up_callback(self)
 
     def down(self, pos, keys):
         self.down_keys = copy(keys)
-        self.down_pos = pos
+        self.downpos = pos
         if self.down_callback is not None:
             self.down_callback(self)
 

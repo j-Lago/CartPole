@@ -97,7 +97,7 @@ class Canvas:
     def draw_aaline(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
         return pygame.draw.aaline(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
-    def draw_lines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Sequence[tuple[float, float]], width: int = 1):
+    def draw_lines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Sequence[tuple[float, float]] | Sequence[Vector2], width: int = 1):
         return pygame.draw.lines(self.surface, color, closed, self.world_to_screen_points(points), width)
 
     def draw_aalines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Sequence[tuple[float, float]], width: int = 1):
