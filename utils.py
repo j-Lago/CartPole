@@ -140,11 +140,13 @@ class RotateMatrix(Mat2x2):
 
 
 class fRect:
-    def __init__(self, x, y, w, h):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
+    def __init__(self, *args):
+        if len(args) == 4:
+            self.x, self.y, self.w, self.h = args
+        elif len(args) == 1:
+            self.x, self.y, self.w, self.h = args[0]
+        else:
+            raise ValueError(f'fRect aceita como argumentos 4 floats ou tupla de 4 floats, mar recebeu: {type(args)}, {args=}')
 
     def __getitem__(self, item):
         return (self.x, self.y, self.w, self.h)[item]
@@ -220,5 +222,35 @@ class fRect:
     @bottomleft.setter
     def bottomleft(self, point):
         self.x, self.y = point[0], point[1]+self.h
+
+    def __add__(self, vec2: Vec2):
+        return fRect(self.x + vec2[0], self.y + vec2[1], self.w, self.h)
+
+    def __sub__(self, vec2: Vec2):
+        return fRect(self.x - vec2[0], self.y - vec2[1], self.w, self.h)
+
+    def __format__(self, format_spec):
+        return f'fRect[{self.x:{format_spec}}, {self.y:{format_spec}}, {self.w:{format_spec}}, {self.h:{format_spec}}]'
+
+    def __str__(self):
+        return f'fRect[{self.x}, {self.y}, {self.w}, {self.h}]'
+
+
+
+if __name__ == '__main__':
+    r = fRect(0.0, 0.0, 2.0, 1.0)
+
+    print(f'{r:.2f}')
+    print(r)
+    print(r[0])
+    x,y,w,h = r + (.5, .2)
+    print(x,y,w,h)
+    print(r-(10,20))
+    r.center = (0, 0)
+    print(r)
+
+    r2 = (1,1,3,4)
+    r3 = fRect(r2)
+
 
 

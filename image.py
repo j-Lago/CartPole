@@ -3,8 +3,9 @@ from pathlib import Path
 from pygame import Vector2
 from canvas import Canvas
 import math
-from utils import outer_rect, points_from_rect, RotateMatrix
+from utils import outer_rect, points_from_rect, RotateMatrix, fRect
 from typing import Self
+
 
 
 class Image:
@@ -110,41 +111,47 @@ class Image:
 
 
 
-    def rotate_rad_around(self, angle: float, pivot: tuple[float, float] | Vector2, anchor: str = 'center') -> Self:
+    def rotate_rad_around(self, angle: float, pivot: tuple[float, float] | Vector2 | str = 'center', dest_pos: tuple[float, float] | Vector2 = Vector2(0, 0)) -> Self:
 
-        match anchor:
-            case 'center': anchor = self.center
-            case 'topleft': anchor = self.topleft
-            case 'topright': anchor = self.topright
-            case 'bottomleft': anchor = self.bottomleft
-            case 'bottomright': anchor = self.bottomright
-            case 'midbottom': anchor = self.midbottom
-            case 'midtop': anchor = self.midtop
-            case 'midleft': anchor = self.midleft
-            case 'midright': anchor = self.midright
-            case _: ValueError(f"Anchor '{anchor}' não suportado.")
+        match pivot:
+            case tuple() | list(): pivot = pivot[:2]
+            case 'center': pivot = self.center
+            case 'topleft': pivot = self.topleft
+            case 'topright': pivot = self.topright
+            case 'bottomleft': pivot = self.bottomleft
+            case 'bottomright': pivot = self.bottomright
+            case 'midbottom': pivot = self.midbottom
+            case 'midtop': pivot = self.midtop
+            case 'midleft': pivot = self.midleft
+            case 'midright': pivot = self.midright
+            case _: ValueError(f"Anchor '{pivot}' não suportado.")
 
-        # self.midtop = pivot
-        rect = self.get_rect()
+        rect = fRect(self.get_rect())
 
         self._canvas.draw_circle((0, 255, 0), rect[:2], 0.01)
-        self._canvas.draw_circle((255, 0, 255), pivot, 0.01)
+        self._canvas.draw_circle((255, 0, 255), dest_pos, 0.01)
 
-        x, y, w, h = rect
-        rect = x - anchor[0], y - anchor[1], w, h
+        if not isinstance(pivot, Vector2):
+            pivot = Vector2(pivot)
+        if not isinstance(dest_pos, Vector2):
+            dest_pos = Vector2(dest_pos)
 
-        points = points_from_rect(rect)
+        points = points_from_rect(rect - pivot)
         rot_points = RotateMatrix(angle) * points
         ext_rect = outer_rect(rot_points)
-        rot_pos = Vector2(ext_rect[:2]) + anchor
+        rot_pos = Vector2(ext_rect[:2]) + dest_pos
+
+        rot_points_shift = tuple(dest_pos + p for p in rot_points)
+        self._canvas.draw_lines((255, 255, 255), True, rot_points_shift, 2)
+        self._canvas.draw_circle((255, 255, 255), rot_points_shift[0], 0.01)
 
         rot_img = pygame.transform.rotate(self._surface, angle*180/math.pi)
         rot = Image(self._canvas, surface=rot_img, pos=rot_pos)
 
         return rot
 
-    def rotate_deg_around(self, angle: float, pivot: tuple[float, float] | Vector2) -> Self:
-        return self.rotate_deg_around(angle/180*math.pi, pivot)
+    def rotate_deg_around(self, angle: float, pivot: tuple[float, float] | Vector2 | str = 'center', dest_pos: tuple[float, float] | Vector2 = Vector2(0, 0)) -> Self:
+        return self.rotate_deg_around(angle/180*math.pi, pivot, dest_pos)
 
     def get_rect(self):
         _, _, sw, sh = self._surface.get_rect()
