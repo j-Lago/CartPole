@@ -3,13 +3,15 @@ import math
 import pygame
 from canvas import Canvas
 import colorsys
+from typing import Sequence
+from pygame import Vector2
 
 
 Vec2 = tuple[float, float] | pygame.Vector2
 Vec3 = tuple[float, float, float] | pygame.Vector2
 Vec4 = tuple[float, float, float, float]
 Point = Vec2
-Points = tuple[Point, ...]
+Points = tuple[Point, ...] | Sequence
 
 
 def points_from_rect(rect=Vec4) -> Points:
@@ -97,14 +99,16 @@ class Mat2x2:
         match other:
             case complex():
                 return complex(other.real*self[0, 0] + other.imag*self[0, 1], other.real*self[1, 0] + other.imag*self[1, 1])
-            case (a, b) if isinstance(a, float) and isinstance(b, float):
+            case (a, b) if isinstance(a, float | int) and isinstance(b, float | int):
                 return other[0]*self[0, 0] + other[1]*self[0, 1], other[0]*self[1, 0] + other[1]*self[1, 1]
+            case _ if isinstance(other, Vector2):
+                return Vector2(other[0]*self[0, 0] + other[1]*self[0, 1], other[0]*self[1, 0] + other[1]*self[1, 1])
             case float() | int():
                 return Mat2x2(other*self[0, 0], other*self[0, 1], other*self[1, 0], other*self[1, 1])
-            case [*points] | (*points, ) if all(isinstance(item, tuple) for item in points):
+            case [*points] | (*points, ) if all(isinstance(item, tuple | Vector2) for item in points):
                 return tuple(self*p for p in points)
             case _:
-                raise ValueError(f"Não é possível multiplicar Mat2x2 por {type(other)}")
+                raise ValueError(f"Não é possível multiplicar Mat2x2 por {type(other)}: {other=}")
 
     def __str__(self):
         return str(self._values)
@@ -133,3 +137,88 @@ class RotateMatrix(Mat2x2):
     @angle_deg.setter
     def angle_deg(self, value):
         self.angle_rad = value / 180 * math.pi
+
+
+class fRect:
+    def __init__(self, x, y, w, h):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+
+    def __getitem__(self, item):
+        return (self.x, self.y, self.w, self.h)[item]
+
+    @property
+    def topleft(self):
+        return Vector2(self.x, self.y)
+
+    @topleft.setter
+    def topleft(self, point):
+        self.x, self.y = point
+
+    @property
+    def midtop(self):
+        return Vector2(self.x+self.w/2, self.y)
+
+    @midtop.setter
+    def midtop(self, point):
+        self.x, self.y = point[0]-self.w/2, point[1]
+
+    @property
+    def topright(self):
+        return Vector2(self.x+self.w, self.y)
+
+    @topright.setter
+    def topright(self, point):
+        self.x, self.y = point[0]-self.w, point[1]
+
+    @property
+    def bottomright(self):
+        return Vector2(self.x+self.w, self.y-self.h)
+
+    @bottomright.setter
+    def bottomright(self, point):
+        self.x, self.y = point[0]-self.w, point[1]+self.h
+
+    @property
+    def midbottom(self):
+        return Vector2(self.x+self.w/2, self.y-self.h)
+
+    @midbottom.setter
+    def midbottom(self, point):
+        self.x, self.y = point[0]-self.w/2, point[1]+self.h
+
+    @property
+    def center(self):
+        return Vector2(self.x+self.w/2, self.y-self.h/2)
+
+    @center.setter
+    def center(self, point):
+        self.x, self.y = point[0]-self.w/2, point[1]+self.h/2
+
+    @property
+    def midleft(self):
+        return Vector2(self.x, self.y-self.h/2)
+
+    @midleft.setter
+    def midleft(self, point):
+        self.x, self.y = point[0], point[1]+self.h/2
+
+    @property
+    def midright(self):
+        return Vector2(self.x+self.w, self.y-self.h/2)
+
+    @midright.setter
+    def midright(self, point):
+        self.x, self.y = point[0]-self.w, point[1]+self.h/2
+
+    @property
+    def bottomleft(self):
+        return Vector2(self.x, self.y-self.h)
+
+    @bottomleft.setter
+    def bottomleft(self, point):
+        self.x, self.y = point[0], point[1]+self.h
+
+

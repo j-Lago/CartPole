@@ -110,24 +110,41 @@ class Image:
 
 
 
-    def rotate_deg_around(self, angle: float, pivot: tuple[float, float] | Vector2) -> Self:
-        img_screen_rect = self._surface.get_rect()
+    def rotate_rad_around(self, angle: float, pivot: tuple[float, float] | Vector2, anchor: str = 'center') -> Self:
 
-        screen_pivot = self._canvas.world_to_screen_v2(pivot)
-        img_screen_rect.midtop = screen_pivot         # todo: criar Rect_f
-        img_rect = self._canvas.screen_to_world_rect(img_screen_rect)
+        match anchor:
+            case 'center': anchor = self.center
+            case 'topleft': anchor = self.topleft
+            case 'topright': anchor = self.topright
+            case 'bottomleft': anchor = self.bottomleft
+            case 'bottomright': anchor = self.bottomright
+            case 'midbottom': anchor = self.midbottom
+            case 'midtop': anchor = self.midtop
+            case 'midleft': anchor = self.midleft
+            case 'midright': anchor = self.midright
+            case _: ValueError(f"Anchor '{anchor}' não suportado.")
 
-        points = points_from_rect(img_rect)
+        # self.midtop = pivot
+        rect = self.get_rect()
 
-        rot_points = RotateMatrix(math.degrees(angle)) * points
+        self._canvas.draw_circle((0, 255, 0), rect[:2], 0.01)
+        self._canvas.draw_circle((255, 0, 255), pivot, 0.01)
 
+        x, y, w, h = rect
+        rect = x - anchor[0], y - anchor[1], w, h
+
+        points = points_from_rect(rect)
+        rot_points = RotateMatrix(angle) * points
         ext_rect = outer_rect(rot_points)
-        ext_points = points_from_rect(ext_rect)
-        rot_img = pygame.transform.rotate(self._surface, math.degrees(angle))
-        return Image(self._canvas, surface=rot_img, pos=ext_rect[:2])
+        rot_pos = Vector2(ext_rect[:2]) + anchor
 
-    def rotate_rad_around(self, angle: float, pivot: tuple[float, float] | Vector2) -> Self:
-        return self.rotate_deg_around(math.degrees(angle), pivot)
+        rot_img = pygame.transform.rotate(self._surface, angle*180/math.pi)
+        rot = Image(self._canvas, surface=rot_img, pos=rot_pos)
+
+        return rot
+
+    def rotate_deg_around(self, angle: float, pivot: tuple[float, float] | Vector2) -> Self:
+        return self.rotate_deg_around(angle/180*math.pi, pivot)
 
     def get_rect(self):
         _, _, sw, sh = self._surface.get_rect()
