@@ -1,7 +1,7 @@
 from pygame import Vector2
 from basescreen import BaseScreen
-from canvas import Canvas
-from utils import fRect, Mat2x2, RotateMatrix, remap
+from canvas import Canvas, remap
+from utils import fRect, Mat2x2, RotateMatrix
 from pendulo import Pendulo
 from random import uniform
 import math
@@ -76,6 +76,10 @@ class Game(BaseScreen):
             if player.alive:
                 player.draw(self.t)
 
+
+
+
+
         #scope
         x = self.t
         total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
@@ -99,7 +103,6 @@ class Game(BaseScreen):
 
     def death(self, player):
         self.sounds['crash'].play()
-        print('estive aqui')
 
     def process_user_input_event(self, event):
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
@@ -155,6 +158,8 @@ class Cart:
         self.fps = self.game.fps
         self.input = self.game.input
         self.x_target = (-0.25, 0.25)
+        tol = math.pi/6
+        self.th_target = (math.pi - tol, math.pi + tol)
 
         if not isinstance(pos, Vector2):
             pos = Vector2(pos)
@@ -173,7 +178,7 @@ class Cart:
 
 
         self.points = {
-            'pole': ((-0.015, 0), (0.015, 0), (0.015, -0.4), (-0.015, -0.4))
+            'pole': ((0.015, 0), (0.015, -0.4), (-0.015, -0.4), (-0.015, 0))
         }
 
         self.base_rect = fRect(0, 0, 0.35, 0.08)
@@ -295,6 +300,17 @@ class Cart:
         self.canvas.draw_polygon(self.guardrail1_col, ti_points)
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
         self.canvas.draw_polygon(self.guardrail1_col, tc_points)
+
+        col1 = (255, 255, 0)
+        col2 = (127, 127, 127)
+        if self.alive and self.th_target[0] < self.theta < self.th_target[1]:
+            for start, end in zip(pole_points, pole_points[1:]):
+                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=100, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 3))
+            if self.x_target[0] < self.x < self.x_target[1]:
+                cart_points = self.base_rect.points
+                for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
+                    self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=100, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 3))
+
 
 
 

@@ -7,7 +7,9 @@ from copy import copy, deepcopy
 import math
 from copy import deepcopy
 from typing import Self
-
+from utils import perpendicular_normal
+from random import random, uniform, randint, gauss
+from lerp import lerp_vec3
 
 class Canvas:
     def __init__(self,
@@ -91,8 +93,46 @@ class Canvas:
     def draw_circle(self, color: Color | tuple[int, int, int] | Vector3, center: Vector2 | tuple[float, float], radius: float, width: int = 0, draw_top_right: bool = False, draw_top_left: bool = False, draw_bottom_left: bool = False, draw_bottom_right: bool = False):
         return pygame.draw.circle(self.surface, color, self.world_to_screen_v2(center), self.world_to_screen_f(radius), width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)
 
-    def draw_line(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
-        return pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
+    def draw_sparkly_line(self, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], color1: Color | tuple[int, int, int] | Vector3 = None, color2: Color | tuple[int, int, int] | Vector3 = None, width: int = 1, density: float = 100, mu: float = 0.0, sigma: float = 1.0, particle_size: int | tuple[int, int]=1):
+
+        if color1 is None and color2 is None:
+            color = randint(0, 255), randint(0, 255), randint(0, 255)
+        elif color1 is not None and color2 is None:
+            color = color1
+        elif color1 is not None and color2 is not None:
+            color = lerp_vec3(color1, color2, random())
+        else:
+            color = color2
+
+
+        # color = 255, 255, 255
+
+        if not isinstance(start_pos, Vector2):
+            start_pos = Vector2(start_pos)
+        if not isinstance(end_pos, Vector2):
+            end_pos = Vector2(end_pos)
+
+        # pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), 2)
+        vec = Vector2(end_pos-start_pos)
+        perp, norm = perpendicular_normal(vec)
+
+        world_width_2 = width / self.scale / 2
+
+        start_pos -= norm * world_width_2 * (1+mu) * sigma
+        end_pos += norm * world_width_2 * (1+mu) * sigma
+
+        # pygame.draw.line(self.surface, (255,0,0), self.world_to_screen_v2(start_pos), self.world_to_screen_v2(start_pos + perp*world_width_2), 4)
+        # pygame.draw.line(self.surface, (255, 0, 0), self.world_to_screen_v2(start_pos),self.world_to_screen_v2(start_pos + norm*world_width_2), 4)
+
+        for _ in range(int((end_pos-start_pos).length()*density)):
+            pos = start_pos.lerp(end_pos, random())
+            pos = pos + perp*world_width_2*gauss(mu, sigma)
+            psize = particle_size if isinstance(particle_size, int | float) else randint(*particle_size)
+            pygame.draw.circle(self.surface, color, self.world_to_screen_v2(pos), psize)
+
+
+
+
 
     def draw_aaline(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
         return pygame.draw.aaline(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
@@ -108,6 +148,9 @@ class Canvas:
 
     def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
         return pygame.draw.rect(self.surface, color, self.world_to_screen_rect(rect), width, border_radius)
+
+    def draw_line(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
+        return pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
     def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center', shift: Vector2 | tuple[float, float] = (0, 0)):
         rendered_text = self.render_text(color, font, text)
@@ -200,14 +243,32 @@ class Canvas:
         return self.surface.blit(source, self.world_to_screen_v2(dest_pos), area, special_flags)
 
 
-def rotate_around_v2(vec: Vector2, angle: float, center: Vector2 = (0.0, 0.0)):
-    if not isinstance(vec, Vector2):
-        vec = Vector2(vec)
-    return (vec - center).rotate_rad(angle) + center
+def remap(point: tuple[float, float] | Vector2, origin: tuple[float, float, float, float] | Canvas | pygame.Surface, dest: tuple[float, float, float, float] | Canvas | pygame.Surface) -> Vector2:
+    if isinstance(origin, Canvas):
+        origin = origin.surface.get_rect()
+    elif isinstance(origin, pygame.Surface):
+        origin = origin.get_rect()
 
+    if isinstance(dest, Canvas):
+        dest = dest.surface.get_rect()
+    elif isinstance(dest, pygame.Surface):
+        dest = dest.get_rect()
 
-def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle: float, center: Vector2 = (0.0, 0.0)) -> Sequence:
-    return tuple(rotate_around_v2(vec, angle, center) for vec in vecs)
+    ox, oy = point
+    ox0, oy0, ow, oh = origin
+    dx0, dy0, dw, dh = dest
+
+    oxr = ox - ox0
+    oyr = oy - oy0
+
+    dxr = oxr * dw / ow
+    dyr = oyr * dh / oh
+
+    dx = dxr + dx0
+    dy = dyr + dy0
+
+    return dx, dy
+
 
 
 # def resolution_map(dest: Canvas, source: Canvas, source_pos: Vector2 | tuple[int, int]) -> Vector2:

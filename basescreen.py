@@ -1,9 +1,8 @@
 import time
 import pygame
 import sys
-from canvas import Canvas
+from canvas import Canvas, remap
 from mouse import Mouse
-from utils import remap
 from filters import MediaMovel
 from popup import PopUp, PopUpText
 from pygame import Vector2, Rect

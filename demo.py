@@ -1,15 +1,14 @@
 import pygame
-from canvas import Canvas
+from canvas import Canvas, remap
 from inputs import Joystick, JOYBUTTON
 import math
-from canvas import rotate_vec2s
 from random import random, randint, uniform, choice
 from particles import BallParticle, Particles, TextParticle
 from pygame import Vector2
 from lerp import lerp, lerp_vec2, lerp_vec3
 from basescreen import BaseScreen
 from mouse import MouseButton, MouseScroll, Mouse
-from utils import remap, ColorsDiscIterator, outer_rect
+from utils import ColorsDiscIterator, outer_rect, rotate_vec2s
 from scope import Scope
 from popup import PopUp, PopUpText
 from pathlib import Path

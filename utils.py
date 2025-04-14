@@ -1,7 +1,7 @@
 import math
 
 import pygame
-from canvas import Canvas
+# from canvas import Canvas
 import colorsys
 from typing import Sequence
 from pygame import Vector2
@@ -19,6 +19,13 @@ def points_from_rect(rect=Vec4) -> Points:
     return (x0, y0), (x0, y0 - h), (x0 + w, y0 - h), (x0 + w, y0)
 
 
+def perpendicular_normal(vec: Vec2) -> (Vec2, Vec2):
+    if not isinstance(vec, Vector2):
+        vec = Vector2(vec)
+    vec = vec.normalize()
+    return Vector2(-vec[1], vec[0]), vec
+
+
 def outer_rect(points: Points) -> Vec4:
     min_x, max_x = float('inf'), float('-inf')
     min_y, max_y = float('inf'), float('-inf')
@@ -30,34 +37,14 @@ def outer_rect(points: Points) -> Vec4:
     return min_x, max_y, max_x - min_x, max_y - min_y
 
 
-
-def remap(point: Vec2, origin: Vec4 | Canvas | pygame.Surface, dest: Vec4 | Canvas | pygame.Surface) -> Vec2:
-    if isinstance(origin, Canvas):
-        origin = origin.surface.get_rect()
-    elif isinstance(origin, pygame.Surface):
-        origin = origin.get_rect()
-
-    if isinstance(dest, Canvas):
-        dest = dest.surface.get_rect()
-    elif isinstance(dest, pygame.Surface):
-        dest = dest.get_rect()
-
-    ox, oy = point
-    ox0, oy0, ow, oh = origin
-    dx0, dy0, dw, dh = dest
-
-    oxr = ox - ox0
-    oyr = oy - oy0
-
-    dxr = oxr * dw / ow
-    dyr = oyr * dh / oh
-
-    dx = dxr + dx0
-    dy = dyr + dy0
-
-    return dx, dy
+def rotate_around_v2(vec: Vec2, angle: float, center: Vec2 = (0.0, 0.0)):
+    if not isinstance(vec, Vector2):
+        vec = Vector2(vec)
+    return (vec - center).rotate_rad(angle) + center
 
 
+def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle: float, center: Vector2 = (0.0, 0.0)) -> Sequence:
+    return tuple(rotate_around_v2(vec, angle, center) for vec in vecs)
 
 
 def collision_point_rect(point: Vec2, rect: Vec4) -> bool:
