@@ -114,7 +114,8 @@ class Cart:
             'pole': (240, 240, 120),
             'pivot': (200, 180, 60),
             'wheels': (240, 240, 120),
-            'ground': (120, 120, 90),
+            'ground': (120, 90, 60),
+            'target_x': (120, 90, 60),
         }
 
         self.points = {
@@ -178,7 +179,10 @@ class Cart:
         self.canvas.draw_circle(self.cols['pivot'], cart_center, 0.04)
 
         y = self.pos[1] - wheel_r - wheel_yaxis
-        self.canvas.draw_line(self.cols['ground'], (self.canvas.xmin, y), (self.canvas.xmax, y), 4)
+        ground_width = 4
+        self.canvas.draw_line(self.cols['ground'], (self.canvas.xmin, y), (self.canvas.xmax, y), ground_width)
+        self.canvas.draw_line(self.cols['target_x'], (-0.3, y-0.02), (-0.3, y), ground_width)
+        self.canvas.draw_line(self.cols['target_x'], (0.3, y - 0.02), (0.3, y), ground_width)
 
         self.canvas.draw_polygon(self.cols['pole'], pole_points)
         self.canvas.draw_circle(self.cols['pole'], cart_center, 0.02)
