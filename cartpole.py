@@ -305,11 +305,11 @@ class Cart:
         col2 = (127, 127, 127)
         if self.alive and self.th_target[0] < self.theta < self.th_target[1]:
             for start, end in zip(pole_points, pole_points[1:]):
-                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=100, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 3))
+                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=200, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 2))
             if self.x_target[0] < self.x < self.x_target[1]:
                 cart_points = self.base_rect.points
                 for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
-                    self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=100, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 3))
+                    self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=200, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 2))
 
 
 
