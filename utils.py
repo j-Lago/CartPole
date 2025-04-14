@@ -152,6 +152,10 @@ class fRect:
         return (self.x, self.y, self.w, self.h)[item]
 
     @property
+    def points(self):
+        return points_from_rect((self.x, self.y, self.w, self.h))
+
+    @property
     def topleft(self):
         return Vector2(self.x, self.y)
 
