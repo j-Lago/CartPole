@@ -38,7 +38,11 @@ class Joystick():
         self.value = self.initial_value
 
     def update(self):
-        self.value = self.normalization(remove_dead_zone(self.source.get_axis(self.channel), self.dead_zone))
+        if self.source is None:
+            self.value = 0.0
+        else:
+            self.value = self.normalization(remove_dead_zone(self.source.get_axis(self.channel), self.dead_zone))
+        return self.value
 
 
 def remove_dead_zone(x, dead_zone):
