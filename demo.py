@@ -279,33 +279,37 @@ class Demo(BaseScreen):
 
         # jet : todo: refacto 'função rotate_image_around(img, angle, center)'
 
-        cimg = Image(canvas, self.images['jet'])
-        cimg.blit()
+        # cimg = Image(canvas, self.images['jet'])
+        # cimg.blit()
 
 
         bias_throttle = (throttle + 0.25)
-        img: pygame.Surface = pygame.transform.scale_by(self.images['jet'], bias_throttle*uniform(0.8, 1.2)*canvas.relative_scale)
+        temp: pygame.Surface = pygame.transform.scale_by(self.images['jet'], bias_throttle*uniform(0.8, 1.2)*canvas.relative_scale)
 
-        pivot = canvas.screen_to_world_v2(canvas.center_pixels() + (0, 30 * canvas.relative_scale))
+        # canvas.blit(temp, (0.5, -0.5))
 
-        #fixme: Image(canvas, img).rotate_rad_around(angle, pivot).blit()
-
-        img_screen_rect = img.get_rect()
-        screen_pivot = canvas.center_pixels() + (0, 30*canvas.relative_scale)
-        img_screen_rect.midtop = screen_pivot
-        img_rect = canvas.screen_to_world_rect(img_screen_rect)
-
-        pivot = canvas.screen_to_world_v2(screen_pivot)
-
-        points = points_from_rect(img_rect)
-
-        rot_points = RotateMatrix(angle) * points
-
-        ext_rect = outer_rect(rot_points)
-        ext_points = points_from_rect(ext_rect)
+        img = Image(canvas, temp)
+        img.midtop = Vector2(0, 0)
+        img = img.rotate_rad_around(angle, Vector2(0, -0.06))
+        img.blit()
 
 
-        canvas.blit(pygame.transform.rotate(img, math.degrees(angle)), ext_rect)
+        # pivot = canvas.screen_to_world_v2(canvas.center_pixels() + (0, 30 * canvas.relative_scale))
+        #
+        #
+        # img_screen_rect = img.get_rect()
+        # screen_pivot = canvas.center_pixels() + (0, 30*canvas.relative_scale)
+        # img_screen_rect.midtop = screen_pivot
+        # img_rect = canvas.screen_to_world_rect(img_screen_rect)
+        # pivot = canvas.screen_to_world_v2(screen_pivot)
+        # points = points_from_rect(img_rect)
+        # rot_points = RotateMatrix(angle) * points
+        # ext_rect = outer_rect(rot_points)
+        # ext_points = points_from_rect(ext_rect)
+
+        # canvas.blit(pygame.transform.rotate(img, math.degrees(angle)), ext_rect)
+
+
 
         # jet particles
         emmit_l = Vector2(-0.05*bias_throttle, -0.04).rotate_rad(angle)
@@ -335,12 +339,7 @@ class Demo(BaseScreen):
 
         # extrenal rects for debug
         if self.show_outer_rects:
-            canvas.draw_polygon((0, 255, 255), points, 2)
-            canvas.draw_circle((0, 255, 255), points[0], .015)
-            canvas.draw_polygon((255, 0, 255), rot_points, 2)
-            canvas.draw_circle((255, 0, 255), rot_points[0], .015)
-            canvas.draw_polygon((255, 0, 0), ext_points, 2)
-            canvas.draw_circle((255, 0, 0), ext_points[0], .015)
+            img.draw_rect((0, 255, 255))
 
 
 

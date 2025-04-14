@@ -190,14 +190,14 @@ class Canvas:
     def fill(self, color, rect=None, special_flags=0):
         self.surface.fill(color, rect, special_flags)
 
-    def blit(self, source: Self | pygame.Surface, dest, area=None, special_flags=0):
+    def blit(self, source: Self | pygame.Surface, dest_pos, area=None, special_flags=0):
         if not self.visible:
             return 0, 0, 0, 0
         if isinstance(source, Canvas):
             if not source.visible:
                 return 0, 0, 0, 0
             source = source.surface
-        return self.surface.blit(source, self.world_to_screen_v2(dest), area, special_flags)
+        return self.surface.blit(source, self.world_to_screen_v2(dest_pos), area, special_flags)
 
 
 def rotate_around_v2(vec: Vector2, angle: float, center: Vector2 = (0.0, 0.0)):
