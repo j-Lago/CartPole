@@ -169,7 +169,7 @@ class Cart:
         self.rail_col = rail_color
         self.sleeper_col = (120, 100, 60)
         self.guardrail0_col = (60, 60, 60)
-        self.guardrail1_col = (240, 240, 30)
+        self.guardrail1_col = (220, 200, 30)
 
 
         self.points = {
@@ -275,26 +275,26 @@ class Cart:
 
         # guardrail
         g_rect = self.guardrail_rect
-        fx = 0.7
-        fy = 0.5
+        fx = 2/3
+        fy = 1/3
 
         g_rect.bottomleft = (self.canvas.xmin, y)
-        ti_points = (g_rect.x, g_rect.y - g_rect.h), (g_rect.x, g_rect.y + fy * g_rect.h - g_rect.h), (
-        g_rect.x + fx * g_rect.w, g_rect.y - g_rect.h)
-        ts_points = (g_rect.x + g_rect.w, g_rect.y), (g_rect.x + g_rect.w, g_rect.y - fy * g_rect.h), (
-        g_rect.x + g_rect.w - fx * g_rect.w, g_rect.y)
+        ti_points = (g_rect.x, g_rect.y - g_rect.h), (g_rect.x, g_rect.y + fy * g_rect.h - g_rect.h), (g_rect.x + fx * g_rect.w, g_rect.y - g_rect.h)
+        ts_points = (g_rect.x + g_rect.w, g_rect.y), (g_rect.x + g_rect.w, g_rect.y - fy * g_rect.h), (g_rect.x + g_rect.w - fx * g_rect.w, g_rect.y)
+        tc_points = (g_rect.x, g_rect.y - g_rect.h + 1.75*fy * g_rect.h), (g_rect.x, g_rect.y - g_rect.h + 2.75*fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 1.25 * fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 0.25 * fy * g_rect.h)
         self.canvas.draw_polygon(self.guardrail0_col, g_rect.points)
         self.canvas.draw_polygon(self.guardrail1_col, ti_points)
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
+        self.canvas.draw_polygon(self.guardrail1_col, tc_points)
 
         g_rect.bottomright = (self.canvas.xmax, y)
-        ti_points = (g_rect.x, g_rect.y - g_rect.h), (g_rect.x, g_rect.y + fy * g_rect.h - g_rect.h), (
-            g_rect.x + fx * g_rect.w, g_rect.y - g_rect.h)
-        ts_points = (g_rect.x + g_rect.w, g_rect.y), (g_rect.x + g_rect.w, g_rect.y - fy * g_rect.h), (
-            g_rect.x + g_rect.w - fx * g_rect.w, g_rect.y)
+        ti_points = (g_rect.x, g_rect.y - g_rect.h), (g_rect.x, g_rect.y + fy * g_rect.h - g_rect.h), (g_rect.x + fx * g_rect.w, g_rect.y - g_rect.h)
+        ts_points = (g_rect.x + g_rect.w, g_rect.y), (g_rect.x + g_rect.w, g_rect.y - fy * g_rect.h), (g_rect.x + g_rect.w - fx * g_rect.w, g_rect.y)
+        tc_points = (g_rect.x, g_rect.y - g_rect.h + 1.75 * fy * g_rect.h), (g_rect.x, g_rect.y - g_rect.h + 2.75 * fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 1.25 * fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 0.25 * fy * g_rect.h)
         self.canvas.draw_polygon(self.guardrail0_col, g_rect.points)
         self.canvas.draw_polygon(self.guardrail1_col, ti_points)
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
+        self.canvas.draw_polygon(self.guardrail1_col, tc_points)
 
 
 
