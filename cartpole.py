@@ -202,7 +202,7 @@ class Cart:
         self.alive = alive
         self.canvas = self.game.active_canvas
         self.input = self.game.input
-        self.x_target = (-0.25, 0.25)
+        self.x_target = (-0.15, 0.15)
         tol = math.pi/6
         self.th_target = (math.pi - tol, math.pi + tol)
 
@@ -309,8 +309,15 @@ class Cart:
         y = self.pos[1] - wheel_r - wheel_yaxis
 
         # flags
+
         for x in (self.x_target[0]-self.base_rect.w/2, self.x_target[1]+self.base_rect.w/2):
-            self.canvas.draw_line((60,60,60), (x, y), (x, y + 0.2), 5)
+            top = Vector2(x, y + 0.2)
+            flag_points = ( top-(0.0,0.001), top-(-0.06, 0.019), top-(0.0, 0.037), )
+            self.canvas.draw_polygon((90, 200, 90), flag_points)
+            self.canvas.draw_aalines((90, 200, 90), False, flag_points)
+            self.canvas.draw_line((60, 60, 60), (x, y), top, 5)
+            self.canvas.draw_circle((60, 60, 60), top, 5/self.canvas.scale)
+
 
         # cart
         self.canvas.draw_rect(cart_col, self.base_rect)
