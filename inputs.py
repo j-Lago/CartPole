@@ -38,7 +38,7 @@ class Joystick():
     def reset(self):
         self.value = self.initial_value
 
-    def update(self):
+    def update(self, *args):
         if self.source is None:
             self.value = 0.0
         else:
@@ -98,12 +98,12 @@ class LinearControl:
         #     self.intx += dt * x
         #     self.th_target = math.pi + (+0.1*x +0.0*self.intx +0.000*v)
         # self.aux.update('')
-        DTH_MAX = 40./180.*math.pi
+        DTH_MAX = 30./180.*math.pi
         # dth = - self.aux.value * 5/180*math.pi
         dth = 0.
-        kp = 0.0042 * 1.5
-        ki = .0023/player.fps * 0.001
-        kd = 0.006 * 0
+        kp = 0.0042 * 3
+        ki = .0023/player.fps * 1
+        kd = 0.006 * 6
 
         self.intx += dt * x
         dth_p = kp*x

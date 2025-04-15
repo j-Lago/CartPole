@@ -37,7 +37,10 @@ class Game(BaseScreen):
             joystick.init()
 
         # self.input = Joystick(joystick, 2, normalization=lambda x: x)
-        self.input = LinearControl()
+        self.inputs = {
+            'p1': Joystick(joystick, 2, normalization=lambda x: x),
+            'p2': LinearControl(),
+        }
 
 
         self.canvases['main'] = Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
@@ -47,59 +50,70 @@ class Game(BaseScreen):
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
         self.cols['fps'] = lerp_vec3(self.cols['info'], (0,0,0), 0.6)
+        self.cols['p1'] = (90, 160, 140)
+        self.cols['p2'] = (160,  90, 140)
 
         self.fps_popup = PopUpText(self.active_canvas, alpha=255, pos=(self.active_canvas.xmin+0.01, self.active_canvas.ymin+.1),
                                     color=self.cols['fps'], text='', font=self.fonts['small'], visible=True, border_width=-1, fill_color=(0,0,0,0))
 
-        self.scopes = None
+        self.scopes = {
+            'p1': Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
+                        color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                        pos=(1.15, 0.75), size=(320, 180), maxlen=400),
+            'p2': Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
+                        color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                        pos=(1.15, 0.05), size=(320, 180), maxlen=400),
+            'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
+                            color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
+                            pos=(0.5, -0.65), size=(320, 180), maxlen=400),
+            'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200,
+                           color=self.cols['info'], focus_color=self.cols['focus'], pos=(1.12, -0.65), size=(320, 180),
+                           maxlen=400),
+        }
         self.players = None
         self.chash_xoffset = None
+        self.perturbation = 0.0
 
         self.reset()
 
     def reset(self):
         self.ticks = 0
-        self.scopes = {
-            'errs': Scope(self.active_canvas, name='states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'], pos=(0.9, 0.5), size=(320, 180), maxlen=400),
-            'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'], pos=(0.9, 0.0), size=(320, 180), maxlen=400),
-            'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.9, -0.5), size=(320, 180), maxlen=400),
-        }
+
+        for scope in self.scopes.values():
+            scope.clear()
 
         th0 = uniform(-1, 1) * 0.0
         self.players = {
-            'p1': Cart(self, Vector2(0.2, 0.35), base_color=(30, 180, 220), rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-            'p2': Cart(self, Vector2(-0.2, -0.35), base_color=(180, 90, 220), rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p1': Cart(self, self.inputs['p1'], Vector2(0.2, 0.35), base_color=self.cols['p1'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart(self, self.inputs['p2'], Vector2(-0.2, -0.35), base_color=self.cols['p2'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
         self.chash_xoffset = 0.0
 
-
+    def perturb(self, intensity):
+        for player in self.players.values():
+            player.perturb(intensity)
+            self.perturbation = intensity
 
 
     def simulate(self):
-        joystick_input = self.input.update(self.players['p1'])
 
-        all_dead = True
+        combined_input = 0.0
         for player in self.players.values():
-            all_dead = all_dead and not player.alive
-
-        if all_dead:
-            joystick_input = 0.0
+            if player.alive:
+                combined_input += math.fabs(player.input.update(player))
 
         d = random() * self.chash_xoffset * 0.2
         self.chash_xoffset -= d
-        # if abs(self.chash_xoffset) < .1:
-        #     self.chash_xoffset = 0
-
         shake_intensity = 1.3
-        self.blit_offset = uniform(-shake_intensity, shake_intensity) * joystick_input * shake_intensity + d, uniform(
-            -shake_intensity, shake_intensity) * joystick_input * shake_intensity * (1+abs(d)*.3)
+        self.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
+            -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1+abs(d)*.3)
 
 
 
         for player in self.players.values():
-            player.step(joystick_input * self.force_factor)
-        self.sounds['jet'].set_volume(math.fabs(joystick_input))
+            player.step()
+        self.sounds['jet'].set_volume(combined_input)
 
 
     def draw_main(self, canvas: Canvas):
@@ -122,8 +136,9 @@ class Game(BaseScreen):
         x = self.t
         total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
         y = {
-            'errs': (self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v, self.players['p1'].omega),
-            'inputs': (self.input.value, 0.0),
+            'p2': (self.players['p2'].theta - math.pi, self.players['p2'].x, self.players['p2'].v, self.players['p2'].omega),
+            'p1': (self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v, self.players['p1'].omega),
+            'inputs': (self.inputs['p1'].value, self.inputs['p2'].value),
             'times': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1),
         }
 
@@ -169,6 +184,9 @@ class Game(BaseScreen):
             elif event.key == pygame.K_DOWN:
                 self.players['p2'].alive = not self.players['p2'].alive
 
+            elif event.key == pygame.K_COMMA: self.perturb(0.4)
+            elif event.key == pygame.K_PERIOD: self.perturb(-0.4)
+
             # elif event.key == pygame.K_r:
             #     self.scopes['ch1'].clear()
             #     self.scopes['ch1'].rolling = not self.scopes['ch1'].rolling
@@ -195,13 +213,13 @@ class Cart:
     assets_path = Path(__file__).parent / 'assets'
     jet_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'jet.png'), (0.35, 0.3))
 
-    def __init__(self, game: BaseScreen, pos: Vector2 = Vector2(0, 0), th0: float = 0, base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
+    def __init__(self, game: BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0, base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
 
         self.death_callback = death_callback
         self.game = game
         self.alive = alive
         self.canvas = self.game.active_canvas
-        self.input = self.game.input
+        self.input = input_device
         self.x_target = (-0.15, 0.15)
         tol = math.pi/6
         self.th_target = (math.pi - tol, math.pi + tol)
@@ -210,7 +228,7 @@ class Cart:
             pos = Vector2(pos)
 
         self.initial_pos = pos
-        self.linear_factor = 0.110625
+        self.linear_factor = 0.110625 * 0.8
 
         self.model = Pendulo(1., .3, 5., 1., 1., x0=self.initial_pos[0]/self.linear_factor, th0=th0, dt=1 / self.fps)
 
@@ -229,6 +247,8 @@ class Cart:
         self.base_rect = fRect(0, 0, 0.35, 0.08)
         self.guardrail_rect = fRect(0, 0, 0.09, 0.18)
 
+    def perturb(self, intensity):
+        self.model.y[3][0] += intensity
 
     @property
     def ticks(self):
@@ -239,7 +259,8 @@ class Cart:
         return self.game.fps
 
 
-    def step(self, force):
+    def step(self):
+        force = self.input.value * self.game.force_factor
         if self.alive:
             if self.x - self.base_rect.w / 2 < self.canvas.xmin + self.guardrail_rect.w or self.x + self.base_rect.w / 2 > self.canvas.xmax - self.guardrail_rect.w:
                 self.alive = False
@@ -279,12 +300,36 @@ class Cart:
             cart_col = lerp_vec3(cart_col, (0, 0, 0), 0.7)
 
         col1 = (255, 255, 0)
-        col2 = (127, 127, 127)
+        col2 = (127, 200, 90)
+
+        # target test
+        pole_on_target = False
+        cart_on_target = False
+        if self.alive and self.th_target[0] < self.theta < self.th_target[1]:
+            pole_on_target = True
+            if self.x_target[0] < self.x < self.x_target[1]:
+                cart_on_target = True
+
+        wheel_r = 0.055
+        wheel_yaxis = self.base_rect[3] * 1.1
+        wheel_xaxis = self.base_rect[2] / 2 * 0.6
+        y = self.pos[1] - wheel_r - wheel_yaxis
+
+        # flags
+        flag_col = (200, 255, 120)
+        flag_pole_col = (60, 60, 60)
+        for x in (self.x_target[0] - self.base_rect.w / 2, self.x_target[1] + self.base_rect.w / 2):
+            top = Vector2(x, y + 0.2)
+            flag_points = (top - (0.0, 0.001), top - (-0.06, 0.019), top - (0.0, 0.037),)
+            self.canvas.draw_polygon(flag_col, flag_points)
+            self.canvas.draw_aalines(flag_col, False, flag_points)
+            self.canvas.draw_line(flag_pole_col, (x, y), top, 5)
+            self.canvas.draw_circle(flag_pole_col, top, 5 / self.canvas.scale)
 
         # flame
         if self.alive:
             flame_gain = math.fabs(self.input.value) * uniform(0.8, 1.2)
-            img0: pygame.Surface = pygame.transform.scale_by(self.jet_img, Vector2(flame_gain, max(flame_gain, 0.7)) * self.canvas.relative_scale)
+            img0: pygame.Surface = pygame.transform.scale_by(self.jet_img, Vector2(flame_gain, max(flame_gain, 0.8)) * self.canvas.relative_scale)
             if self.input.value < 0:
                 img0 = pygame.transform.flip(img0, True, False)
 
@@ -302,25 +347,23 @@ class Cart:
         pole_points = RotateMatrix(self.theta) * self.points['pole']
         pole_points = tuple((cart_center[0]+p[0], cart_center[1]+p[1]) for p in pole_points)
 
+        sigma = 0.75
+        mu = 0.5
+        density = 180
+        particle_size = 1,2
 
-        wheel_r = 0.055
-        wheel_yaxis = self.base_rect[3] * 1.1
-        wheel_xaxis = self.base_rect[2] / 2 * 0.6
-        y = self.pos[1] - wheel_r - wheel_yaxis
 
-        # flags
 
-        for x in (self.x_target[0]-self.base_rect.w/2, self.x_target[1]+self.base_rect.w/2):
-            top = Vector2(x, y + 0.2)
-            flag_points = ( top-(0.0,0.001), top-(-0.06, 0.019), top-(0.0, 0.037), )
-            self.canvas.draw_polygon((90, 200, 90), flag_points)
-            self.canvas.draw_aalines((90, 200, 90), False, flag_points)
-            self.canvas.draw_line((60, 60, 60), (x, y), top, 5)
-            self.canvas.draw_circle((60, 60, 60), top, 5/self.canvas.scale)
 
 
         # cart
         self.canvas.draw_rect(cart_col, self.base_rect)
+        self.canvas.draw_circle(cart_col, cart_center, 0.04)
+        if cart_on_target:
+            cart_points = self.base_rect.points
+            for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
+                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=density, mu=mu, sigma=sigma,
+                                              color1=col1, color2=col2, particle_size=particle_size)
 
         # wheels
         for m, wheel_center in enumerate(( (cart_center - (wheel_xaxis, wheel_yaxis)), (cart_center - (-wheel_xaxis, wheel_yaxis)))):
@@ -333,8 +376,7 @@ class Cart:
                 self.canvas.draw_line(pole_col, wheel_center, wheel_center + spoke.rotate_rad(n*2*math.pi/n_spokes+ang + m*0.554) , 6)
             self.canvas.draw_circle(cart_col, wheel_center, wheel_r * .15, 10)
 
-        # cart-pole axis
-        self.canvas.draw_circle(cart_col, cart_center, 0.04)
+
 
         # rail
         rail_sleeper_rect = fRect(0, 0, 0.03, 0.02)
@@ -355,6 +397,11 @@ class Cart:
         self.canvas.draw_polygon(pole_col, pole_points)
         self.canvas.draw_circle(pole_col, cart_center, 0.02)
         self.canvas.draw_circle(cart_col, cart_center, 0.01)
+
+        if pole_on_target:
+            for start, end in zip(pole_points, pole_points[1:]):
+                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=density, mu=mu, sigma=sigma, color1=col1, color2=col2, particle_size=particle_size)
+
 
         # guardrail
         g_rect = self.guardrail_rect
@@ -379,14 +426,6 @@ class Cart:
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
         self.canvas.draw_polygon(self.guardrail1_col, tc_points)
 
-
-        if self.alive and self.th_target[0] < self.theta < self.th_target[1]:
-            for start, end in zip(pole_points, pole_points[1:]):
-                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=200, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 2))
-            if self.x_target[0] < self.x < self.x_target[1]:
-                cart_points = self.base_rect.points
-                for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
-                    self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=200, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 2))
 
 
 
