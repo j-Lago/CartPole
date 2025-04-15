@@ -107,7 +107,7 @@ class Scope(PopUp):
                 if len(ys) == 1:
                     self.line_colors = list(ColorsDiscIterator(len(ys), ch, cs, cv))
                 else:
-                    self.line_colors = list(ColorsDiscIterator(len(ys), 1-ch/(3*len(ys)), min(cs*1.2, 1.0), min(cv*1.2, 1.0)))
+                    self.line_colors = list(ColorsDiscIterator(len(ys), 1-ch/(5*len(ys)), min(cs*1.2, 1.0), min(cv*1.2, 1.0)))
 
             if len(self.data) > 2:
                 for i in range(len(ys)):

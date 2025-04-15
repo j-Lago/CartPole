@@ -6,17 +6,21 @@ from pendulo import Pendulo
 from random import uniform
 import math
 import pygame
-from inputs import Joystick, JOYBUTTON
+from inputs import Joystick, JOYBUTTON, LinearControl
 from scope import Scope
 from pathlib import Path
 from image import Image
 from lerp import lerp_vec3
 from typing import Callable
+from random import random
+from popup import PopUpText
 
 
 class Game(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.info_popup.visible = False
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
@@ -32,8 +36,8 @@ class Game(BaseScreen):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
 
-        self.input = Joystick(joystick, 2, normalization=lambda x: x)
-
+        # self.input = Joystick(joystick, 2, normalization=lambda x: x)
+        self.input = LinearControl()
 
 
         self.canvases['main'] = Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
@@ -42,30 +46,64 @@ class Game(BaseScreen):
 
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
+        self.cols['fps'] = lerp_vec3(self.cols['info'], (0,0,0), 0.6)
+
+        self.fps_popup = PopUpText(self.active_canvas, alpha=255, pos=(self.active_canvas.xmin+0.01, self.active_canvas.ymin+.1),
+                                    color=self.cols['fps'], text='', font=self.fonts['small'], visible=True, border_width=-1, fill_color=(0,0,0,0))
+
+        self.scopes = None
+        self.players = None
+        self.chash_xoffset = None
+
+        self.reset()
+
+    def reset(self):
+        self.ticks = 0
         self.scopes = {
-            'errs': Scope(self.active_canvas, name='position', legend=('th', 'x'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.25, 0.25), focus_color=self.cols['focus'], pos=(0.9, 0.5), size=(320, 180), maxlen=400),
-            'inputs': Scope(self.active_canvas, name='inputs', legend=('input'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.8, ), focus_color=self.cols['focus'], pos=(0.9,0.0), size=(320, 180), maxlen=400),
+            'errs': Scope(self.active_canvas, name='states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'], pos=(0.9, 0.5), size=(320, 180), maxlen=400),
+            'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'], pos=(0.9, 0.0), size=(320, 180), maxlen=400),
             'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.9, -0.5), size=(320, 180), maxlen=400),
         }
 
+        th0 = uniform(-1, 1) * 0.0
         self.players = {
-            'p1': Cart(self, Vector2(0.2, 0.35), base_color=(30, 180, 220), rail_color=(90, 90, 90), death_callback=self.death),
-            'p2': Cart(self, Vector2(-0.2, -0.35), base_color=(180, 90, 220), rail_color=(90, 90, 90), death_callback=self.death),
+            'p1': Cart(self, Vector2(0.2, 0.35), base_color=(30, 180, 220), rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart(self, Vector2(-0.2, -0.35), base_color=(180, 90, 220), rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
-
+        self.chash_xoffset = 0.0
 
 
 
 
     def simulate(self):
-        joystick_input = self.input.update()
+        joystick_input = self.input.update(self.players['p1'])
+
+        all_dead = True
+        for player in self.players.values():
+            all_dead = all_dead and not player.alive
+
+        if all_dead:
+            joystick_input = 0.0
+
+        d = random() * self.chash_xoffset * 0.2
+        self.chash_xoffset -= d
+        # if abs(self.chash_xoffset) < .1:
+        #     self.chash_xoffset = 0
+
+        shake_intensity = 1.3
+        self.blit_offset = uniform(-shake_intensity, shake_intensity) * joystick_input * shake_intensity + d, uniform(
+            -shake_intensity, shake_intensity) * joystick_input * shake_intensity * (1+abs(d)*.3)
+
+
 
         for player in self.players.values():
             player.step(joystick_input * self.force_factor)
         self.sounds['jet'].set_volume(math.fabs(joystick_input))
 
+
     def draw_main(self, canvas: Canvas):
+        canvas.fill(self.cols['bg'])
         pos = self.mouse_world_pos
 
         # desenha os mortos por traz
@@ -84,10 +122,15 @@ class Game(BaseScreen):
         x = self.t
         total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
         y = {
-            'errs': (0, 0), #(self.players[0].theta - math.pi, self.players[0].x),
-            'inputs': (self.input.value, ),
+            'errs': (self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v, self.players['p1'].omega),
+            'inputs': (self.input.value, 0.0),
             'times': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1),
         }
+
+        # fps
+        self.fps_popup.text = (f'fps: {self.real_fps:.1f} ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)', )
+        self.fps_popup.draw()
+        canvas.blit(self.fps_popup, self.fps_popup.pos)
 
         def another_in_focus(self_key):
             for ikey, iscope in self.scopes.items():
@@ -103,6 +146,7 @@ class Game(BaseScreen):
 
     def death(self, player):
         self.sounds['crash'].play()
+        self.chash_xoffset = player.v * 500
 
     def process_user_input_event(self, event):
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
@@ -118,7 +162,9 @@ class Game(BaseScreen):
                 self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
+            if event.key == pygame.K_ESCAPE:
+                self.reset()
+            elif event.key == pygame.K_UP:
                 self.players['p1'].alive = not self.players['p1'].alive
             elif event.key == pygame.K_DOWN:
                 self.players['p2'].alive = not self.players['p2'].alive
@@ -149,13 +195,12 @@ class Cart:
     assets_path = Path(__file__).parent / 'assets'
     jet_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'jet.png'), (0.35, 0.3))
 
-    def __init__(self, game: BaseScreen, pos: Vector2 = Vector2(0, 0), base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
+    def __init__(self, game: BaseScreen, pos: Vector2 = Vector2(0, 0), th0: float = 0, base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
 
         self.death_callback = death_callback
         self.game = game
         self.alive = alive
         self.canvas = self.game.active_canvas
-        self.fps = self.game.fps
         self.input = self.game.input
         self.x_target = (-0.25, 0.25)
         tol = math.pi/6
@@ -167,7 +212,7 @@ class Cart:
         self.initial_pos = pos
         self.linear_factor = 0.110625
 
-        self.model = Pendulo(1., .3, 5., 1., 1., x0=self.initial_pos[0]/self.linear_factor, th0=0.658, dt=1 / self.fps)
+        self.model = Pendulo(1., .3, 5., 1., 1., x0=self.initial_pos[0]/self.linear_factor, th0=th0, dt=1 / self.fps)
 
 
         self.base_color = base_color
@@ -185,9 +230,16 @@ class Cart:
         self.guardrail_rect = fRect(0, 0, 0.09, 0.18)
 
 
+    @property
+    def ticks(self):
+        return self.game.ticks
+
+    @property
+    def fps(self):
+        return self.game.fps
+
+
     def step(self, force):
-
-
         if self.alive:
             if self.x - self.base_rect.w / 2 < self.canvas.xmin + self.guardrail_rect.w or self.x + self.base_rect.w / 2 > self.canvas.xmax - self.guardrail_rect.w:
                 self.alive = False
@@ -201,8 +253,17 @@ class Cart:
         return self.model.theta
 
     @property
+    def omega(self):
+        return self.model.omega
+
+    @property
     def x(self):
-        return self.model.x*self.linear_factor
+        return self.model.x * self.linear_factor
+
+
+    @property
+    def v(self):
+        return self.model.v * self.linear_factor
 
     @property
     def pos(self):
@@ -216,6 +277,9 @@ class Cart:
         if not self.alive:
             pole_col = lerp_vec3(pole_col, (0, 0, 0), 0.7)
             cart_col = lerp_vec3(cart_col, (0, 0, 0), 0.7)
+
+        col1 = (255, 255, 0)
+        col2 = (127, 127, 127)
 
         # flame
         if self.alive:
@@ -238,13 +302,20 @@ class Cart:
         pole_points = RotateMatrix(self.theta) * self.points['pole']
         pole_points = tuple((cart_center[0]+p[0], cart_center[1]+p[1]) for p in pole_points)
 
+
+        wheel_r = 0.055
+        wheel_yaxis = self.base_rect[3] * 1.1
+        wheel_xaxis = self.base_rect[2] / 2 * 0.6
+        y = self.pos[1] - wheel_r - wheel_yaxis
+
+        # flags
+        for x in (self.x_target[0]-self.base_rect.w/2, self.x_target[1]+self.base_rect.w/2):
+            self.canvas.draw_line((60,60,60), (x, y), (x, y + 0.2), 5)
+
         # cart
         self.canvas.draw_rect(cart_col, self.base_rect)
 
         # wheels
-        wheel_r = 0.055
-        wheel_yaxis = self.base_rect[3]*1.1
-        wheel_xaxis = self.base_rect[2] / 2 * 0.6
         for m, wheel_center in enumerate(( (cart_center - (wheel_xaxis, wheel_yaxis)), (cart_center - (-wheel_xaxis, wheel_yaxis)))):
             self.canvas.draw_circle(pole_col, wheel_center, wheel_r, 10)
             self.canvas.draw_circle(pole_col, wheel_center, wheel_r*.3, 10)
@@ -259,7 +330,6 @@ class Cart:
         self.canvas.draw_circle(cart_col, cart_center, 0.04)
 
         # rail
-        y = self.pos[1] - wheel_r - wheel_yaxis
         rail_sleeper_rect = fRect(0, 0, 0.03, 0.02)
         n_sleepers = 22
         mw = self.canvas.get_rect()[2] / (n_sleepers-1)
@@ -269,8 +339,9 @@ class Cart:
             self.canvas.draw_rect(self.sleeper_col, rail_sleeper_rect)
         ground_width = 4
         self.canvas.draw_line(self.rail_col, (self.canvas.xmin, y), (self.canvas.xmax, y), ground_width)
+
         # for x in self.x_target:
-        #     self.canvas.draw_line(self.rail_col, (x, y-0.04), (x, y), ground_width)
+        #     self.canvas.draw_line(col1, (x, y-0.03), (x, y-0.05), ground_width)
 
 
         # pole
@@ -301,8 +372,7 @@ class Cart:
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
         self.canvas.draw_polygon(self.guardrail1_col, tc_points)
 
-        col1 = (255, 255, 0)
-        col2 = (127, 127, 127)
+
         if self.alive and self.th_target[0] < self.theta < self.th_target[1]:
             for start, end in zip(pole_points, pole_points[1:]):
                 self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=200, mu=0.5, sigma=1, color1=col1, color2=col2, particle_size=(1, 2))

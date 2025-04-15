@@ -53,6 +53,7 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self._flags = flags
         self.fullscreen = fullscreen
+        self.blit_offset = 0, 0
 
         self.fps = fps
         self.real_fps = self.fps
@@ -203,7 +204,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             popup.draw()
             popup.blit_to_main()
 
-        blit_with_aspect_ratio(self.window, self.active_canvas, self.antialiasing)
+        blit_with_aspect_ratio(self.window, self.active_canvas, self.antialiasing, offset=self.blit_offset)
 
         self.info_popup.main_canvas = self.window
         self.help_popup.main_canvas = self.window

@@ -59,6 +59,14 @@ class Pendulo:
         return self.y[0][0]
 
     @property
+    def v(self):
+        return self.y[1][0]
+
+    @property
+    def omega(self):
+        return self.y[3][0]
+
+    @property
     def linear_acceleration(self):
         return (self.y[1][0] - self.y[1][1]) / (self.Ki*2)
 
