@@ -24,6 +24,14 @@ JOYBUTTON: dict[str, int] = {
 }
 
 
+class NoneInput():
+    def __init__(self):
+        self.value = 0.0
+
+    def update(self, *args):
+        return self.value
+
+
 class Joystick():
     def __init__(self, source: pygame.joystick, channel, active_player_key:str|None=None, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
         self.active_player_key = active_player_key
@@ -52,7 +60,7 @@ def remove_dead_zone(x, dead_zone):
     return x
 
 
-class LinearControl:
+class LinearController:
     def __init__(self, active_player_key:str|None=None, initial_value=0., normalization: Callable = lambda x: x):
         self.active_player_key = active_player_key
         self.value = initial_value
@@ -74,7 +82,7 @@ class LinearControl:
         # coreografia inicial
         # init_r, pause_1, swing_l, pause_2 = 1.25, 1.25, 0.68, 1.5
         init_r, pause_1, swing_l, pause_2 = 0.85, 1.1, 0.7, 1.2
-        dir = -1
+        dir = 1
         if time < init_r:
             f = 1. * dir
         elif time < init_r + pause_1:

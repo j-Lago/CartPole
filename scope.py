@@ -8,7 +8,7 @@ from utils import ColorsDiscIterator
 import colorsys
 
 class Scope(PopUp):
-    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, legend=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float = 1.0, grid_lerp_factor: float = 0.6, bg_lerp_factor: float = 0.9, border_width: int = 2, border_radius: int = 13, **kwargs):
+    def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, legend=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float | tuple[float, ...] = 1.0, grid_lerp_factor: float = 0.6, bg_lerp_factor: float = 0.9, border_width: int = 2, border_radius: int = 13, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.bg_lerp_factor = bg_lerp_factor
