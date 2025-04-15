@@ -27,6 +27,8 @@ class Game(BaseScreen):
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
 
+        self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
+
         self.sounds['coin'] = self.load_sound(self.assets_path / 'coin.wav', volume=0.1)
         self.sounds['crash'] = self.load_sound(self.assets_path / 'crash.wav', volume=1.0)
         self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)
@@ -54,8 +56,8 @@ class Game(BaseScreen):
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
         self.cols['fps'] = lerp_vec3(self.cols['info'], (0,0,0), 0.6)
-        self.cols['p1'] = (90, 160, 140)
-        self.cols['p2'] = (160,  90, 140)
+        self.cols['p1'] = (90, 140, 190)
+        self.cols['p2'] = (190,  90, 140)
         self.cols['tiny_collect'] = (235, 230, 180)
         self.cols['small_collect'] = (220, 200, 60)
         self.cols['big_collect'] = (200, 140, 240)
@@ -66,23 +68,23 @@ class Game(BaseScreen):
 
 
         self.popups['p1_score'] = PopUpText(self.active_canvas, alpha=255, pos=(-0.37, 0.95),
-                                    color=self.cols['fps'], text='score', font=self.fonts['huge'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
+                                    color=self.cols['p1'], text='score', font=self.fonts['huge'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
 
         self.popups['p2_score'] = PopUpText(self.active_canvas, alpha=255, pos=(-0.37, .15),
-                                    color=self.cols['fps'], text='score', font=self.fonts['huge'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
+                                    color=self.cols['p2'], text='score', font=self.fonts['huge'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
 
         self.scopes = {
             'p1': Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
-                        color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                        color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
                         pos=(-1.75, 0.95), size=(320, 180), maxlen=400),
             'p2': Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
-                        color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                        color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
                         pos=(-1.75, 0.13), size=(320, 180), maxlen=400),
             'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
-                            color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
+                            color=self.cols['scope'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
                             pos=(0.5, -0.65), size=(320, 180), maxlen=400),
             'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200,
-                           color=self.cols['info'], focus_color=self.cols['focus'], pos=(1.12, -0.65), size=(320, 180),
+                           color=self.cols['scope'], focus_color=self.cols['focus'], pos=(1.12, -0.65), size=(320, 180),
                            maxlen=400),
         }
         self.paused = False
@@ -299,7 +301,7 @@ class Cart:
 
         self.col1 = (255, 255, 0)
         self.col2 = (127, 180, 90)
-        self.flag_col = (200, 255, 120)
+        self.flag_col = (90, 200, 90)
         self.flag_pole_col = (60, 60, 60)
 
         self.spark_sigma = 1.0
@@ -308,7 +310,7 @@ class Cart:
         self.spark_particle_size = 1, 2
 
         self.point_particles = Particles(100)
-        self.text_particles = Particles(7)
+        self.text_particles = Particles(10)
 
     def reset(self):
         self.cart_on_target = False
@@ -424,8 +426,9 @@ class Cart:
         if cart_on_target:
             cart_points = self.base_rect.points
             for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
-                # self.canvas.draw_circle(col1, cart_center, 0.04, 1, draw_top_right=True, draw_top_left=True)
                 self.canvas.draw_line(color=self.col1, start_pos=start, end_pos=end)
+                self.canvas.draw_circle(cart_col, cart_center, 0.04)
+                self.canvas.draw_circle(self.col1, cart_center, 0.04, 1, draw_top_right=True, draw_top_left=True)
                 self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=self.spark_density, mu=self.spark_mu, sigma=self.spark_sigma,
                                               color1=self.col1, color2=self.col2, particle_size=self.spark_particle_size, both_sides=False)
 
@@ -511,7 +514,7 @@ class Cart:
                     collect_color = self.game.cols['tiny_collect']
 
                 self.text_particles.append(
-                    TextParticle(self.canvas, collect_color, f'{collect_amount:+d}', self.game.fonts['tiny'],
+                    TextParticle(self.canvas, collect_color, f'{collect_amount:+d}', self.game.fonts['reward'],
                                  pos=pos, vel=(uniform(-0.2,0.2), uniform(0.4, 0.5)), dt=1/self.fps,
                                  lifetime=2,
                                  g=-98)
