@@ -93,7 +93,7 @@ class Canvas:
     def draw_circle(self, color: Color | tuple[int, int, int] | Vector3, center: Vector2 | tuple[float, float], radius: float, width: int = 0, draw_top_right: bool = False, draw_top_left: bool = False, draw_bottom_left: bool = False, draw_bottom_right: bool = False):
         return pygame.draw.circle(self.surface, color, self.world_to_screen_v2(center), self.world_to_screen_f(radius), width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)
 
-    def draw_sparkly_line(self, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], color1: Color | tuple[int, int, int] | Vector3 = None, color2: Color | tuple[int, int, int] | Vector3 = None, width: int = 1, density: float = 100, mu: float = 0.0, sigma: float = 1.0, particle_size: int | tuple[int, int]=1):
+    def draw_sparkly_line(self, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], color1: Color | tuple[int, int, int] | Vector3 = None, color2: Color | tuple[int, int, int] | Vector3 = None, width: int = 1, density: float = 100, mu: float = 0.0, sigma: float = 1.0, both_sides:bool=True, particle_size: int | tuple[int, int]=1):
 
         if color1 is None and color2 is None:
             color = randint(0, 255), randint(0, 255), randint(0, 255)
@@ -103,9 +103,6 @@ class Canvas:
             color = lerp_vec3(color1, color2, random())
         else:
             color = color2
-
-
-        # color = 255, 255, 255
 
         if not isinstance(start_pos, Vector2):
             start_pos = Vector2(start_pos)
@@ -121,12 +118,12 @@ class Canvas:
         start_pos -= norm * world_width_2 * (1+mu) * sigma
         end_pos += norm * world_width_2 * (1+mu) * sigma
 
-        # pygame.draw.line(self.surface, (255,0,0), self.world_to_screen_v2(start_pos), self.world_to_screen_v2(start_pos + perp*world_width_2), 4)
-        # pygame.draw.line(self.surface, (255, 0, 0), self.world_to_screen_v2(start_pos),self.world_to_screen_v2(start_pos + norm*world_width_2), 4)
-
         for _ in range(int((end_pos-start_pos).length()*density)):
             pos = start_pos.lerp(end_pos, random())
-            pos = pos + perp*world_width_2*gauss(mu, sigma)
+            if both_sides:
+                pos = pos + perp*world_width_2*gauss(mu, sigma)
+            else:
+                pos = pos + perp*world_width_2*abs(gauss(mu, sigma))
             psize = particle_size if isinstance(particle_size, int | float) else randint(*particle_size)
             pygame.draw.circle(self.surface, color, self.world_to_screen_v2(pos), psize)
 

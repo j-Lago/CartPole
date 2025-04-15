@@ -16,7 +16,7 @@ Points = tuple[Point, ...] | Sequence
 
 def points_from_rect(rect=Vec4) -> Points:
     x0, y0, w, h = rect
-    return (x0, y0), (x0, y0 - h), (x0 + w, y0 - h), (x0 + w, y0)
+    return (x0 + w, y0), (x0 + w, y0 - h), (x0, y0 - h), (x0, y0)
 
 
 def perpendicular_normal(vec: Vec2) -> (Vec2, Vec2):

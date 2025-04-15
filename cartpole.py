@@ -1,4 +1,6 @@
 from pygame import Vector2
+
+import particles
 from basescreen import BaseScreen
 from canvas import Canvas, remap
 from utils import fRect, Mat2x2, RotateMatrix
@@ -12,9 +14,9 @@ from pathlib import Path
 from image import Image
 from lerp import lerp_vec3
 from typing import Callable
-from random import random
+from random import random, choice, uniform, gauss, randint
 from popup import PopUpText
-
+from particles import Particles, BallParticle, TextParticle
 
 class Game(BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -247,6 +249,19 @@ class Cart:
         self.base_rect = fRect(0, 0, 0.35, 0.08)
         self.guardrail_rect = fRect(0, 0, 0.09, 0.18)
 
+        self.col1 = (255, 255, 0)
+        self.col2 = (127, 180, 90)
+        self.flag_col = (200, 255, 120)
+        self.flag_pole_col = (60, 60, 60)
+
+        self.spark_sigma = 1.0
+        self.spark_mu = 0.0
+        self.spark_density = 100
+        self.spark_particle_size = 1, 2
+
+        self.point_particles = Particles(200)
+        self.text_particles = Particles(200)
+
     def perturb(self, intensity):
         self.model.y[3][0] += intensity
 
@@ -292,6 +307,8 @@ class Cart:
 
     def draw(self, t):
 
+
+
         pole_col = self.base_color
         cart_col = lerp_vec3(self.base_color, (0, 0, 0), 0.4)
 
@@ -299,8 +316,8 @@ class Cart:
             pole_col = lerp_vec3(pole_col, (0, 0, 0), 0.7)
             cart_col = lerp_vec3(cart_col, (0, 0, 0), 0.7)
 
-        col1 = (255, 255, 0)
-        col2 = (127, 200, 90)
+
+
 
         # target test
         pole_on_target = False
@@ -316,15 +333,13 @@ class Cart:
         y = self.pos[1] - wheel_r - wheel_yaxis
 
         # flags
-        flag_col = (200, 255, 120)
-        flag_pole_col = (60, 60, 60)
         for x in (self.x_target[0] - self.base_rect.w / 2, self.x_target[1] + self.base_rect.w / 2):
             top = Vector2(x, y + 0.2)
             flag_points = (top - (0.0, 0.001), top - (-0.06, 0.019), top - (0.0, 0.037),)
-            self.canvas.draw_polygon(flag_col, flag_points)
-            self.canvas.draw_aalines(flag_col, False, flag_points)
-            self.canvas.draw_line(flag_pole_col, (x, y), top, 5)
-            self.canvas.draw_circle(flag_pole_col, top, 5 / self.canvas.scale)
+            self.canvas.draw_polygon(self.flag_col, flag_points)
+            self.canvas.draw_aalines(self.flag_col, False, flag_points)
+            self.canvas.draw_line(self.flag_pole_col, (x, y), top, 5)
+            self.canvas.draw_circle(self.flag_pole_col, top, 5 / self.canvas.scale)
 
         # flame
         if self.alive:
@@ -347,14 +362,6 @@ class Cart:
         pole_points = RotateMatrix(self.theta) * self.points['pole']
         pole_points = tuple((cart_center[0]+p[0], cart_center[1]+p[1]) for p in pole_points)
 
-        sigma = 0.75
-        mu = 0.5
-        density = 180
-        particle_size = 1,2
-
-
-
-
 
         # cart
         self.canvas.draw_rect(cart_col, self.base_rect)
@@ -362,8 +369,10 @@ class Cart:
         if cart_on_target:
             cart_points = self.base_rect.points
             for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
-                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=density, mu=mu, sigma=sigma,
-                                              color1=col1, color2=col2, particle_size=particle_size)
+                # self.canvas.draw_circle(col1, cart_center, 0.04, 1, draw_top_right=True, draw_top_left=True)
+                self.canvas.draw_line(color=self.col1, start_pos=start, end_pos=end)
+                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=self.spark_density, mu=self.spark_mu, sigma=self.spark_sigma,
+                                              color1=self.col1, color2=self.col2, particle_size=self.spark_particle_size, both_sides=False)
 
         # wheels
         for m, wheel_center in enumerate(( (cart_center - (wheel_xaxis, wheel_yaxis)), (cart_center - (-wheel_xaxis, wheel_yaxis)))):
@@ -375,8 +384,6 @@ class Cart:
                 ang = -self.x / wheel_r
                 self.canvas.draw_line(pole_col, wheel_center, wheel_center + spoke.rotate_rad(n*2*math.pi/n_spokes+ang + m*0.554) , 6)
             self.canvas.draw_circle(cart_col, wheel_center, wheel_r * .15, 10)
-
-
 
         # rail
         rail_sleeper_rect = fRect(0, 0, 0.03, 0.02)
@@ -394,13 +401,20 @@ class Cart:
 
 
         # pole
-        self.canvas.draw_polygon(pole_col, pole_points)
         self.canvas.draw_circle(pole_col, cart_center, 0.02)
-        self.canvas.draw_circle(cart_col, cart_center, 0.01)
+        if pole_on_target:
+            self.canvas.draw_circle(self.col1, cart_center, 0.02, 1)
+        self.canvas.draw_polygon(pole_col, pole_points)
 
         if pole_on_target:
             for start, end in zip(pole_points, pole_points[1:]):
-                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=density, mu=mu, sigma=sigma, color1=col1, color2=col2, particle_size=particle_size)
+                self.canvas.draw_aaline(color=self.col1, start_pos=start, end_pos=end)
+
+        self.canvas.draw_circle(pole_col, cart_center, 0.0185)
+        self.canvas.draw_circle(cart_col, cart_center, 0.01)
+        if pole_on_target:
+            for start, end in zip(pole_points, pole_points[1:]):
+                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=self.spark_density, mu=self.spark_mu, sigma=self.spark_sigma, color1=self.col1, color2=self.col2, particle_size=self.spark_particle_size, both_sides=False)
 
 
         # guardrail
@@ -426,7 +440,17 @@ class Cart:
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
         self.canvas.draw_polygon(self.guardrail1_col, tc_points)
 
+        if self.ticks % 10 == 0:
+            self.text_particles.append(
+                TextParticle(self.canvas, self.game.cols['info'], f'{choice([10,50,100,200])}', self.game.fonts['tiny'],
+                             pos=(0,0), vel=(uniform(-0.5,0.5), uniform(0.5, 1)), dt=1/self.fps,
+                             lifetime=2,
+                             g=-98)
+            )
 
+        # particles
+        self.text_particles.step_and_draw()
+        self.point_particles.step_and_draw()
 
 
 
