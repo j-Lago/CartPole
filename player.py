@@ -13,10 +13,12 @@ class Cart:
 
     assets_path = Path(__file__).parent / 'assets'
     jet_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'jet.png'), (0.35, 0.3))
+    perturb_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'dedo.png'), 0.3)
 
     def __init__(self, name: str, game: gb.BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0,
                  base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255),
                  alive: bool = True, death_callback: Callable = None):
+
 
         self.name = name
         self.game = game
@@ -30,11 +32,13 @@ class Cart:
 
         self.cart_on_target = False
         self.pole_on_target = False
-        self.steps_with_pole_on_target = 0
-        self.steps_with_both_on_target = 0
-        self.score = 0
-        self.uncollected_score = 0
-        self.reward = 0
+        self.steps_with_pole_on_target = None
+        self.steps_with_both_on_target = None
+        self.score = None
+        self.uncollected_score = None
+        self.reward = None
+        self.perturbation = None
+        self.ticks_since_perturbation = None
 
         self.reward_pole_on_target_short = 1
         self.reward_pole_on_target_long = 2
@@ -98,6 +102,8 @@ class Cart:
         self.score = 0
         self.uncollected_score = 0
         self.reward = 0
+        self.perturbation = 0
+        self.ticks_since_perturbation = 0
 
     def collect_score(self, max_collect: int = None):
         x = min(self.uncollected_score, max_collect) if max_collect is not None else self.uncollected_score
@@ -105,6 +111,8 @@ class Cart:
         return x
 
     def perturb(self, intensity):
+        self.perturbation = intensity
+        self.ticks_since_perturbation = 0
         self.model.y[3][0] += intensity
 
     @property
@@ -315,6 +323,7 @@ class Cart:
         #                          g=-98)
         #         )
         #         self.game.sounds['coin'].play()
+        pole_tip = Vector2(pole_points[1]).lerp(pole_points[2], 0.5)
 
         uncollected_score = self.uncollected_score
         if self.alive and (self.ticks + self.collect_shift) % self.collect_every_x_ticks == 0 and uncollected_score > 0:
@@ -327,16 +336,17 @@ class Cart:
                     self.reward_cart_on_target_short + self.reward_pole_on_target_long) \
                 else self.game.cols['huge_collect']
             color = gb.lerp_vec3(color, (randint(5, 250), randint(5, 250), randint(5, 250)), uniform(0.1, 0.2))
-            pos = Vector2(pole_points[1]).lerp(pole_points[2], random())
+
             self.text_particles.append(
                 gb.TextParticle(self.canvas,
                                 color,
                                 f'+{collected}',
                                 self.game.fonts['reward'],
-                                pos=pos,
-                                vel=(uniform(-0.2, 0.2), uniform(0.4, 0.5)),
+                                pos= Vector2(pole_points[1]) - (0.025, -0.03),
+                                vel=(uniform(-0.3, 0.23), uniform(0.3, 0.5)),
                                 dt=1 / self.game.fps,
                                 lifetime=uniform(0.5, 1.5),
+                                g=-20,
                                 )
             )
             self.game.sounds['coin'].play()
@@ -399,9 +409,27 @@ class Cart:
         pos_score = self.canvas.xmax - pad, y_score
         pos_label = self.canvas.xmax - pad2, y_label
         pos_description = self.canvas.xmax - pad2, y_description
-        self.canvas.draw_text(self.base_color, self.game.fonts['big'], f'{self.score}', pos_score, anchor=anchor)
-        self.canvas.draw_text(self.base_color, self.game.fonts['medium'], self.name.upper() + ' SCORE', pos_label,
-                              anchor=anchor)
-        self.canvas.draw_text(self.base_color, self.game.fonts['tiny'], self.input.description, pos_description,
-                              anchor=anchor)
+        self.canvas.draw_text(self.base_color, self.game.fonts['big'], f'{self.score}', pos_score, anchor)
+        self.canvas.draw_text(self.base_color, self.game.fonts['medium'], self.name.upper() + ' SCORE', pos_label, anchor)
+        self.canvas.draw_text(self.base_color, self.game.fonts['tiny'], self.input.description, pos_description, anchor)
+
+
+        #perturbtion
+        if self.perturbation != 0:
+            if self.alive:
+                pole_down = not (math.pi / 2 < self.model.theta < 3 * math.pi / 2)
+                direction = (pole_down ^ (self.perturbation > 0))
+                w, h = 80, 50
+                x, y = pole_tip
+                if not direction:
+                    x -= w / self.canvas.scale
+                y -= h / self.canvas.scale / 2
+                y += 0.09 if pole_down else 0.065
+                dedo = pygame.transform.smoothscale(pygame.transform.flip(self.perturb_img, direction, False), (w, h))
+                self.canvas.blit(dedo, (x,y))
+            self.ticks_since_perturbation += 1
+            if self.ticks_since_perturbation * 1 / self.fps > 0.2:
+                self.perturbation = 0
+                self.ticks_since_perturbation = 0
+
 
