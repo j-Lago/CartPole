@@ -1,11 +1,8 @@
+import gamebase as gb
 import time
 import pygame
 import sys
-from canvas import Canvas, remap
-from mouse import Mouse
-from filters import MediaMovel
-from popup import PopUp, PopUpText
-from pygame import Vector2, Rect
+from pygame import Vector2
 from pathlib import Path
 
 
@@ -61,8 +58,8 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.ticks = 0
         self.last_time = time.perf_counter()
         self.last_active_frame_time = 0.0
-        self.mm_fps = MediaMovel(20)
-        self.mm_frame_time = MediaMovel(20)
+        self.mm_fps = gb.MediaMovel(20)
+        self.mm_frame_time = gb.MediaMovel(20)
 
         self.antialiasing = antialiasing
         self.window_size = window_size
@@ -77,16 +74,16 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.last_active_canvas_key = None
 
         self.info_position = (30, 30)
-        self.mouse = Mouse()
+        self.mouse = gb.Mouse()
 
         if self.fullscreen:
-            self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
+            self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
         else:
-            self.window = Canvas(surface=pygame.display.set_mode(window_size, self._flags))
+            self.window = gb.Canvas(surface=pygame.display.set_mode(window_size, self._flags))
 
         self.extra_info = []
-        self.info_popup = PopUpText(self.window, alpha=200, pos=(10, -10),
-                                    color=self.cols['info'], text='', font=self.fonts['info'], visible=True, border_radius=13, border_width=2)
+        self.info_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10),
+                                       color=self.cols['info'], text='', font=self.fonts['info'], visible=False, border_radius=13, border_width=2)
         self.extra_help = []
         self.base_help = [
             f' F1: help',
@@ -94,9 +91,9 @@ class BaseScreen(metaclass=MetaLoopCall):
             f'F11: fullsceen/windowned',
             f'F10: toggle antialiasing',
         ]
-        self.help_popup = PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250),
-                                    color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
-                                    border_radius=13, border_width=2)
+        self.help_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250),
+                                       color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
+                                       border_radius=13, border_width=2)
 
         self.final_window_popups = {
             'info': self.info_popup,
@@ -121,6 +118,12 @@ class BaseScreen(metaclass=MetaLoopCall):
     def load_image(self, file_path: Path):
         return pygame.image.load(file_path)
 
+    def show_info(self):
+        self.info_popup.visible = True
+
+    def hide_info(self):
+        self.info_popup.visible = False
+
 
     @property
     def active_canvas(self):
@@ -139,7 +142,7 @@ class BaseScreen(metaclass=MetaLoopCall):
     @property
     def mouse_world_pos(self) -> Vector2:
         canvas = self.active_canvas
-        return canvas.screen_to_world_v2(remap(self.mouse.pos, self.window, canvas))
+        return canvas.screen_to_world_v2(gb.remap(self.mouse.pos, self.window, canvas))
 
     def loop(self):
         while True:
@@ -167,9 +170,9 @@ class BaseScreen(metaclass=MetaLoopCall):
                             pygame.display.quit()
                             pygame.display.init()
                             pygame.mouse.set_visible(_mouse_visibility)
-                            self.window = Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
+                            self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
                         else:
-                            self.window = Canvas(surface=pygame.display.set_mode(self.window_size, self._flags))
+                            self.window = gb.Canvas(surface=pygame.display.set_mode(self.window_size, self._flags))
                     elif event.key == pygame.K_a:
                         self.antialiasing = not self.antialiasing
 
@@ -254,7 +257,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.last_time = time.perf_counter()
 
 
-def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offset: tuple[int, int] | None = None):
+def blit_with_aspect_ratio(dest: gb.Canvas, source: gb.Canvas, antialiasing=True, offset: tuple[int, int] | None = None):
     source_size = source.get_size()
     dest_size = dest.get_size()
 

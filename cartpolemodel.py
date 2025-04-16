@@ -3,7 +3,7 @@ from collections import deque
 import math
 
 
-class Pendulo:
+class CartPoleModel:
     def __init__(self, cart_mass, pole_mass, pole_length, x_damping, theta_damping, x0, th0, dt):
         self.ini = 0.
         self.x0 = x0

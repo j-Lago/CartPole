@@ -1,30 +1,18 @@
-from pygame import Vector2
-from mouse import MouseButton, Mouse, MouseScroll
-import particles
-from basescreen import BaseScreen
-from canvas import Canvas, remap
-from utils import fRect, Mat2x2, RotateMatrix
-from pendulo import Pendulo
-from random import uniform
-import math
+import gamebase as gb
 import pygame
-from inputs import Joystick, JOYBUTTON, LinearController, NoneInput
-from scope import Scope
+from pygame import Vector2
+import math
 from pathlib import Path
-from image import Image
-from lerp import lerp_vec3
-from typing import Callable
-from random import random, choice, uniform, gauss, randint
-from popup import PopUpText
-from particles import Particles, BallParticle, TextParticle
+from random import random, uniform, randint
+from player import Cart
 
-class Game(BaseScreen):
+
+class CartPoleGame(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.game_duration = 45
         self.info_popup.visible = False
-
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
@@ -50,44 +38,50 @@ class Game(BaseScreen):
             joystick.init()
 
         # self.input = Joystick(joystick, 2, normalization=lambda x: x)
-        self.inputs = {
-            'p1': Joystick(joystick, 2, dead_zone=0.03) if joystick is not None else LinearController(),
-            'p2': LinearController(),
-            'none': NoneInput(),
+        self.inputs: dict[str, gb.BaseInput] = {
+            'p1': gb.Joystick(joystick, 2, dead_zone=0.03) if joystick is not None else gb.LinearController(),
+            'p2': gb.LinearController(),
+            'none_p1': gb.NoneInput(),
+            'none_p2': gb.NoneInput(),
         }
 
-
-        self.canvases['main'] = Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
+        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
         self.pre_draw_callback = self.simulate
         self.event_loop_callback = self.process_user_input_event
 
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
-        self.cols['fps'] = lerp_vec3(self.cols['info'], (0,0,0), 0.6)
+        self.cols['fps'] = gb.lerp_vec3(self.cols['info'], (0, 0, 0), 0.6)
         self.cols['p1'] = (90, 140, 190)
-        self.cols['p2'] = (190,  90, 140)
+        self.cols['p2'] = (190, 90, 140)
         self.cols['tiny_collect'] = (235, 230, 180)
         self.cols['small_collect'] = (220, 200, 60)
         self.cols['big_collect'] = (200, 140, 240)
         self.cols['huge_collect'] = (200, 90, 255)
         self.cols['timer'] = (90, 60, 50)
 
-        self.fps_popup = PopUpText(self.active_canvas, alpha=255, pos=(self.active_canvas.xmin+0.01, self.active_canvas.ymax-.04),
-                                    color=self.cols['fps'], text='', font=self.fonts['medium'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
+        self.fps_popup = gb.PopUpText(self.active_canvas, alpha=255,
+                                      pos=(self.active_canvas.xmin + 0.01, self.active_canvas.ymax - .04),
+                                      color=self.cols['fps'], text='', font=self.fonts['medium'], visible=True,
+                                      border_width=-1, fill_color=(0, 0, 0, 0))
 
         self.scopes = {
-            'p1': Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
-                        color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
-                        pos=(-1.75, 0.95), size=(320, 180), maxlen=400, visible=False),
-            'p2': Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
-                        color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
-                        pos=(-1.75, 0.13), size=(320, 180), maxlen=400, visible=False),
-            'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
-                            color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
-                            pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
-            'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200,
-                           color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65), size=(320, 180),
-                           maxlen=400, visible=True),
+            'p1': gb.Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps,
+                           alpha=200,
+                           color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                           pos=(-1.75, 0.95), size=(320, 180), maxlen=400, visible=False),
+            'p2': gb.Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps,
+                           alpha=200,
+                           color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                           pos=(-1.75, 0.13), size=(320, 180), maxlen=400, visible=False),
+            'inputs': gb.Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
+                               color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
+                               pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
+            'times': gb.Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps,
+                              alpha=200,
+                              color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65),
+                              size=(320, 180),
+                              maxlen=400, visible=True),
         }
         self.paused = False
         self.players = None
@@ -100,8 +94,10 @@ class Game(BaseScreen):
         self.ticks = 0
         th0 = uniform(-1, 1) * 0.0
         self.players = {
-            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],
+                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'],
+                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
         self.chash_xoffset = 0.0
@@ -111,34 +107,30 @@ class Game(BaseScreen):
         for player in self.players.values():
             player.reset()
 
-
-    def left_release(self, button: MouseButton):
+    def left_release(self, button: gb.MouseButton):
         pass
 
-    def left_click(self, button: MouseButton):
+    def left_click(self, button: gb.MouseButton):
         pass
 
-    def right_click(self, button: MouseButton):
+    def right_click(self, button: gb.MouseButton):
         pass
 
-    def right_release(self, button: MouseButton):
+    def right_release(self, button: gb.MouseButton):
         for scope in self.scopes.values():
             if scope.collision(self.mouse_world_pos):
                 scope.visible = False
 
-    def scroll_up(self, scroll: MouseScroll):
+    def scroll_up(self, scroll: gb.MouseScroll):
         pass
 
-    def scroll_down(self, scroll: MouseScroll):
+    def scroll_down(self, scroll: gb.MouseScroll):
         pass
-
-
 
     def perturb(self, intensity):
         for player in self.players.values():
             player.perturb(intensity)
             self.perturbation = intensity
-
 
     def simulate(self):
 
@@ -151,16 +143,13 @@ class Game(BaseScreen):
         self.chash_xoffset -= d
         shake_intensity = 1.3
         self.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
-            -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1+abs(d)*.3)
-
-
+            -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1 + abs(d) * .3)
 
         for player in self.players.values():
             player.step()
         self.sounds['jet'].set_volume(combined_input)
 
-
-    def draw_main(self, canvas: Canvas):
+    def draw_main(self, canvas: gb.Canvas):
         canvas.fill(self.cols['bg'])
         pos = self.mouse_world_pos
 
@@ -173,15 +162,21 @@ class Game(BaseScreen):
                 player.draw(self.t)
 
         # timer
-        canvas.draw_text(self.cols['timer'], self.fonts['normal'], f'{self.game_duration - self.t:.1f}', (canvas.xmax - 0.05, 0), anchor='midright')
-        canvas.draw_text(self.cols['timer'], self.fonts['medium'], 'TIMER', (canvas.xmax-0.06, -0.08), anchor='midright')
+        canvas.draw_text(self.cols['timer'], self.fonts['normal'], f'{self.game_duration - self.t:.1f}',
+                         (canvas.xmax - 0.05, 0), anchor='midright')
+        canvas.draw_text(self.cols['timer'], self.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
+                         anchor='midright')
 
         # scope
         x = self.t
         total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
         y = {
-            'p2': (self.players['p2'].theta - math.pi, self.players['p2'].x, self.players['p2'].v, self.players['p2'].omega),
-            'p1': (self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v, self.players['p1'].omega),
+            'p2': (
+                self.players['p2'].theta - math.pi, self.players['p2'].x, self.players['p2'].v,
+                self.players['p2'].omega),
+            'p1': (
+                self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v,
+                self.players['p1'].omega),
             'inputs': (self.inputs['p1'].value, self.inputs['p2'].value),
             'times': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1),
         }
@@ -209,13 +204,14 @@ class Game(BaseScreen):
 
     def process_user_input_event(self, event):
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
-            self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]), int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))
+            self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]),
+                                       int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
         for scope in self.scopes.values():
             if self.mouse.left.dragging and scope.focus:
                 canvas = self.active_canvas
-                delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
+                delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
                 scope.pos = Vector2(scope.pos) + delta
                 self.mouse.left.clear_drag_delta()
@@ -232,12 +228,18 @@ class Game(BaseScreen):
             #     self.players['p2'].alive = not self.players['p2'].alive
 
             elif event.key == pygame.K_2:
-                self.inputs['p2'], self.inputs['none'] = self.inputs['none'], self.inputs['p2']
+                self.inputs['p2'], self.inputs['none_p2'] = self.inputs['none_p2'], self.inputs['p2']
+                self.reset()
+
+            elif event.key == pygame.K_1:
+                self.inputs['p1'], self.inputs['none_p1'] = self.inputs['none_p1'], self.inputs['p1']
                 self.reset()
 
 
-            elif event.key == pygame.K_COMMA: self.perturb(0.4)
-            elif event.key == pygame.K_PERIOD: self.perturb(-0.4)
+            elif event.key == pygame.K_COMMA:
+                self.perturb(0.4)
+            elif event.key == pygame.K_PERIOD:
+                self.perturb(-0.4)
 
             # elif event.key == pygame.K_r:
             #     self.scopes['ch1'].clear()
@@ -258,395 +260,3 @@ class Game(BaseScreen):
             #     self.scopes['ch2'].x_scale *= 2
             # elif event.key == pygame.K_KP_MINUS:
             #     self.scopes['ch2'].x_scale /= 2
-
-
-
-class Cart:
-    instance_count: int = 0
-
-    assets_path = Path(__file__).parent / 'assets'
-    jet_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'jet.png'), (0.35, 0.3))
-
-    def __init__(self, name: str, game: BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0, base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
-
-        self.name = name
-        self.game = game
-
-        Cart.instance_count += 1
-        self.id = Cart.instance_count
-        self.collect_every_x_ticks = 10
-        self.collect_shift = self.collect_every_x_ticks // 2 if (self.id %2 == 0) else 0
-
-        self.training_mode = False
-
-        self.cart_on_target = False
-        self.pole_on_target = False
-        self.steps_with_pole_on_target = 0
-        self.steps_with_both_on_target = 0
-        self.score = 0
-        self.uncollected_score = 0
-        self.reward = 0
-
-        self.reward_pole_on_target_short = 1
-        self.reward_pole_on_target_long = 2
-        self.reward_cart_on_target_short = 2
-        self.reward_cart_on_target_long = 6
-        self.reward_on_death = -100
-        self.reward_death_per_tick = -1
-
-        self.time_pole_on_target_short = int(60 / (60 / self.fps)) if not self.training_mode else 0
-        self.time_pole_on_target_long = int(60 * 3 / (60 / self.fps)) if not self.training_mode else 0
-        self.time_cart_on_target_short = int(60 / (60 / self.fps)) if not self.training_mode else 0
-        self.time_cart_on_target_long = int(60 * 3 / (60 / self.fps)) if not self.training_mode else 0
-
-        self.death_callback = death_callback
-        self.alive = alive
-        self.canvas: Canvas = self.game.active_canvas
-        self.input = input_device
-        self.x_target = (-0.15, 0.15)
-        tol = math.pi/12
-        self.th_target = (math.pi - tol, math.pi + tol)
-
-        if not isinstance(pos, Vector2):
-            pos = Vector2(pos)
-
-        self.initial_pos = pos
-        self.linear_factor = 0.110625 * 0.8
-
-        self.model = Pendulo(1., .3, 5., 1., 1., x0=self.initial_pos[0]/self.linear_factor, th0=th0, dt=1 / self.fps)
-
-
-        self.base_color = base_color
-        self.rail_col = rail_color
-        self.sleeper_col = (120, 100, 60)
-        self.guardrail0_col = (60, 60, 60)
-        self.guardrail1_col = (220, 200, 30)
-
-
-        self.points = {
-            'pole': ((0.015, 0), (0.015, -0.35), (-0.015, -0.35), (-0.015, 0))
-        }
-
-        self.base_rect = fRect(0, 0, 0.35, 0.08)
-        self.guardrail_rect = fRect(0, 0, 0.09, 0.18)
-
-        self.col1 = (255, 255, 0)
-        self.col2 = (127, 180, 90)
-        self.flag_col = (90, 200, 90)
-        self.flag_pole_col = (60, 60, 60)
-
-        self.spark_sigma = 1.0
-        self.spark_mu = 0.0
-        self.spark_density = 100
-        self.spark_particle_size = 1, 2
-
-        self.point_particles = Particles(100)
-        self.text_particles = Particles(6)
-
-    def reset(self):
-        self.cart_on_target = False
-        self.pole_on_target = False
-        self.steps_with_pole_on_target = 0
-        self.steps_with_both_on_target = 0
-        self.score = 0
-        self.uncollected_score = 0
-        self.reward = 0
-
-    def collect_score(self, max_collect: int = None):
-        x = min(self.uncollected_score, max_collect) if max_collect is not None else self.uncollected_score
-        self.uncollected_score -= x
-        return x
-
-    def perturb(self, intensity):
-        self.model.y[3][0] += intensity
-
-    @property
-    def ticks(self):
-        return self.game.ticks
-
-    @property
-    def fps(self):
-        return self.game.fps
-
-
-    def step(self):
-        force = self.input.value * self.game.force_factor
-        if self.alive:
-            if self.x - self.base_rect.w / 2 < self.canvas.xmin + self.guardrail_rect.w or self.x + self.base_rect.w / 2 > self.canvas.xmax - self.guardrail_rect.w:
-                self.alive = False
-                if self.death_callback is not None:
-                    self.death_callback(self)
-            else:
-                self.model.step(force)
-
-    @property
-    def theta(self):
-        return self.model.theta
-
-    @property
-    def omega(self):
-        return self.model.omega
-
-    @property
-    def x(self):
-        return self.model.x * self.linear_factor
-
-
-    @property
-    def v(self):
-        return self.model.v * self.linear_factor
-
-    @property
-    def pos(self):
-        return Vector2(self.x, self.initial_pos[1])
-
-    def draw(self, t):
-        f = 60 / self.game.fps
-        pole_col = self.base_color
-        cart_col = lerp_vec3(self.base_color, (0, 0, 0), 0.4)
-
-        if not self.alive:
-            pole_col = lerp_vec3(pole_col, (0, 0, 0), 0.7)
-            cart_col = lerp_vec3(cart_col, (0, 0, 0), 0.7)
-
-        # target test
-        pole_on_target = False
-        cart_on_target = False
-        if self.alive and self.th_target[0] < self.theta < self.th_target[1]:
-            pole_on_target = True
-            if self.x_target[0] < self.x < self.x_target[1]:
-                cart_on_target = True
-
-        wheel_r = 0.055
-        wheel_yaxis = self.base_rect[3] * 1.1
-        wheel_xaxis = self.base_rect[2] / 2 * 0.6
-        y = self.pos[1] - wheel_r - wheel_yaxis
-
-        # flags
-        flag_tops = []
-        for x in (self.x_target[0] - self.base_rect.w / 2, self.x_target[1] + self.base_rect.w / 2):
-            top = Vector2(x, y + 0.2)
-            flag_tops.append(top)
-            flag_points = (top - (0.0, 0.001), top - (-0.06, 0.019), top - (0.0, 0.037),)
-            self.canvas.draw_polygon(self.flag_col, flag_points)
-            self.canvas.draw_aalines(self.flag_col, False, flag_points)
-            self.canvas.draw_line(self.flag_pole_col, (x, y), top, 5)
-            self.canvas.draw_circle(self.flag_pole_col, top, 5 / self.canvas.scale)
-
-        # flame
-        if self.alive:
-            flame_gain = math.fabs(self.input.value) * uniform(0.8, 1.2)
-            img0: pygame.Surface = pygame.transform.scale_by(self.jet_img, Vector2(flame_gain, max(flame_gain, 0.8)) * self.canvas.relative_scale)
-            if self.input.value < 0:
-                img0 = pygame.transform.flip(img0, True, False)
-
-            img = Image(self.canvas, img0)
-            flame_offset = self.base_rect[2]/2*0.9, self.base_rect[3]/2
-            if self.input.value > 0:
-                img.midright = self.pos - flame_offset
-            else:
-                img.midleft = self.pos + (flame_offset[0], -flame_offset[1])
-            img.blit()
-
-        cart_center = self.pos
-        self.base_rect.midtop = cart_center
-
-        pole_points = RotateMatrix(self.theta) * self.points['pole']
-        pole_points = tuple((cart_center[0]+p[0], cart_center[1]+p[1]) for p in pole_points)
-
-
-        # cart
-        self.canvas.draw_rect(cart_col, self.base_rect)
-        self.canvas.draw_circle(cart_col, cart_center, 0.04)
-        if cart_on_target:
-            cart_points = self.base_rect.points
-            for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
-                self.canvas.draw_line(color=self.col1, start_pos=start, end_pos=end)
-                self.canvas.draw_circle(cart_col, cart_center, 0.04)
-                self.canvas.draw_circle(self.col1, cart_center, 0.04, 1, draw_top_right=True, draw_top_left=True)
-                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=self.spark_density, mu=self.spark_mu, sigma=self.spark_sigma,
-                                              color1=self.col1, color2=self.col2, particle_size=self.spark_particle_size, both_sides=False)
-
-        # wheels
-        for m, wheel_center in enumerate(( (cart_center - (wheel_xaxis, wheel_yaxis)), (cart_center - (-wheel_xaxis, wheel_yaxis)))):
-            self.canvas.draw_circle(pole_col, wheel_center, wheel_r, 10)
-            self.canvas.draw_circle(pole_col, wheel_center, wheel_r*.3, 10)
-            spoke = Vector2(0.0, wheel_r*.9)
-            n_spokes = 5
-            for n in range(n_spokes):
-                ang = -self.x / wheel_r
-                self.canvas.draw_line(pole_col, wheel_center, wheel_center + spoke.rotate_rad(n*2*math.pi/n_spokes+ang + m*0.554) , 6)
-            self.canvas.draw_circle(cart_col, wheel_center, wheel_r * .15, 10)
-
-        # rail
-        rail_sleeper_rect = fRect(0, 0, 0.03, 0.02)
-        n_sleepers = 22
-        mw = self.canvas.get_rect()[2] / (n_sleepers-1)
-        for i in range(n_sleepers):
-            x = self.canvas.xmin + i * mw
-            rail_sleeper_rect.midtop = (x, y)
-            self.canvas.draw_rect(self.sleeper_col, rail_sleeper_rect)
-        ground_width = 4
-        self.canvas.draw_line(self.rail_col, (self.canvas.xmin, y), (self.canvas.xmax, y), ground_width)
-
-        # for x in self.x_target:
-        #     self.canvas.draw_line(col1, (x, y-0.03), (x, y-0.05), ground_width)
-
-
-        # pole
-        self.canvas.draw_circle(pole_col, cart_center, 0.02)
-        if pole_on_target:
-            self.canvas.draw_circle(self.col1, cart_center, 0.02, 1)
-        self.canvas.draw_polygon(pole_col, pole_points)
-
-        if pole_on_target:
-            for start, end in zip(pole_points, pole_points[1:]):
-                self.canvas.draw_aaline(color=self.col1, start_pos=start, end_pos=end)
-
-        self.canvas.draw_circle(pole_col, cart_center, 0.0185)
-        self.canvas.draw_circle(cart_col, cart_center, 0.01)
-        if pole_on_target:
-            for start, end in zip(pole_points, pole_points[1:]):
-                self.canvas.draw_sparkly_line(start_pos=start, end_pos=end, width=10, density=self.spark_density, mu=self.spark_mu, sigma=self.spark_sigma, color1=self.col1, color2=self.col2, particle_size=self.spark_particle_size, both_sides=False)
-
-
-        # guardrail
-        g_rect = self.guardrail_rect
-        fx = 2/3
-        fy = 1/3
-
-        g_rect.bottomleft = (self.canvas.xmin, y)
-        ti_points = (g_rect.x, g_rect.y - g_rect.h), (g_rect.x, g_rect.y + fy * g_rect.h - g_rect.h), (g_rect.x + fx * g_rect.w, g_rect.y - g_rect.h)
-        ts_points = (g_rect.x + g_rect.w, g_rect.y), (g_rect.x + g_rect.w, g_rect.y - fy * g_rect.h), (g_rect.x + g_rect.w - fx * g_rect.w, g_rect.y)
-        tc_points = (g_rect.x, g_rect.y - g_rect.h + 1.75*fy * g_rect.h), (g_rect.x, g_rect.y - g_rect.h + 2.75*fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 1.25 * fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 0.25 * fy * g_rect.h)
-        self.canvas.draw_polygon(self.guardrail0_col, g_rect.points)
-        self.canvas.draw_polygon(self.guardrail1_col, ti_points)
-        self.canvas.draw_polygon(self.guardrail1_col, ts_points)
-        self.canvas.draw_polygon(self.guardrail1_col, tc_points)
-
-        g_rect.bottomright = (self.canvas.xmax, y)
-        ti_points = (g_rect.x, g_rect.y - g_rect.h), (g_rect.x, g_rect.y + fy * g_rect.h - g_rect.h), (g_rect.x + fx * g_rect.w, g_rect.y - g_rect.h)
-        ts_points = (g_rect.x + g_rect.w, g_rect.y), (g_rect.x + g_rect.w, g_rect.y - fy * g_rect.h), (g_rect.x + g_rect.w - fx * g_rect.w, g_rect.y)
-        tc_points = (g_rect.x, g_rect.y - g_rect.h + 1.75 * fy * g_rect.h), (g_rect.x, g_rect.y - g_rect.h + 2.75 * fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 1.25 * fy * g_rect.h), (g_rect.x + g_rect.w, g_rect.y - g_rect.h + 0.25 * fy * g_rect.h)
-        self.canvas.draw_polygon(self.guardrail0_col, g_rect.points)
-        self.canvas.draw_polygon(self.guardrail1_col, ti_points)
-        self.canvas.draw_polygon(self.guardrail1_col, ts_points)
-        self.canvas.draw_polygon(self.guardrail1_col, tc_points)
-
-        # if pole_on_target:
-        #     pos = Vector2(pole_points[1]).lerp(pole_points[2], random())
-        #     if (self.ticks + self.collect_shift) % self.collect_every_x_ticks == 0:
-        #
-        #         collect_amount = choice([10, 20, 50, 100, 200, 500])
-        #
-        #         if collect_amount >= 200:
-        #             collect_color = self.game.cols['huge_collect']
-        #         elif collect_amount >= 100:
-        #             collect_color = self.game.cols['big_collect']
-        #         elif collect_amount >= 50:
-        #             collect_color = self.game.cols['small_collect']
-        #         else:
-        #             collect_color = self.game.cols['tiny_collect']
-        #
-        #         self.text_particles.append(
-        #             TextParticle(self.canvas, collect_color, f'{collect_amount:+d}', self.game.fonts['reward'],
-        #                          pos=pos, vel=(uniform(-0.2,0.2), uniform(0.4, 0.5)), dt=1/self.fps,
-        #                          lifetime=2,
-        #                          g=-98)
-        #         )
-        #         self.game.sounds['coin'].play()
-
-        uncollected_score = self.uncollected_score
-        if self.alive and (self.ticks + self.collect_shift) % self.collect_every_x_ticks == 0 and uncollected_score > 0:
-            collected = self.collect_score(max_collect=200)
-            color = self.game.cols['tiny_collect'] if collected <= f * self.collect_every_x_ticks * self.reward_pole_on_target_short \
-                else self.game.cols['small_collect'] if collected <= f * self.collect_every_x_ticks * self.reward_pole_on_target_long \
-                else self.game.cols['big_collect'] if collected <= f * self.collect_every_x_ticks * (
-                        self.reward_cart_on_target_short + self.reward_pole_on_target_long) \
-                else self.game.cols['huge_collect']
-            color = lerp_vec3(color, (randint(5, 250), randint(5, 250), randint(5, 250)), uniform(0.1, 0.2))
-            pos = Vector2(pole_points[1]).lerp(pole_points[2], random())
-            self.text_particles.append(
-                TextParticle(self.canvas,
-                             color,
-                             f'+{collected}',
-                             self.game.fonts['reward'],
-                             pos=pos,
-                             vel=(uniform(-0.2,0.2), uniform(0.4, 0.5)),
-                             dt=1 / self.game.fps,
-                             lifetime=uniform(0.5, 1.5),
-                             )
-            )
-            self.game.sounds['coin'].play()
-
-
-        if self.steps_with_both_on_target >= self.time_cart_on_target_long:
-            for _ in range(randint(1, 5)):
-                self.point_particles.append(
-                    BallParticle(self.canvas, (randint(0, 255),randint(0, 255),randint(0, 255)), uniform(1.1,2.1)/self.canvas.scale,
-                                 pos=flag_tops[0], vel=(uniform(-0.25,0.25), uniform(0.4, .8)), dt=1/self.fps,
-                                 g=-98)
-                    )
-                self.point_particles.append(
-                    BallParticle(self.canvas, (randint(0, 255), randint(0, 255), randint(0, 255)),
-                                 uniform(1.1, 2.1) / self.canvas.scale,
-                                 pos=flag_tops[1], vel=(uniform(-0.25, 0.25), uniform(0.4, .8)), dt=1 / self.fps,
-                                 g=-98)
-                )
-
-        # particles
-        self.text_particles.step_and_draw()
-        self.point_particles.step_and_draw()
-
-
-        # score
-        self.pole_on_target = pole_on_target
-        self.both_on_target = pole_on_target and cart_on_target
-
-        if not self.game.paused:
-            self.steps_with_pole_on_target = self.steps_with_pole_on_target + 1 if self.pole_on_target else 0
-            self.steps_with_both_on_target = self.steps_with_both_on_target + 1 if self.both_on_target else 0
-
-            self.reward = 0
-            if self.steps_with_pole_on_target > self.time_pole_on_target_short:
-                self.reward += self.reward_pole_on_target_short if self.steps_with_pole_on_target < self.time_pole_on_target_long else self.reward_pole_on_target_long
-
-            if self.steps_with_both_on_target > self.time_cart_on_target_short:
-                self.reward += self.reward_cart_on_target_short if self.steps_with_both_on_target < self.time_cart_on_target_long else self.reward_cart_on_target_long
-            # self.ticks += 1
-        else:
-            self.reward = 0
-            # self.ticks_since_death += 1
-
-        self.reward = int(self.reward * 60 / self.game.fps)
-        self.score += self.reward
-        self.uncollected_score += self.reward
-
-
-        # draw score
-        pad = 0.05
-        pad2 = 0.06
-        if self.id % 2 == 1:
-            y_score = self.canvas.ymax - 0.04
-            y_label = y_score - 0.2
-            y_description = y_label - 0.06
-            anchor = 'topright'
-        else:
-            y_score = self.canvas.ymin
-            y_label = y_score + 0.2 + 0.02
-            y_description = y_label + 0.06
-            anchor = 'bottomright'
-        pos_score = self.canvas.xmax - pad, y_score
-        pos_label = self.canvas.xmax - pad2, y_label
-        pos_description = self.canvas.xmax - pad2, y_description
-        self.canvas.draw_text(self.base_color, self.game.fonts['big'], f'{self.score}', pos_score, anchor=anchor)
-        self.canvas.draw_text(self.base_color, self.game.fonts['medium'], self.name.upper() + ' SCORE', pos_label, anchor=anchor)
-        self.canvas.draw_text(self.base_color, self.game.fonts['tiny'], self.input.description, pos_description, anchor=anchor)
-
-
-
-
-
-
-if __name__ == '__main__':
-    Game()

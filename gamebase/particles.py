@@ -1,10 +1,7 @@
 import math
-import random
-from random import random as rand, randint, uniform, choice
 import pygame
 from _collections import deque
-from vec import lerp_vec3
-from canvas import Canvas
+from gamebase.canvas import Canvas
 
 
 

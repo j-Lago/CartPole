@@ -1,12 +1,10 @@
+import gamebase as gb
 import pygame.transform
-from canvas import Canvas
-from utils import collision_point_rect
-from lerp import lerp_vec3
 from pygame import Vector2
 
 
-class PopUp(Canvas):
-    def __init__(self, main_canvas: Canvas, *args, pos=(0, 0), alpha=255, flags=pygame.HWSURFACE | pygame.SRCALPHA, **kwargs):
+class PopUp(gb.Canvas):
+    def __init__(self, main_canvas: gb.Canvas, *args, pos=(0, 0), alpha=255, flags=pygame.HWSURFACE | pygame.SRCALPHA, **kwargs):
         super().__init__(*args, flags=flags, **kwargs)
         self.main_canvas = main_canvas
         self.pos = pos
@@ -14,7 +12,7 @@ class PopUp(Canvas):
 
     def collision(self, pos) -> bool:
         _, _, w, h = self.surface.get_rect()
-        return collision_point_rect(pos, (self.pos[0], self.pos[1], w*self.main_canvas.relative_scale/self.main_canvas.scale, h*self.main_canvas.relative_scale/self.main_canvas.scale))
+        return gb.collision_point_rect(pos, (self.pos[0], self.pos[1], w*self.main_canvas.relative_scale/self.main_canvas.scale, h*self.main_canvas.relative_scale/self.main_canvas.scale))
 
     def blit_to_main(self):
         dest = self.main_canvas
@@ -34,7 +32,7 @@ class PopUpText(PopUp):
         self.color = color
         self.bg_lerp_factor = bg_lerp_factor
         if fill_color is None:
-            fill_color = lerp_vec3(self.color, self.main_canvas._bg_color, self.bg_lerp_factor)
+            fill_color = gb.lerp_vec3(self.color, self.main_canvas._bg_color, self.bg_lerp_factor)
         self.fill_color = fill_color
         self.border_radius = border_radius
         self.border_width = border_width
@@ -43,13 +41,9 @@ class PopUpText(PopUp):
         if self.draw_fun is None:
             self.draw_fun = self.default_draw
 
-
-
-    def default_draw(self, canvas: Canvas):
-
+    def default_draw(self, canvas: gb.Canvas):
         if isinstance(self.text, str):
             self.text = [self.text]
-
         rects = []
         renders = []
         pad = Vector2(self.pad[0], 0)
@@ -75,6 +69,5 @@ class PopUpText(PopUp):
 
         for n in range(len(self.text)):
             self.blit(renders[n], self.screen_to_world_rect(rects[n]))
-
 
         canvas.draw_rect(self.color, rect, self.border_width, self.border_radius)

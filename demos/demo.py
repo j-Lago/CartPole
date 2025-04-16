@@ -1,22 +1,13 @@
+import gamebase as gb
 import pygame
-from canvas import Canvas, remap
-from inputs import Joystick, JOYBUTTON
+from pygame import Vector2
 import math
 from random import random, randint, uniform, choice
-from particles import BallParticle, Particles, TextParticle
-from pygame import Vector2
-from lerp import lerp, lerp_vec2, lerp_vec3
-from basescreen import BaseScreen
-from mouse import MouseButton, MouseScroll, Mouse
-from utils import ColorsDiscIterator, outer_rect, rotate_vec2s
-from scope import Scope
-from popup import PopUp, PopUpText
 from pathlib import Path
-from utils import points_from_rect, RotateMatrix
-from image import Image
 
 
-class Demo(BaseScreen):
+
+class Demo(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -32,9 +23,9 @@ class Demo(BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.canvases = {
-            'rocket': Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
-            'menu': Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_2),
-            'test'  : Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_3),
+            'rocket': gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
+            'menu': gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_2),
+            'test'  : gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_3),
         }
 
         self.event_loop_callback = self.process_user_input_event
@@ -44,8 +35,8 @@ class Demo(BaseScreen):
         self.cols['scope'] = (55, 255, 200)
         # flags = pygame.HWSURFACE | pygame.SRCALPHA
         self.scopes = {
-            'ch1': Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
-            'ch2': Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
+            'ch1': gb.Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
+            'ch2': gb.Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
@@ -60,11 +51,11 @@ class Demo(BaseScreen):
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
-            self.steer = Joystick(joystick, 2)
-            self.throttle = Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
+            self.steer = gb.Joystick(joystick, 2)
+            self.throttle = gb.Joystick(joystick, 4, normalization=lambda x: (x+1)/2)
 
-        self.particles = Particles(100)
-        self.text_particles = Particles(300)
+        self.particles = gb.Particles(100)
+        self.text_particles = gb.Particles(300)
         self.particles_fonts = [
             pygame.font.SysFont('Times', 22),
             pygame.font.SysFont('Times', 36),
@@ -110,15 +101,15 @@ class Demo(BaseScreen):
 
 
 
-    def left_release(self, button: MouseButton):
+    def left_release(self, button: gb.MouseButton):
         self.sounds['beep'].play()
 
-    def left_click(self, button: MouseButton):
+    def left_click(self, button: gb.MouseButton):
         key = 'left_click'
         if key in self.popups.keys():
             del self.popups[key]
 
-    def right_click(self, button: MouseButton):
+    def right_click(self, button: gb.MouseButton):
         pos = self.mouse_world_pos
 
         key = 'left_click'
@@ -127,20 +118,20 @@ class Demo(BaseScreen):
             self.popups[key].text = text
             self.popups[key]._pos = pos
         else:
-            self.popups[key] = PopUpText(self.canvases['rocket'], alpha=180, pos=pos,
+            self.popups[key] = gb.PopUpText(self.canvases['rocket'], alpha=180, pos=pos,
                                          color=(255, 255, 0), text=text, font=self.fonts['info'],
                                          visible=True, border_radius=0, border_width=1)
 
 
 
-    def right_release(self, button: MouseButton):
+    def right_release(self, button: gb.MouseButton):
         pass
 
-    def scroll_up(self, scroll: MouseScroll):
+    def scroll_up(self, scroll: gb.MouseScroll):
         if scroll.up_keys[pygame.K_LCTRL]:
             self.active_canvas.scale /= 1.1
 
-    def scroll_down(self, scroll: MouseScroll):
+    def scroll_down(self, scroll: gb.MouseScroll):
         if scroll.down_keys[pygame.K_LCTRL]:
             self.active_canvas.scale *= 1.1
 
@@ -152,7 +143,7 @@ class Demo(BaseScreen):
         for scope in self.scopes.values():
             if self.mouse.left.dragging and scope.focus:
                 canvas = self.active_canvas
-                delta = canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas))
+                delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
                 scope.pos = Vector2(scope.pos) + delta
                 self.mouse.left.clear_drag_delta()
@@ -193,7 +184,7 @@ class Demo(BaseScreen):
 
 
 
-    def draw_color_wheel(self, canvas: Canvas):
+    def draw_color_wheel(self, canvas: gb.Canvas):
         width = 1
         M = 10
         grid_color = (100, 100, 100)
@@ -212,7 +203,7 @@ class Demo(BaseScreen):
 
         self.hue_shift_exemple += 3 / 360
         r = radius
-        cols_iter = ColorsDiscIterator(self.hue_ncols_exemple, self.hue_shift_exemple, 1.0, 0.9)
+        cols_iter = gb.ColorsDiscIterator(self.hue_ncols_exemple, self.hue_shift_exemple, 1.0, 0.9)
         for i, col in enumerate(cols_iter):
             ang = i * 2 * math.pi / len(cols_iter)
             canvas.draw_circle(col, (self.hue_radius_exemple * math.cos(ang), self.hue_radius_exemple * math.sin(ang)), r)
@@ -223,7 +214,7 @@ class Demo(BaseScreen):
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
         canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, -1', pos=(+1, -1), anchor='midbottom')
 
-    def draw_menu(self, canvas: Canvas):
+    def draw_menu(self, canvas: gb.Canvas):
         prtsc = self.canvases[self.last_active_canvas_key].copy()
         prtsc.set_alpha(128)
         offset = (canvas.xmin, canvas.ymax)
@@ -233,18 +224,18 @@ class Demo(BaseScreen):
         red = (255, 30, 60)
         yellow = (255, 200, 30)
         for n in range(N := 400):
-            color = lerp_vec3(blue, red, n / N)
+            color = gb.lerp_vec3(blue, red, n / N)
             th = math.fmod(self.t * 2, 2 * math.pi) + 3 * math.pi * n / N
             h = math.cos(self.t / 2) + 2
             r = math.cos(h * th) * 0.5
             canvas.draw_circle(color, (r * math.cos(th), r * math.sin(th)), .08)
         canvas.draw_text(yellow, self.fonts['huge'], f'PAUSED!', (0, 0))
 
-    def rocket_got_focus_callback(self, canvas: Canvas):
+    def rocket_got_focus_callback(self, canvas: gb.Canvas):
         for key, scope in self.scopes.items():
             scope.clear()
 
-    def draw_rocket(self, canvas: Canvas):
+    def draw_rocket(self, canvas: gb.Canvas):
 
         self.extra_info = [
         ]
@@ -264,8 +255,8 @@ class Demo(BaseScreen):
             for _ in range(int(2*60/self.fps)):
                 font_index = randint(0, len(self.particles_fonts)-1)
                 self.text_particles.append(
-                    TextParticle(canvas,
-                                 color=lerp_vec3((90, 250, 90), (30, 90, 30), random()),
+                    gb.TextParticle(canvas,
+                                 color=gb.lerp_vec3((90, 250, 90), (30, 90, 30), random()),
                                  text=choice(self.letters),
                                  font=self.particles_fonts[font_index],
                                  pos=(uniform(-1.8, 1.8), 1.05),
@@ -287,7 +278,7 @@ class Demo(BaseScreen):
 
         # canvas.blit(temp, (0.5, -0.5))
 
-        img = Image(canvas, temp)
+        img = gb.Image(canvas, temp)
         img.midtop = Vector2(0, 0)
         img = img.rotate_rad_around(angle, Vector2(0, -0.06))
         img.blit()
@@ -316,11 +307,11 @@ class Demo(BaseScreen):
         if self.particle_en:
             for _ in range(int(randint(round(8 * bias_throttle), round(10 * bias_throttle)) * 60 / self.fps)):
                 vel = Vector2(uniform(-0.2, .07), uniform(-5, -8)) * bias_throttle
-                self.particles.append(BallParticle(canvas,
-                                                   lerp_vec3(lerp_vec3((255, 60, 0), (200, 200, 60), random()),
+                self.particles.append(gb.BallParticle(canvas,
+                                                   gb.lerp_vec3(gb.lerp_vec3((255, 60, 0), (200, 200, 60), random()),
                                                              (255, 255, 255), random() * 0.5),
                                                    uniform(.003, .006),
-                                                   pos=lerp_vec2(emmit_l, emmit_r, random()),
+                                                   pos=gb.lerp_vec2(emmit_l, emmit_r, random()),
                                                    vel=vel.rotate_rad(angle),
                                                    dt=1 / self.fps, lifetime=uniform(.1, .15), g=0))
             self.particles.step_and_draw()
@@ -328,7 +319,7 @@ class Demo(BaseScreen):
 
         # rocket
         canvas.draw_polygon((90, 90, 100),
-                            rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
+                            gb.rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
         canvas.draw_polygon((120, 120, 130),
                             ((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)))
 

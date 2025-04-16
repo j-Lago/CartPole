@@ -1,13 +1,11 @@
-from canvas import Canvas
-from popup import PopUp
+import gamebase as gb
 from _collections import deque
-from lerp import lerp_vec3
 from pygame import Vector2
 from itertools import islice
-from utils import ColorsDiscIterator
 import colorsys
 
-class Scope(PopUp):
+
+class Scope(gb.PopUp):
     def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, legend=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float | tuple[float, ...] = 1.0, grid_lerp_factor: float = 0.6, bg_lerp_factor: float = 0.9, border_width: int = 2, border_radius: int = 13, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -56,7 +54,7 @@ class Scope(PopUp):
         # print(f'{self.name} cleared')
 
 
-    def default_draw(self, canvas: Canvas):
+    def default_draw(self, canvas: gb.Canvas):
 
         L = 100
 
@@ -74,8 +72,8 @@ class Scope(PopUp):
         if self.focus:
             color = self.focus_color
 
-        color_grid = lerp_vec3(color, (30, 30, 30), self.grid_lerp_factor)
-        color_bf = lerp_vec3(color, (30, 30, 30), self.bg_lerp_factor)
+        color_grid = gb.lerp_vec3(color, (30, 30, 30), self.grid_lerp_factor)
+        color_bf = gb.lerp_vec3(color, (30, 30, 30), self.bg_lerp_factor)
 
         canvas.draw_rect(color_bf, rect, 0, 15)
 
@@ -105,9 +103,9 @@ class Scope(PopUp):
 
             if self.line_colors is None:
                 if len(ys) == 1:
-                    self.line_colors = list(ColorsDiscIterator(len(ys), ch, cs, cv))
+                    self.line_colors = list(gb.ColorsDiscIterator(len(ys), ch, cs, cv))
                 else:
-                    self.line_colors = list(ColorsDiscIterator(len(ys), ch, min(cs*1.2, 1.0), min(cv*1.2, 1.0)))
+                    self.line_colors = list(gb.ColorsDiscIterator(len(ys), ch, min(cs*1.2, 1.0), min(cv*1.2, 1.0)))
 
             if len(self.data) > 2:
                 for i in range(len(ys)):

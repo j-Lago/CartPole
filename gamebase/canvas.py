@@ -1,15 +1,10 @@
+import gamebase as gb
 import pygame
-from pygame import Vector2, Rect, Vector3
-from typing import Sequence
-from pygame import Color
-from typing import Callable
-from copy import copy, deepcopy
-import math
-from copy import deepcopy
-from typing import Self
-from utils import perpendicular_normal
+from typing import Sequence, Callable, Self
+from copy import copy
 from random import random, uniform, randint, gauss
-from lerp import lerp_vec3
+from pygame import Vector2, Vector3, Rect, Color
+
 
 class Canvas:
     def __init__(self,
@@ -101,7 +96,7 @@ class Canvas:
         elif color1 is not None and color2 is None:
             color = color1
         elif color1 is not None and color2 is not None:
-            color = lerp_vec3(color1, color2, random())
+            color = gb.lerp_vec3(color1, color2, random())
         else:
             color = color2
 
@@ -112,7 +107,7 @@ class Canvas:
 
         # pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), 2)
         vec = Vector2(end_pos-start_pos)
-        perp, norm = perpendicular_normal(vec)
+        perp, norm = gb.perpendicular_normal(vec)
 
         world_width_2 = width / self.scale / 2
 

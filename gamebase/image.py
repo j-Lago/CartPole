@@ -1,18 +1,17 @@
+import gamebase as gb
 import pygame
+from pygame import Vector2, Surface
 from pathlib import Path
-from pygame import Vector2
-from canvas import Canvas
 import math
-from utils import outer_rect, points_from_rect, RotateMatrix, fRect
 from typing import Self
 
 
 
 class Image:
-    def __init__(self, canvas: Canvas, surface: pygame.Surface | None = None, pos: tuple[float, float] | Vector2 = Vector2(0, 0), file_path: Path | None = None):
+    def __init__(self, canvas: gb.Canvas, surface: Surface | None = None, pos: tuple[float, float] | Vector2 = Vector2(0, 0), file_path: Path | None = None):
         self._canvas = canvas
         if file_path is not None:
-            self._surface: pygame.Surface = pygame.image.load(file_path)
+            self._surface: Surface = pygame.image.load(file_path)
         elif surface is not None:
             self._surface = surface
         else:
@@ -126,10 +125,10 @@ class Image:
         if not isinstance(dest_pos, Vector2):
             dest_pos = Vector2(dest_pos)
 
-        rect = fRect(self.get_rect())
-        points = points_from_rect(rect - anchor)
-        rot_points = RotateMatrix(angle) * points
-        ext_rect = outer_rect(rot_points)
+        rect = gb.fRect(self.get_rect())
+        points = gb.points_from_rect(rect - anchor)
+        rot_points = gb.RotateMatrix(angle) * points
+        ext_rect = gb.outer_rect(rot_points)
         rot_pos = Vector2(ext_rect[:2]) + dest_pos
 
         rot_img = pygame.transform.rotate(self._surface, angle*180/math.pi)
