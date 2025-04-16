@@ -43,7 +43,7 @@ class Game(BaseScreen):
 
         # self.input = Joystick(joystick, 2, normalization=lambda x: x)
         self.inputs = {
-            'p1': Joystick(joystick, 2, dead_zone=0.03),
+            'p1': Joystick(joystick, 2, dead_zone=0.03) if joystick is not None else LinearController(),
             'p2': LinearController(),
             'none': NoneInput(),
         }
@@ -66,13 +66,6 @@ class Game(BaseScreen):
         self.fps_popup = PopUpText(self.active_canvas, alpha=255, pos=(self.active_canvas.xmin+0.01, self.active_canvas.ymin+.1),
                                     color=self.cols['fps'], text='', font=self.fonts['small'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
 
-
-        self.popups['p1_score'] = PopUpText(self.active_canvas, alpha=255, pos=(-0.37, 0.95),
-                                    color=self.cols['p1'], text='score', font=self.fonts['huge'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
-
-        self.popups['p2_score'] = PopUpText(self.active_canvas, alpha=255, pos=(-0.37, .15),
-                                    color=self.cols['p2'], text='score', font=self.fonts['huge'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
-
         self.scopes = {
             'p1': Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
                         color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
@@ -82,9 +75,9 @@ class Game(BaseScreen):
                         pos=(-1.75, 0.13), size=(320, 180), maxlen=400),
             'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
                             color=self.cols['scope'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
-                            pos=(0.5, -0.65), size=(320, 180), maxlen=400),
+                            pos=(-0.5, -0.65), size=(320, 180), maxlen=400),
             'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200,
-                           color=self.cols['scope'], focus_color=self.cols['focus'], pos=(1.12, -0.65), size=(320, 180),
+                           color=self.cols['scope'], focus_color=self.cols['focus'], pos=(-1.2, -0.65), size=(320, 180),
                            maxlen=400),
         }
         self.paused = False
@@ -98,8 +91,8 @@ class Game(BaseScreen):
         self.ticks = 0
         th0 = uniform(-1, 1) * 0.0
         self.players = {
-            'p1': Cart(self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-            'p2': Cart(self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.4), base_color=self.cols['p1'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.4), base_color=self.cols['p2'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
         self.chash_xoffset = 0.0
@@ -145,7 +138,6 @@ class Game(BaseScreen):
                 player.draw(self.t)
         for key, player in self.players.items():
             if player.alive:
-                self.popups[key+'_score'].text = [f'{player.score:>10}']
                 player.draw(self.t)
 
 
@@ -160,7 +152,7 @@ class Game(BaseScreen):
         }
 
         # fps
-        self.fps_popup.text = (f'fps: {self.real_fps:.1f} ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)', )
+        self.fps_popup.text = (f'fps: {self.real_fps:.1f} ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',)
         self.fps_popup.draw()
         canvas.blit(self.fps_popup, self.fps_popup.pos)
 
@@ -237,8 +229,9 @@ class Cart:
     assets_path = Path(__file__).parent / 'assets'
     jet_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'jet.png'), (0.35, 0.3))
 
-    def __init__(self, game: BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0, base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
+    def __init__(self, name: str, game: BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0, base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), alive: bool=True, death_callback: Callable = None):
 
+        self.name = name
         self.game = game
 
         Cart.instance_count += 1
@@ -270,7 +263,7 @@ class Cart:
 
         self.death_callback = death_callback
         self.alive = alive
-        self.canvas = self.game.active_canvas
+        self.canvas: Canvas = self.game.active_canvas
         self.input = input_device
         self.x_target = (-0.15, 0.15)
         tol = math.pi/6
@@ -309,8 +302,8 @@ class Cart:
         self.spark_density = 100
         self.spark_particle_size = 1, 2
 
-        self.point_particles = Particles(100)
-        self.text_particles = Particles(10)
+        self.point_particles = Particles(80)
+        self.text_particles = Particles(6)
 
     def reset(self):
         self.cart_on_target = False
@@ -525,9 +518,15 @@ class Cart:
             for _ in range(randint(1, 3)):
                 self.point_particles.append(
                     BallParticle(self.canvas, (randint(0, 255),randint(0, 255),randint(0, 255)), uniform(1.1,2.1)/self.canvas.scale,
-                                 pos=choice(flag_tops), vel=(uniform(-0.25,0.25), uniform(0.4, .8)), dt=1/self.fps,
+                                 pos=flag_tops[0], vel=(uniform(-0.25,0.25), uniform(0.4, .8)), dt=1/self.fps,
                                  g=-98)
                     )
+                self.point_particles.append(
+                    BallParticle(self.canvas, (randint(0, 255), randint(0, 255), randint(0, 255)),
+                                 uniform(1.1, 2.1) / self.canvas.scale,
+                                 pos=flag_tops[1], vel=(uniform(-0.25, 0.25), uniform(0.4, .8)), dt=1 / self.fps,
+                                 g=-98)
+                )
 
         # particles
         self.text_particles.step_and_draw()
@@ -556,6 +555,22 @@ class Cart:
         self.reward = int(self.reward * 60 / self.game.fps)
         self.score += self.reward
         self.uncollected_score += self.reward
+
+
+        # draw score
+        pad = 0.02
+        if self.id % 2 == 1:
+            y_score = self.canvas.ymax - pad
+            y_label = y_score - 0.32
+            anchor = 'topright'
+        else:
+            y_score = self.canvas.ymin - pad*2
+            y_label = y_score + 0.32 + 2*pad
+            anchor = 'bottomright'
+        pos_score = self.canvas.xmax - pad, y_score
+        pos_label = self.canvas.xmax - pad, y_label
+        self.canvas.draw_text(self.base_color, self.game.fonts['huge'], f'{self.score}', pos_score, anchor=anchor)
+        self.canvas.draw_text(self.base_color, self.game.fonts['normal'], self.name+' score ', pos_label, anchor=anchor)
 
 
 

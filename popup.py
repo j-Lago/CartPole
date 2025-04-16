@@ -22,13 +22,14 @@ class PopUp(Canvas):
 
 
 class PopUpText(PopUp):
-    def __init__(self, *args, color: tuple[int, int, int], font: pygame.font.Font, text: list[str] | str, size=(1, 1), border_width: int = 1, border_radius: int = 0, fill_color: tuple[int, int, int] | tuple[int, int, int, int] | None = None, pad: tuple[int, int] = (10, 10), bg_lerp_factor: float = 0.9, **kwargs):
+    def __init__(self, *args, color: tuple[int, int, int], font: pygame.font.Font, text: list[str] | str, size=(1, 1), border_width: int = 1, border_radius: int = 0, fill_color: tuple[int, int, int] | tuple[int, int, int, int] | None = None, pad: tuple[int, int] = (10, 10), bg_lerp_factor: float = 0.9,  antialiasing:bool = True, **kwargs):
         super().__init__(*args, size=size, **kwargs)
 
         if isinstance(text, str):
             text = [text]
         self.text = text
 
+        self.antialiasing = antialiasing
         self.font = font
         self.color = color
         self.bg_lerp_factor = bg_lerp_factor
@@ -55,7 +56,7 @@ class PopUpText(PopUp):
         y_max = self.pad[1]
         x_max = 0
         for n, info in enumerate(self.text):
-            rendered_text = self.font.render(info, True, self.color)
+            rendered_text = self.font.render(info, self.antialiasing, self.color)
             text_rect = rendered_text.get_rect()
 
             pos = pad + Vector2(0, y_max)

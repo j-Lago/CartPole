@@ -252,8 +252,8 @@ class Demo(BaseScreen):
         if self.steer is not None:
             self.steer.update()
             self.throttle.update()
-            angle = self.steer.value * math.pi / 6
-            throttle = max(self.throttle_min, self.throttle.value)
+            angle = self.steer._value * math.pi / 6
+            throttle = max(self.throttle_min, self.throttle._value)
         else:
             angle = 0.0
             throttle = self.throttle_min

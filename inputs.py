@@ -1,5 +1,5 @@
-
-from typing import Callable
+from abc import ABC, abstractmethod, abstractproperty
+from typing import Callable, Self
 import pygame
 import math
 
@@ -24,34 +24,70 @@ JOYBUTTON: dict[str, int] = {
 }
 
 
-class NoneInput():
-    def __init__(self):
-        self.value = 0.0
+class BaseInput(ABC):
+    @property
+    @abstractmethod
+    def value(self):
+        pass
+
+    @abstractmethod
+    def update(self, player: Self) -> float:
+        pass
+
+    @abstractmethod
+    def reset(self) -> None:
+        pass
+
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        pass
+
+
+
+class NoneInput(BaseInput):
+    @property
+    def value(self):
+        return 0.0
 
     def update(self, *args):
-        return self.value
+        return 0.0
+
+    def reset(self):
+        pass
+
+    @property
+    def description(self) -> str:
+        return 'None Input'
 
 
-class Joystick():
+class Joystick(BaseInput):
     def __init__(self, source: pygame.joystick, channel, active_player_key:str|None=None, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
         self.active_player_key = active_player_key
         self.source = source
         self.channel = channel
         self.initial_value = initial_value
-        self.value = initial_value
+        self._value = initial_value
         self.dead_zone = dead_zone
         self.normalization = normalization
-        self.device_type = 'Human: Joystick'
+
+    @property
+    def description(self) -> str:
+        return 'Human: Joystick'
+
+    @property
+    def value(self):
+        return self._value
 
     def reset(self):
-        self.value = self.initial_value
+        self._value = self.initial_value
 
     def update(self, *args):
         if self.source is None:
-            self.value = 0.0
+            self._value = 0.0
         else:
-            self.value = self.normalization(remove_dead_zone(self.source.get_axis(self.channel), self.dead_zone))
-        return self.value
+            self._value = self.normalization(remove_dead_zone(self.source.get_axis(self.channel), self.dead_zone))
+        return self._value
 
 
 def remove_dead_zone(x, dead_zone):
@@ -60,18 +96,24 @@ def remove_dead_zone(x, dead_zone):
     return x
 
 
-class LinearController:
+class LinearController(BaseInput):
     def __init__(self, active_player_key:str|None=None, initial_value=0., normalization: Callable = lambda x: x):
         self.active_player_key = active_player_key
-        self.value = initial_value
+        self._value = initial_value
         self.initial_value = initial_value
         self.normalization = normalization
         self.intx = 0.
         self.th_target = math.pi
-        self.device_type = 'Classic: Linear'
 
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def description(self):
+        return 'Classic: Linear'
     def reset(self):
-        self.value = self.initial_value
+        self._value = self.initial_value
         self.intx = 0.
         self.th_target = math.pi
         # self.aux = Joystick(source=pygame.joystick.Joystick(0), channel=2, dead_zone=0.05)
@@ -94,8 +136,8 @@ class LinearController:
         else:
             f = self.linear_controller(player, time)
 
-        self.value = self.normalization(f)
-        return self.value
+        self._value = self.normalization(f)
+        return self._value
 
     def linear_controller(self, player, time):
         dt = 1/player.fps

@@ -25,6 +25,7 @@ class Canvas:
                  draw_fun: Callable = None,
                  got_focus_callback: Callable = None
                  ):
+
         self.fonts = fonts
         self.visible = visible
         self.got_focus_callback = got_focus_callback
