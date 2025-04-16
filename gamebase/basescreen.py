@@ -59,9 +59,9 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.ticks = 0
         self.last_time = time.perf_counter()
         self.last_active_frame_time = 0.0
-        self.mm_fps = gb.MediaMovel(20)
-        self.mm_frame_time = gb.MediaMovel(20)
-        self.mm_sleep_compensation = gb.MediaMovel(20)
+        self.mm_fps = gb.MediaMovel(30)
+        self.mm_frame_time = gb.MediaMovel(30)
+        self.mm_sleep_compensation = gb.MediaMovel(30)
 
         self.antialiasing = antialiasing
         self.window_size = window_size
