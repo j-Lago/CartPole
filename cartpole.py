@@ -100,8 +100,8 @@ class Game(BaseScreen):
         self.ticks = 0
         th0 = uniform(-1, 1) * 0.0
         self.players = {
-            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.4), base_color=self.cols['p1'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.4), base_color=self.cols['p2'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'], rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
         self.chash_xoffset = 0.0
@@ -304,7 +304,7 @@ class Cart:
         self.canvas: Canvas = self.game.active_canvas
         self.input = input_device
         self.x_target = (-0.15, 0.15)
-        tol = math.pi/6
+        tol = math.pi/12
         self.th_target = (math.pi - tol, math.pi + tol)
 
         if not isinstance(pos, Vector2):
@@ -324,7 +324,7 @@ class Cart:
 
 
         self.points = {
-            'pole': ((0.015, 0), (0.015, -0.4), (-0.015, -0.4), (-0.015, 0))
+            'pole': ((0.015, 0), (0.015, -0.35), (-0.015, -0.35), (-0.015, 0))
         }
 
         self.base_rect = fRect(0, 0, 0.35, 0.08)
@@ -352,7 +352,10 @@ class Cart:
         self.uncollected_score = 0
         self.reward = 0
 
-
+    def collect_score(self, max_collect: int = None):
+        x = min(self.uncollected_score, max_collect) if max_collect is not None else self.uncollected_score
+        self.uncollected_score -= x
+        return x
 
     def perturb(self, intensity):
         self.model.y[3][0] += intensity
@@ -398,6 +401,7 @@ class Cart:
         return Vector2(self.x, self.initial_pos[1])
 
     def draw(self, t):
+        f = 60 / self.game.fps
         pole_col = self.base_color
         cart_col = lerp_vec3(self.base_color, (0, 0, 0), 0.4)
 
@@ -529,28 +533,52 @@ class Cart:
         self.canvas.draw_polygon(self.guardrail1_col, ts_points)
         self.canvas.draw_polygon(self.guardrail1_col, tc_points)
 
-        if pole_on_target:
+        # if pole_on_target:
+        #     pos = Vector2(pole_points[1]).lerp(pole_points[2], random())
+        #     if (self.ticks + self.collect_shift) % self.collect_every_x_ticks == 0:
+        #
+        #         collect_amount = choice([10, 20, 50, 100, 200, 500])
+        #
+        #         if collect_amount >= 200:
+        #             collect_color = self.game.cols['huge_collect']
+        #         elif collect_amount >= 100:
+        #             collect_color = self.game.cols['big_collect']
+        #         elif collect_amount >= 50:
+        #             collect_color = self.game.cols['small_collect']
+        #         else:
+        #             collect_color = self.game.cols['tiny_collect']
+        #
+        #         self.text_particles.append(
+        #             TextParticle(self.canvas, collect_color, f'{collect_amount:+d}', self.game.fonts['reward'],
+        #                          pos=pos, vel=(uniform(-0.2,0.2), uniform(0.4, 0.5)), dt=1/self.fps,
+        #                          lifetime=2,
+        #                          g=-98)
+        #         )
+        #         self.game.sounds['coin'].play()
+
+        uncollected_score = self.uncollected_score
+        if self.alive and (self.ticks + self.collect_shift) % self.collect_every_x_ticks == 0 and uncollected_score > 0:
+            collected = self.collect_score(max_collect=200)
+            color = self.game.cols['tiny_collect'] if collected <= f * self.collect_every_x_ticks * self.reward_pole_on_target_short \
+                else self.game.cols['small_collect'] if collected <= f * self.collect_every_x_ticks * self.reward_pole_on_target_long \
+                else self.game.cols['big_collect'] if collected <= f * self.collect_every_x_ticks * (
+                        self.reward_cart_on_target_short + self.reward_pole_on_target_long) \
+                else self.game.cols['huge_collect']
+            color = lerp_vec3(color, (randint(5, 250), randint(5, 250), randint(5, 250)), uniform(0.1, 0.2))
             pos = Vector2(pole_points[1]).lerp(pole_points[2], random())
-            if (self.ticks + self.collect_shift) % self.collect_every_x_ticks == 0:
+            self.text_particles.append(
+                TextParticle(self.canvas,
+                             color,
+                             f'+{collected}',
+                             self.game.fonts['reward'],
+                             pos=pos,
+                             vel=(uniform(-0.2,0.2), uniform(0.4, 0.5)),
+                             dt=1 / self.game.fps,
+                             lifetime=uniform(0.5, 1.5),
+                             )
+            )
+            self.game.sounds['coin'].play()
 
-                collect_amount = choice([10, 20, 50, 100, 200, 500])
-
-                if collect_amount >= 200:
-                    collect_color = self.game.cols['huge_collect']
-                elif collect_amount >= 100:
-                    collect_color = self.game.cols['big_collect']
-                elif collect_amount >= 50:
-                    collect_color = self.game.cols['small_collect']
-                else:
-                    collect_color = self.game.cols['tiny_collect']
-
-                self.text_particles.append(
-                    TextParticle(self.canvas, collect_color, f'{collect_amount:+d}', self.game.fonts['reward'],
-                                 pos=pos, vel=(uniform(-0.2,0.2), uniform(0.4, 0.5)), dt=1/self.fps,
-                                 lifetime=2,
-                                 g=-98)
-                )
-                self.game.sounds['coin'].play()
 
         if self.steps_with_both_on_target >= self.time_cart_on_target_long:
             for _ in range(randint(1, 5)):
@@ -571,7 +599,7 @@ class Cart:
         self.point_particles.step_and_draw()
 
 
-        #score
+        # score
         self.pole_on_target = pole_on_target
         self.both_on_target = pole_on_target and cart_on_target
 
