@@ -1,5 +1,5 @@
 from pygame import Vector2
-
+from mouse import MouseButton, Mouse, MouseScroll
 import particles
 from basescreen import BaseScreen
 from canvas import Canvas, remap
@@ -22,13 +22,21 @@ class Game(BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.game_duration = 45
         self.info_popup.visible = False
+
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
 
-        self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
+        self.mouse.left.press_callback = self.left_click
+        self.mouse.left.release_callback = self.left_release
+        self.mouse.right.press_callback = self.right_click
+        self.mouse.right.release_callback = self.right_release
+        self.mouse.scroll.up_callback = self.scroll_up
+        self.mouse.scroll.down_callback = self.scroll_down
 
+        self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
         self.sounds['coin'] = self.load_sound(self.assets_path / 'coin.wav', volume=0.1)
         self.sounds['crash'] = self.load_sound(self.assets_path / 'crash.wav', volume=1.0)
         self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)
@@ -62,23 +70,24 @@ class Game(BaseScreen):
         self.cols['small_collect'] = (220, 200, 60)
         self.cols['big_collect'] = (200, 140, 240)
         self.cols['huge_collect'] = (200, 90, 255)
+        self.cols['timer'] = (90, 60, 50)
 
-        self.fps_popup = PopUpText(self.active_canvas, alpha=255, pos=(self.active_canvas.xmin+0.01, self.active_canvas.ymin+.1),
-                                    color=self.cols['fps'], text='', font=self.fonts['small'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
+        self.fps_popup = PopUpText(self.active_canvas, alpha=255, pos=(self.active_canvas.xmin+0.01, self.active_canvas.ymax-.04),
+                                    color=self.cols['fps'], text='', font=self.fonts['medium'], visible=True, border_width=-1, fill_color=(0, 0, 0, 0))
 
         self.scopes = {
             'p1': Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
-                        color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
-                        pos=(-1.75, 0.95), size=(320, 180), maxlen=400),
+                        color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                        pos=(-1.75, 0.95), size=(320, 180), maxlen=400, visible=False),
             'p2': Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps, alpha=200,
-                        color=self.cols['scope'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
-                        pos=(-1.75, 0.13), size=(320, 180), maxlen=400),
+                        color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                        pos=(-1.75, 0.13), size=(320, 180), maxlen=400, visible=False),
             'inputs': Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
-                            color=self.cols['scope'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
-                            pos=(-0.5, -0.65), size=(320, 180), maxlen=400),
+                            color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
+                            pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
             'times': Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps, alpha=200,
-                           color=self.cols['scope'], focus_color=self.cols['focus'], pos=(-1.2, -0.65), size=(320, 180),
-                           maxlen=400),
+                           color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65), size=(320, 180),
+                           maxlen=400, visible=True),
         }
         self.paused = False
         self.players = None
@@ -101,6 +110,29 @@ class Game(BaseScreen):
             scope.clear()
         for player in self.players.values():
             player.reset()
+
+
+    def left_release(self, button: MouseButton):
+        pass
+
+    def left_click(self, button: MouseButton):
+        pass
+
+    def right_click(self, button: MouseButton):
+        pass
+
+    def right_release(self, button: MouseButton):
+        for scope in self.scopes.values():
+            if scope.collision(self.mouse_world_pos):
+                scope.visible = False
+
+    def scroll_up(self, scroll: MouseScroll):
+        pass
+
+    def scroll_down(self, scroll: MouseScroll):
+        pass
+
+
 
     def perturb(self, intensity):
         for player in self.players.values():
@@ -140,8 +172,11 @@ class Game(BaseScreen):
             if player.alive:
                 player.draw(self.t)
 
+        # timer
+        canvas.draw_text(self.cols['timer'], self.fonts['normal'], f'{self.game_duration - self.t:.1f}', (canvas.xmax - 0.05, 0), anchor='midright')
+        canvas.draw_text(self.cols['timer'], self.fonts['medium'], 'TIMER', (canvas.xmax-0.06, -0.08), anchor='midright')
 
-        #scope
+        # scope
         x = self.t
         total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
         y = {
@@ -152,7 +187,7 @@ class Game(BaseScreen):
         }
 
         # fps
-        self.fps_popup.text = (f'fps: {self.real_fps:.1f} ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',)
+        self.fps_popup.text = (f'{self.real_fps:.1f} Hz ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',)
         self.fps_popup.draw()
         canvas.blit(self.fps_popup, self.fps_popup.pos)
 
@@ -188,10 +223,13 @@ class Game(BaseScreen):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.reset()
-            elif event.key == pygame.K_UP:
-                self.players['p1'].alive = not self.players['p1'].alive
-            elif event.key == pygame.K_DOWN:
-                self.players['p2'].alive = not self.players['p2'].alive
+            elif event.key == pygame.K_s:
+                for scope in self.scopes.values():
+                    scope.visible = True
+            # elif event.key == pygame.K_UP:
+            #     self.players['p1'].alive = not self.players['p1'].alive
+            # elif event.key == pygame.K_DOWN:
+            #     self.players['p2'].alive = not self.players['p2'].alive
 
             elif event.key == pygame.K_2:
                 self.inputs['p2'], self.inputs['none'] = self.inputs['none'], self.inputs['p2']
@@ -302,7 +340,7 @@ class Cart:
         self.spark_density = 100
         self.spark_particle_size = 1, 2
 
-        self.point_particles = Particles(80)
+        self.point_particles = Particles(100)
         self.text_particles = Particles(6)
 
     def reset(self):
@@ -514,8 +552,8 @@ class Cart:
                 )
                 self.game.sounds['coin'].play()
 
-        if pole_on_target and cart_on_target:
-            for _ in range(randint(1, 3)):
+        if self.steps_with_both_on_target >= self.time_cart_on_target_long:
+            for _ in range(randint(1, 5)):
                 self.point_particles.append(
                     BallParticle(self.canvas, (randint(0, 255),randint(0, 255),randint(0, 255)), uniform(1.1,2.1)/self.canvas.scale,
                                  pos=flag_tops[0], vel=(uniform(-0.25,0.25), uniform(0.4, .8)), dt=1/self.fps,
@@ -558,20 +596,24 @@ class Cart:
 
 
         # draw score
-        pad = 0.02
+        pad = 0.05
+        pad2 = 0.06
         if self.id % 2 == 1:
-            y_score = self.canvas.ymax - pad
-            y_label = y_score - 0.32
+            y_score = self.canvas.ymax - 0.04
+            y_label = y_score - 0.2
+            y_description = y_label - 0.06
             anchor = 'topright'
         else:
-            y_score = self.canvas.ymin - pad*2
-            y_label = y_score + 0.32 + 2*pad
+            y_score = self.canvas.ymin
+            y_label = y_score + 0.2 + 0.02
+            y_description = y_label + 0.06
             anchor = 'bottomright'
         pos_score = self.canvas.xmax - pad, y_score
-        pos_label = self.canvas.xmax - pad, y_label
-        self.canvas.draw_text(self.base_color, self.game.fonts['huge'], f'{self.score}', pos_score, anchor=anchor)
-        self.canvas.draw_text(self.base_color, self.game.fonts['normal'], self.name+' score ', pos_label, anchor=anchor)
-
+        pos_label = self.canvas.xmax - pad2, y_label
+        pos_description = self.canvas.xmax - pad2, y_description
+        self.canvas.draw_text(self.base_color, self.game.fonts['big'], f'{self.score}', pos_score, anchor=anchor)
+        self.canvas.draw_text(self.base_color, self.game.fonts['medium'], self.name.upper() + ' SCORE', pos_label, anchor=anchor)
+        self.canvas.draw_text(self.base_color, self.game.fonts['tiny'], self.input.description, pos_description, anchor=anchor)
 
 
 

@@ -152,7 +152,7 @@ class LinearController(BaseInput):
         # dth = - self.aux.value * 5/180*math.pi
         dth = 0.
         kp = 0.0042 * 3
-        ki = .0023/player.fps * 1
+        ki = .0023/player.fps * 10
         kd = 0.006 * 6
 
         self.intx += dt * x

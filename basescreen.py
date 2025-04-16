@@ -26,7 +26,7 @@ class BaseScreen(metaclass=MetaLoopCall):
                  antialiasing: bool = True,
                  fullscreen: bool = False,
                  font_family: str = 'Consolas',
-                 font_base_size: int = 26,
+                 font_base_size: int = 70,
                  flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
                  ):
 
@@ -44,11 +44,12 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self.fonts = {
             'info': pygame.font.SysFont('Consolas', 22),
-            'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.8)),
-            'small': pygame.font.SysFont(font_family, round(font_base_size)),
-            'normal': pygame.font.SysFont(font_family, round(font_base_size*1.5)),
-            'big': pygame.font.SysFont(font_family, round(font_base_size*4)),
-            'huge': pygame.font.SysFont(font_family, round(font_base_size*8)),
+            'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.2571)),
+            'small': pygame.font.SysFont(font_family, round(font_base_size*.342835)),
+            'medium': pygame.font.SysFont(font_family, round(font_base_size*.42857)),
+            'normal': pygame.font.SysFont(font_family, round(font_base_size*1.0)),
+            'big': pygame.font.SysFont(font_family, round(font_base_size*1.71428)),
+            'huge': pygame.font.SysFont(font_family, round(font_base_size*2.85714)),
         }
 
         self._flags = flags
