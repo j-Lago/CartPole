@@ -3,7 +3,7 @@ import pygame
 from pygame import Vector2
 import math
 from pathlib import Path
-from random import random, uniform, randint
+from random import random, uniform, randint, choice, choices
 from player import Cart
 
 
@@ -88,6 +88,21 @@ class CartPoleGame(gb.BaseScreen):
         self.chash_xoffset = None
         self.perturbation = 0.0
 
+        self.stress_test_particles = gb.Particles(1200)
+        self.stress_test_en = False
+
+        self.extra_help = [
+            f'────────────────────────',
+            f'ESC: reset',
+            f' F7: toggle stress test',
+            f'  1: enable/disable player 1',
+            f'  2: enable/disable player 2',
+            f'  ,: perturb anticlockwise',
+            f'  .: perturb clockwise',
+            f'  s: enable scopes',
+            f'm_r: disable scope',
+        ]
+
         self.reset()
 
     def reset(self):
@@ -153,6 +168,8 @@ class CartPoleGame(gb.BaseScreen):
         canvas.fill(self.cols['bg'])
         pos = self.mouse_world_pos
 
+        self.stress_test()  #todo: retirar na versão final
+
         # desenha os mortos por traz
         for player in self.players.values():
             if not player.alive:
@@ -182,9 +199,15 @@ class CartPoleGame(gb.BaseScreen):
         }
 
         # fps
-        self.fps_popup.text = (f'{self.real_fps:.1f} Hz ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',)
-        self.fps_popup.draw()
-        canvas.blit(self.fps_popup, self.fps_popup.pos)
+        canvas.draw_text(self.cols['info'], self.fonts['fps'],
+                         f'{self.mm_fps.value:.1f}',
+                         canvas.topleft + (0.11, -0.02),
+                         anchor='midtop')
+
+        canvas.draw_text(self.cols['info'], self.fonts['small'],
+                         f'({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
+                         canvas.topleft + (0.11, -0.09),
+                         anchor='midtop')
 
         def another_in_focus(self_key):
             for ikey, iscope in self.scopes.items():
@@ -197,6 +220,22 @@ class CartPoleGame(gb.BaseScreen):
             scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
             scope.draw()
             scope.blit_to_main()
+
+
+    def stress_test(self):
+        if self.stress_test_en:
+            letters = [chr(i) for i in range(945, 970) if i != 962]
+            for _ in range(10):
+                font_index = randint(0, len(self.particles_fonts)-1)
+                self.stress_test_particles.append(
+                    gb.TextParticle(self.active_canvas,
+                                    color=gb.lerp_vec3((90, 250, 90), (30, 90, 30), random()),
+                                    text=choice(letters),
+                                    font=self.particles_fonts[font_index],
+                                    pos=(uniform(-1.8, 1.8), 1.05),
+                                    vel=(0, -0.8 - font_index * .2), dt=1 / self.fps, g=0, lifetime=-1,
+                                    ))
+            self.stress_test_particles.step_and_draw()
 
     def death(self, player):
         self.sounds['crash'].play()
@@ -234,6 +273,19 @@ class CartPoleGame(gb.BaseScreen):
             elif event.key == pygame.K_1:
                 self.inputs['p1'], self.inputs['none_p1'] = self.inputs['none_p1'], self.inputs['p1']
                 self.reset()
+
+            elif event.key == pygame.K_F7:
+                self.stress_test_en = not self.stress_test_en
+                if self.stress_test_en:
+                    if 'particles_fonts' not in self.__dict__:
+                        self.particles_fonts = [
+                            pygame.font.SysFont('Times', 22),
+                            pygame.font.SysFont('Times', 36),
+                            pygame.font.SysFont('Times', 54),
+                            pygame.font.SysFont('Times', 68),
+                    ]
+                elif 'particles_fonts' in self.__dict__:
+                    del self.particles_fonts
 
 
             elif event.key == pygame.K_COMMA:

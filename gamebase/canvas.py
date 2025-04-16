@@ -173,10 +173,37 @@ class Canvas:
 
     @property
     def center(self):
-        return Vector2(0, 0)
+        x, y, w, h = self.get_rect()
+        print(Vector2(x+w/2, y-h/2))
+        return Vector2(x+w/2, y-h/2)
+
+    @property
+    def topleft(self):
+        x, y, *_ = self.get_rect()
+        return Vector2(x, y)
+
+    @property
+    def xmin(self) -> float:
+        x, *_ = self.get_rect()
+        return x
+
+    @property
+    def ymin(self) -> float:
+        _, y, *_ = self.get_rect()
+        return -y
+
+    @property
+    def xmax(self) -> float:
+        x, _, w, _ = self.get_rect()
+        return x + w
+
+    @property
+    def ymax(self) -> float:
+        _, y, _, h = self.get_rect()
+        return -y + h
 
     def center_pixels(self):
-        return self.world_to_screen_v2(Vector2(0, 0))
+        return self.world_to_screen_v2(self.center)
 
     def world_to_screen_v2(self, vec: Vector2) -> Vector2:
         return Vector2(round(vec[0] * self.scale + self.bias[0]), round(-vec[1] * self.scale + self.bias[1]))
@@ -203,25 +230,6 @@ class Canvas:
     def get_rect(self) -> tuple[float, float, float, float]:
         return self.screen_to_world_rect(self.surface.get_rect())
 
-    @property
-    def xmin(self) -> float:
-        rect  = self.get_rect()
-        return rect[0]
-
-    @property
-    def ymin(self) -> float:
-        rect  = self.get_rect()
-        return -rect[1]
-
-    @property
-    def xmax(self) -> float:
-        rect  = self.get_rect()
-        return rect[0] + rect[2]
-
-    @property
-    def ymax(self) -> float:
-        rect  = self.get_rect()
-        return -rect[1] + rect[3]
 
     def fill(self, color, rect=None, special_flags=0):
         self.surface.fill(color, rect, special_flags)

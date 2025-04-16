@@ -41,10 +41,11 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self.fonts = {
             'info': pygame.font.SysFont('Consolas', 22),
+            'fps': pygame.font.SysFont('Consolas', 38),
             'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.2571)),
             'small': pygame.font.SysFont(font_family, round(font_base_size*.342835)),
             'medium': pygame.font.SysFont(font_family, round(font_base_size*.42857)),
-            'normal': pygame.font.SysFont(font_family, round(font_base_size*1.0)),
+            'normal': pygame.font.SysFont(font_family, round(font_base_size*1)),
             'big': pygame.font.SysFont(font_family, round(font_base_size*1.71428)),
             'huge': pygame.font.SysFont(font_family, round(font_base_size*2.85714)),
         }
@@ -60,6 +61,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.last_active_frame_time = 0.0
         self.mm_fps = gb.MediaMovel(20)
         self.mm_frame_time = gb.MediaMovel(20)
+        self.mm_sleep_compensation = gb.MediaMovel(20)
 
         self.antialiasing = antialiasing
         self.window_size = window_size
@@ -100,7 +102,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             'help': self.help_popup
         }
 
-        self.clock = pygame.time.Clock()
+        # self.clock = pygame.time.Clock()  # controle de frame rate alterado para solução própria, aparentemente mais consistente
 
         # sounds
         self.mixer = pygame.mixer
@@ -249,11 +251,15 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.ticks += 1
         self.active_canvas.ticks += 1
 
-        t = time.perf_counter()
-        self.last_active_frame_time = (t - self.last_time)
+        ideal_period = 1/self.fps
+        self.last_active_frame_time = (time.perf_counter() - self.last_time)
 
-        self.real_fps = self.clock.get_fps()
-        self.clock.tick(self.fps)
+        # self.real_fps = self.clock.get_fps()
+        # self.clock.tick(self.fps)  # parece impreciso
+        time.sleep(max(0.0, ideal_period - self.last_active_frame_time + self.mm_sleep_compensation.value))
+        real_period = (time.perf_counter() - self.last_time)
+        self.mm_sleep_compensation.append(ideal_period-real_period)
+        self.real_fps = 1/real_period
         self.last_time = time.perf_counter()
 
 
