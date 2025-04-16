@@ -1,0 +1,262 @@
+import gamebase as gb
+import pygame
+from pygame import Vector2
+import math
+from pathlib import Path
+from random import random, uniform, randint
+from player import Cart
+
+
+class CartPoleGame(gb.BaseScreen):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.game_duration = 45
+        self.info_popup.visible = False
+
+        self.rel_path = Path(__file__).parent
+        self.assets_path = self.rel_path / 'assets'
+
+        self.mouse.left.press_callback = self.left_click
+        self.mouse.left.release_callback = self.left_release
+        self.mouse.right.press_callback = self.right_click
+        self.mouse.right.release_callback = self.right_release
+        self.mouse.scroll.up_callback = self.scroll_up
+        self.mouse.scroll.down_callback = self.scroll_down
+
+        self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
+        self.sounds['coin'] = self.load_sound(self.assets_path / 'coin.wav', volume=0.1)
+        self.sounds['crash'] = self.load_sound(self.assets_path / 'crash.wav', volume=1.0)
+        self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)
+        self.sounds['jet'].play(loops=-1)
+        # self.images['jet'] = pygame.transform.smoothscale_by(self.load_image(self.assets_path / 'jet.png'), (0.35, 0.3))
+
+        self.force_factor = 18
+        joystick = None
+        for i in range(pygame.joystick.get_count()):
+            joystick = pygame.joystick.Joystick(i)
+            joystick.init()
+
+        # self.input = Joystick(joystick, 2, normalization=lambda x: x)
+        self.inputs: dict[str, gb.BaseInput] = {
+            'p1': gb.Joystick(joystick, 2, dead_zone=0.03) if joystick is not None else gb.LinearController(),
+            'p2': gb.LinearController(),
+            'none_p1': gb.NoneInput(),
+            'none_p2': gb.NoneInput(),
+        }
+
+        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
+        self.pre_draw_callback = self.simulate
+        self.event_loop_callback = self.process_user_input_event
+
+        self.cols['focus'] = (255, 255, 0)
+        self.cols['scope'] = (55, 255, 200)
+        self.cols['fps'] = gb.lerp_vec3(self.cols['info'], (0, 0, 0), 0.6)
+        self.cols['p1'] = (90, 140, 190)
+        self.cols['p2'] = (190, 90, 140)
+        self.cols['tiny_collect'] = (235, 230, 180)
+        self.cols['small_collect'] = (220, 200, 60)
+        self.cols['big_collect'] = (200, 140, 240)
+        self.cols['huge_collect'] = (200, 90, 255)
+        self.cols['timer'] = (90, 60, 50)
+
+        self.fps_popup = gb.PopUpText(self.active_canvas, alpha=255,
+                                      pos=(self.active_canvas.xmin + 0.01, self.active_canvas.ymax - .04),
+                                      color=self.cols['fps'], text='', font=self.fonts['medium'], visible=True,
+                                      border_width=-1, fill_color=(0, 0, 0, 0))
+
+        self.scopes = {
+            'p1': gb.Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps,
+                           alpha=200,
+                           color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                           pos=(-1.75, 0.95), size=(320, 180), maxlen=400, visible=False),
+            'p2': gb.Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps,
+                           alpha=200,
+                           color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                           pos=(-1.75, 0.13), size=(320, 180), maxlen=400, visible=False),
+            'inputs': gb.Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
+                               color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
+                               pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
+            'times': gb.Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps,
+                              alpha=200,
+                              color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65),
+                              size=(320, 180),
+                              maxlen=400, visible=True),
+        }
+        self.paused = False
+        self.players = None
+        self.chash_xoffset = None
+        self.perturbation = 0.0
+
+        self.reset()
+
+    def reset(self):
+        self.ticks = 0
+        th0 = uniform(-1, 1) * 0.0
+        self.players = {
+            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],
+                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'],
+                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+        }
+
+        self.chash_xoffset = 0.0
+        self.paused = False
+        for scope in self.scopes.values():
+            scope.clear()
+        for player in self.players.values():
+            player.reset()
+
+    def left_release(self, button: gb.MouseButton):
+        pass
+
+    def left_click(self, button: gb.MouseButton):
+        pass
+
+    def right_click(self, button: gb.MouseButton):
+        pass
+
+    def right_release(self, button: gb.MouseButton):
+        for scope in self.scopes.values():
+            if scope.collision(self.mouse_world_pos):
+                scope.visible = False
+
+    def scroll_up(self, scroll: gb.MouseScroll):
+        pass
+
+    def scroll_down(self, scroll: gb.MouseScroll):
+        pass
+
+    def perturb(self, intensity):
+        for player in self.players.values():
+            player.perturb(intensity)
+            self.perturbation = intensity
+
+    def simulate(self):
+
+        combined_input = 0.0
+        for player in self.players.values():
+            if player.alive:
+                combined_input += math.fabs(player.input.update(player))
+
+        d = random() * self.chash_xoffset * 0.2
+        self.chash_xoffset -= d
+        shake_intensity = 1.3
+        self.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
+            -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1 + abs(d) * .3)
+
+        for player in self.players.values():
+            player.step()
+        self.sounds['jet'].set_volume(combined_input)
+
+    def draw_main(self, canvas: gb.Canvas):
+        canvas.fill(self.cols['bg'])
+        pos = self.mouse_world_pos
+
+        # desenha os mortos por traz
+        for player in self.players.values():
+            if not player.alive:
+                player.draw(self.t)
+        for key, player in self.players.items():
+            if player.alive:
+                player.draw(self.t)
+
+        # timer
+        canvas.draw_text(self.cols['timer'], self.fonts['normal'], f'{self.game_duration - self.t:.1f}',
+                         (canvas.xmax - 0.05, 0), anchor='midright')
+        canvas.draw_text(self.cols['timer'], self.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
+                         anchor='midright')
+
+        # scope
+        x = self.t
+        total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
+        y = {
+            'p2': (
+                self.players['p2'].theta - math.pi, self.players['p2'].x, self.players['p2'].v,
+                self.players['p2'].omega),
+            'p1': (
+                self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v,
+                self.players['p1'].omega),
+            'inputs': (self.inputs['p1'].value, self.inputs['p2'].value),
+            'times': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1),
+        }
+
+        # fps
+        self.fps_popup.text = (f'{self.real_fps:.1f} Hz ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',)
+        self.fps_popup.draw()
+        canvas.blit(self.fps_popup, self.fps_popup.pos)
+
+        def another_in_focus(self_key):
+            for ikey, iscope in self.scopes.items():
+                if ikey != self_key and iscope.focus:
+                    return True
+            return False
+
+        for key, scope in self.scopes.items():
+            scope.append(x, y[key])
+            scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
+            scope.draw()
+            scope.blit_to_main()
+
+    def death(self, player):
+        self.sounds['crash'].play()
+        self.chash_xoffset = player.v * 500
+
+    def process_user_input_event(self, event):
+        if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
+            self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]),
+                                       int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))
+            self.mouse.right.clear_drag_delta()
+
+        for scope in self.scopes.values():
+            if self.mouse.left.dragging and scope.focus:
+                canvas = self.active_canvas
+                delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
+                # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
+                scope.pos = Vector2(scope.pos) + delta
+                self.mouse.left.clear_drag_delta()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.reset()
+            elif event.key == pygame.K_s:
+                for scope in self.scopes.values():
+                    scope.visible = True
+            # elif event.key == pygame.K_UP:
+            #     self.players['p1'].alive = not self.players['p1'].alive
+            # elif event.key == pygame.K_DOWN:
+            #     self.players['p2'].alive = not self.players['p2'].alive
+
+            elif event.key == pygame.K_2:
+                self.inputs['p2'], self.inputs['none_p2'] = self.inputs['none_p2'], self.inputs['p2']
+                self.reset()
+
+            elif event.key == pygame.K_1:
+                self.inputs['p1'], self.inputs['none_p1'] = self.inputs['none_p1'], self.inputs['p1']
+                self.reset()
+
+
+            elif event.key == pygame.K_COMMA:
+                self.perturb(0.4)
+            elif event.key == pygame.K_PERIOD:
+                self.perturb(-0.4)
+
+            # elif event.key == pygame.K_r:
+            #     self.scopes['ch1'].clear()
+            #     self.scopes['ch1'].rolling = not self.scopes['ch1'].rolling
+            # elif event.key == pygame.K_v:
+            #     self.scopes['ch1'].visible = not self.scopes['ch1'].visible
+            # elif event.key == pygame.K_KP_MULTIPLY:
+            #     self.scopes['ch1'].x_scale *= 2
+            # elif event.key == pygame.K_KP_DIVIDE:
+            #     self.scopes['ch1'].x_scale /= 2
+            #
+            # elif event.key == pygame.K_t:
+            #     self.scopes['ch2'].clear()
+            #     self.scopes['ch2'].rolling = not self.scopes['ch2'].rolling
+            # elif event.key == pygame.K_b:
+            #     self.scopes['ch2'].visible = not self.scopes['ch2'].visible
+            # elif event.key == pygame.K_KP_PLUS:
+            #     self.scopes['ch2'].x_scale *= 2
+            # elif event.key == pygame.K_KP_MINUS:
+            #     self.scopes['ch2'].x_scale /= 2
