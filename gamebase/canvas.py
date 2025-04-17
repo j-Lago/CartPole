@@ -268,8 +268,7 @@ def remap(point: tuple[float, float] | Vector2, origin: tuple[float, float, floa
     dx = dxr + dx0
     dy = dyr + dy0
 
-    return dx, dy
-
+    return Vector2(dx, dy)
 
 
 def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offset: tuple[int, int] | None = None):

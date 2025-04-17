@@ -168,7 +168,7 @@ class CartPoleGame(gb.BaseScreen):
         canvas.fill(self.cols['bg'])
         pos = self.mouse_world_pos
 
-        self.stress_test()  #todo: retirar na versão final
+        self.stress_test()  # todo: retirar na versão final
 
         # desenha os mortos por traz
         for player in self.players.values():
