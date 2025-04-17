@@ -17,7 +17,7 @@ class MetaLoopCall(type):
 
 
 class BaseScreen(metaclass=MetaLoopCall):
-    def __init__(self, window_size: tuple[int, int] = (1600, 900),
+    def __init__(self, window_size: tuple[int, int] = (1280, 720),
                  canvas_size: tuple[int, int] = (1920, 1080),
                  fps: float = 60.0,
                  antialiasing: bool = True,
