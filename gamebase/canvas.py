@@ -272,7 +272,26 @@ def remap(point: tuple[float, float] | Vector2, origin: tuple[float, float, floa
 
 
 
-# def resolution_map(dest: Canvas, source: Canvas, source_pos: Vector2 | tuple[int, int]) -> Vector2:
-#     dw, dh = dest.get_size()
-#     sw, sh = source.get_size()
-#     return Vector2(round(source_pos[0] / sw * dw), round(source_pos[1] / sh * sw))
+def blit_with_aspect_ratio(dest: Canvas, source: Canvas, antialiasing=True, offset: tuple[int, int] | None = None):
+    source_size = source.get_size()
+    dest_size = dest.get_size()
+
+    source_ratio = source_size[0] / source_size[1]
+    dest_ratio = dest_size[0] / dest_size[1]
+
+    if source_size == dest_size:
+        scaled_surface = source.copy()
+        if offset is None:
+            offset = (0, 0)
+    else:
+        rescale = pygame.transform.smoothscale if antialiasing else pygame.transform.scale
+        if source_ratio > dest_ratio:
+            new_width = dest_size[0]
+            new_height = int(dest_size[0] / source_ratio)
+        else:
+            new_height = dest_size[1]
+            new_width = int(dest_size[1] * source_ratio)
+        scaled_surface = rescale(source.surface, (new_width, new_height))
+        if offset is None:
+            offset = (dest_size[0] - new_width) // 2, (dest_size[1] - new_height) // 2   # centralizada
+    dest.blit(scaled_surface, dest.screen_to_world_v2(offset))

@@ -6,7 +6,7 @@ except PackageNotFoundError:
     __version__ = '0.0.0'
 
 
-from .canvas import Canvas, remap
+from .canvas import Canvas, remap, blit_with_aspect_ratio
 from .basescreen import BaseScreen
 from .filters import MediaMovel
 from .image import Image
