@@ -35,8 +35,8 @@ class Running(GameState, ABC):
     def __init__(self, game):
         super().__init__(game)
 
-    def enter(self):
-        print('enter running')
+    def __str__(self):
+        return 'Running'
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, TOGGLE_PAUSE):
@@ -48,7 +48,7 @@ class Paused(GameState, ABC):
         super().__init__(game)
 
     def __str__(self):
-        return 'GameState: Paused'
+        return 'Paused'
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, TOGGLE_PAUSE):
