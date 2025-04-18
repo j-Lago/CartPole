@@ -35,11 +35,21 @@ class Running(st.GameState):
         angle = 0
         pos = self.game.mouse_world_pos
 
-        canvas.draw_polygon((90, 90, 100),
-                            gb.translate_vec2s(gb.rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle), pos))  # angle
-        canvas.draw_polygon((120, 120, 130),
-                            gb.translate_vec2s(((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)), pos))
+        draw_rocket(canvas, pos, angle)
 
-        canvas.draw_circle((255, 200, 60), pos+(0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
-        canvas.draw_circle((0, 0, 0), pos+(0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
 
+
+
+
+def draw_rocket(canvas: gb.Canvas, pos = (0,0), angle=0):
+    canvas.draw_polygon((90, 90, 100),
+                        gb.translate_vec2s(
+                            gb.rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle),
+                            pos))  # angle
+    canvas.draw_polygon((120, 120, 130),
+                        gb.translate_vec2s(
+                            ((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)),
+                            pos))
+
+    canvas.draw_circle((255, 200, 60), pos + (0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
+    canvas.draw_circle((0, 0, 0), pos + (0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
