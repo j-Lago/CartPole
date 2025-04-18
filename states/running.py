@@ -23,16 +23,13 @@ class Running(st.GameState):
         if bind_test(event, TOGGLE_PAUSE):
             self.change_state(st.Paused(self.game))
         if event.type == TIMEOUT:
-            self.change_state(st.Timeout(self.game))
-        if bind_test(event, TEST):
-            self.game.clock.start_timer(pygame.event.Event(TIMEOUT), period_seconds=3)
+            self.change_state(st.GameOver(self.game))
+        if bind_test(event, RESTART):
+            self.change_state(st.Intro(self.game))
 
     def draw(self, canvas: gb.Canvas):
         remain = '(' + ', '.join(f"{self.game.clock.get_timer_remaining(id):.1f}" for id in self.game.clock.get_timers_ids()) + ')'
-        canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'RUNNING', (0, .4))
-        canvas.draw_text((255, 30, 30), self.game.fonts['big'],
-                         f'Game will end in {self.game.clock.get_timer_remaining(self.timer_id):.0f} s', (0, -.4))
-        canvas.draw_text((255, 30, 30), self.game.fonts['normal'], f'{self.game.clock.t:.1f}s', (0, .2))
-        canvas.draw_text((255, 190, 30), self.game.fonts['normal'], f'{remain}', (0, 0))
+        canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'RUNNING', (0, 0))
+        canvas.draw_text((255, 30, 30), self.game.fonts['big'], f'Game will end in {self.game.clock.get_timer_remaining(self.timer_id):.0f} s', (0, -.4))
 
 
