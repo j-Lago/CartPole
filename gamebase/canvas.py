@@ -27,7 +27,7 @@ class Canvas:
         self._bg_color: Color = bg_color
         self.draw_fun = draw_fun
         self.shortcut = shortcut
-        self.ticks = 0
+        # self.ticks = 0
         self.base_scale = 1.0
         if surface is None:
             self.surface = pygame.Surface(size, flags)

@@ -15,6 +15,7 @@ from .mouse import Mouse, MouseScroll, MouseButton
 from .particles import Particles, Particle, TextParticle, BallParticle
 from .popup import PopUpText, PopUp
 from .scope import Scope
+from .gameclock import Clock, Timer
 from .lerp import *
 from .utils import *
 

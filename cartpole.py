@@ -106,7 +106,7 @@ class CartPoleGame(gb.BaseScreen):
         self.reset()
 
     def reset(self):
-        self.ticks = 0
+        self.clock.reset()
         th0 = uniform(-1, 1) * 0.0
         self.players = {
             'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],

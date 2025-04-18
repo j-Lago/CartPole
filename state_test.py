@@ -2,13 +2,13 @@ import pygame.display
 
 import gamebase as gb
 from gamestate import GameState, Running, Paused
+from bindings import *
 
 
 class MinimalDemo(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
-        self.mouse.set_visible(False)
         self.show_info()
 
         self.joystick = None
@@ -17,12 +17,19 @@ class MinimalDemo(gb.BaseScreen):
             self.joystick.init()
             print('joystick inicializado')
 
-
         self.event_loop_callback = self.process_event
         self.state = Running(self)
 
+        # pygame.time.set_timer(TIMEOUT, 2000, loops=1)
+        # pygame.event.post(pygame.event.Event(TIMEOUT))
+
+
+
     def process_event(self, event: pygame.event):
         self.state.handle_event(event)
+
+        # if bind_test(event, pygame.K_SPACE):
+        #     pass
 
 
     def draw_main(self, canvas: gb.Canvas):
@@ -30,9 +37,14 @@ class MinimalDemo(gb.BaseScreen):
         pygame.display.set_caption(str(self.state))
 
         pos = self.mouse_world_pos
-        canvas.draw_text((255, 190, 30), self.fonts['huge'], f'{self.t:.1f}s', (0, 0))
-        canvas.draw_circle((200, 200, 200), pos, .015)
-        canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop', shift=(0, -0.03))
+
+
+        # if self.t < 5:
+        canvas.draw_text((255, 190, 30), self.fonts['small'], f'{self.clock.timers}', (0, 0))
+        canvas.draw_text((255, 30, 30), self.fonts['huge'], f'{self.clock.t:.1f}s', (0, .4))
+        # else:
+        #     canvas.draw_text((255, 190, 30), self.fonts['huge'], f'TIMEOUT!', (0, 0))
+        #     event = pygame.event.Event()
 
 
 if __name__ == '__main__':

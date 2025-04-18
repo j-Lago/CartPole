@@ -117,7 +117,7 @@ class Cart:
 
     @property
     def ticks(self):
-        return self.game.ticks
+        return self.game.clock.ticks
 
     @property
     def fps(self):

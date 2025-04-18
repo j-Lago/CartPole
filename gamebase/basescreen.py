@@ -55,8 +55,9 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.blit_offset = 0, 0
 
         self.fps = fps
+        self.clock: gb.Clock = gb.Clock(fps)
+
         self.real_fps = self.fps
-        self.ticks = 0
         self.last_time = time.perf_counter()
         self.last_active_frame_time = 0.0
         self.mm_fps = gb.MediaMovel(30)
@@ -135,7 +136,7 @@ class BaseScreen(metaclass=MetaLoopCall):
 
     @property
     def t(self):
-        return self.ticks / self.fps
+        return self.clock.t
 
     @property
     def mouse_pos(self) -> Vector2:
@@ -223,9 +224,8 @@ class BaseScreen(metaclass=MetaLoopCall):
                 # f'╰───╯',
                 f'fps: {self.mm_fps.value:.1f} Hz',
                 f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
-                f'sim_time: {self.ticks / self.fps:.1f} s',
+                f'sim_time: {self.clock.t:.1f} s',
                 f'antialiasing: {self.antialiasing}',
-                f"active_canvas: '{self.active_canvas_key}' ({self.active_canvas.ticks / self.fps:.1f} s)",
                 f'canvas_res: {canvas.get_size()} px',
                 f'window_res: {self.window.get_size()} px',
                 f'mouse_window: {pygame.mouse.get_pos()} px',
@@ -248,8 +248,9 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.mm_frame_time.append(self.last_active_frame_time)
 
         pygame.display.flip()
-        self.ticks += 1
-        self.active_canvas.ticks += 1
+
+        self.clock.update()
+        # self.active_canvas.ticks += 1
 
         ideal_period = 1/self.fps
         self.last_active_frame_time = (time.perf_counter() - self.last_time)
@@ -261,30 +262,3 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.mm_sleep_compensation.append(ideal_period-real_period)
         self.real_fps = 1/real_period
         self.last_time = time.perf_counter()
-
-
-
-
-
-
-# def render_message(text, font, color):
-#     text_surface = font.render(text, True, color[:3])
-#     if len(color) == 4:
-#         text_surface.set_alpha(color[3])
-#     return text_surface
-#
-#
-# def draw_text_list(canvas, info_list, font, color, pos, vspace):
-#     for l, info in enumerate(info_list):
-#         info_render = font.render(info, True, color)
-#         canvas.blit(info_render, (pos[0], pos[1] + vspace * l))
-
-
-# def world_to_screen(vec2: tuple[float, float], scale: tuple[float, float] | float, bias: tuple[float, float]) -> tuple[int, int]:
-#     if isinstance(scale, float | int):
-#         scale = (scale, scale)
-#     screen_x = round(vec2[0] * scale[0] + bias[0])
-#     screen_y = round(-vec2[1] * scale[1] + bias[1])
-#     return screen_x, screen_y
-
-

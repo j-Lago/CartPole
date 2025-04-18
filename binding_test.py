@@ -18,6 +18,10 @@ J_UP = 11
 J_DOWN = 12
 
 
+END_OF_INTRO = pygame.USEREVENT + 1
+TIMEOUT = pygame.USEREVENT + 2
+
+
 @dataclass
 class Bind:
     keydown: int | None = None
@@ -26,7 +30,7 @@ class Bind:
     joybuttonup: int | None = None
 
 
-def bind_test(event, bind):
+def bind_test(event: pygame.event.Event, bind: Bind):
     if bind.joybuttondown is not None:
         if event.type == pygame.JOYBUTTONDOWN and event.button == bind.joybuttondown:
             return True
