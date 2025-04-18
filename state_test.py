@@ -1,7 +1,6 @@
 import pygame.display
-
 import gamebase as gb
-from gamestate import GameState, Running, Paused
+from states import Running
 from bindings import *
 
 
@@ -20,33 +19,16 @@ class MinimalDemo(gb.BaseScreen):
         self.event_loop_callback = self.process_event
         self.state = Running(self)
 
-        # pygame.time.set_timer(TIMEOUT, 2000, loops=1)
-        # pygame.event.post(pygame.event.Event(TIMEOUT))
-
-
-
     def process_event(self, event: pygame.event):
         self.state.handle_event(event)
-
-        # if bind_test(event, pygame.K_SPACE):
-        #     pass
-
 
     def draw_main(self, canvas: gb.Canvas):
 
         pygame.display.set_caption(str(self.state))
+        self.state.update()
+        self.state.draw(canvas)
 
-        pos = self.mouse_world_pos
 
-
-        # if self.t < 5:
-        remain = ', '.join(f"{self.clock.get_timer_remaining(id):.1f}" for id in self.clock.get_timers_ids())
-        canvas.draw_text((255, 190, 30), self.fonts['small'], f'{self.clock.get_timers_ids()}', (0, -.05))
-        canvas.draw_text((255, 190, 30), self.fonts['small'], f'{remain}', (0, 0))
-        canvas.draw_text((255, 30, 30), self.fonts['huge'], f'{self.clock.t:.1f}s', (0, .4))
-        # else:
-        #     canvas.draw_text((255, 190, 30), self.fonts['huge'], f'TIMEOUT!', (0, 0))
-        #     event = pygame.event.Event()
 
 
 if __name__ == '__main__':

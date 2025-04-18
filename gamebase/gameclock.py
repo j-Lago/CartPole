@@ -45,6 +45,9 @@ class Clock:
     def get_timers_ids(self) -> list:
         return [*self.timers.keys()]
 
+    def cancel_timers(self):
+        self.timers: dict[int, Timer] = dict()
+
 
 
     @property
