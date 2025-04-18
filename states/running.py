@@ -32,4 +32,14 @@ class Running(st.GameState):
         canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'RUNNING', (0, 0))
         canvas.draw_text((255, 30, 30), self.game.fonts['big'], f'Game will end in {self.game.clock.get_timer_remaining(self.timer_id):.0f} s', (0, -.4))
 
+        angle = 0
+        pos = self.game.mouse_world_pos
+
+        canvas.draw_polygon((90, 90, 100),
+                            gb.translate_vec2s(gb.rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle), pos))  # angle
+        canvas.draw_polygon((120, 120, 130),
+                            gb.translate_vec2s(((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)), pos))
+
+        canvas.draw_circle((255, 200, 60), pos+(0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
+        canvas.draw_circle((0, 0, 0), pos+(0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
 

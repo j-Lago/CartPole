@@ -47,6 +47,9 @@ def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle:
     return tuple(rotate_around_v2(vec, angle, center) for vec in vecs)
 
 
+def translate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], shift: Vector2) -> Sequence:
+    return tuple( (vec[0]+shift[0], vec[1]+shift[1]) for vec in vecs)
+
 def collision_point_rect(point: Vec2, rect: Vec4) -> bool:
     return rect[0] < point[0] < rect[0] + rect[2] and rect[1] > point[1] > rect[1] - rect[3]
 

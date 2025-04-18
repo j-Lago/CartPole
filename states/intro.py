@@ -6,7 +6,7 @@ import states as st
 class Intro(st.GameState):
     def __init__(self, game):
         super().__init__(game)
-        self.intro_time = 5
+        self.intro_time = 2
         self.timer_id = self.game.clock.start_timer(pygame.event.Event(END_OF_INTRO), period_seconds=self.intro_time)
 
     def __str__(self):
