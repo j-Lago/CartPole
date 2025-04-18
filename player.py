@@ -121,7 +121,7 @@ class Cart:
 
     @property
     def fps(self):
-        return self.game.fps
+        return self.game.clock.fps
 
     def step(self):
         force = self.input.value * self.game.force_factor
@@ -154,7 +154,7 @@ class Cart:
         return Vector2(self.x, self.initial_pos[1])
 
     def draw(self, t):
-        f = 60 / self.game.fps
+        f = 60 / self.game.clock.fps
         pole_col = self.base_color
         cart_col = gb.lerp_vec3(self.base_color, (0, 0, 0), 0.4)
 
@@ -344,7 +344,7 @@ class Cart:
                                 self.game.fonts['reward'],
                                 pos= Vector2(pole_points[1]) - (0.025, -0.03),
                                 vel=(uniform(-0.3, 0.23), uniform(0.3, 0.5)),
-                                dt=1 / self.game.fps,
+                                dt=1 / self.game.clock.fps,
                                 lifetime=uniform(0.5, 1.5),
                                 g=-20,
                                 )
@@ -389,7 +389,7 @@ class Cart:
             self.reward = 0
             # self.ticks_since_death += 1
 
-        self.reward = int(self.reward * 60 / self.game.fps)
+        self.reward = int(self.reward * 60 / self.game.clock.fps)
         self.score += self.reward
         self.uncollected_score += self.reward
 

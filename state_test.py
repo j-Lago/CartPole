@@ -8,16 +8,17 @@ class MinimalDemo(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
-        self.show_info()
+        # self.show_info()
 
         self.joystick = None
         if pygame.joystick.get_count() > 0:
             self.joystick = pygame.joystick.Joystick(0)
             self.joystick.init()
-            print('joystick inicializado')
+            # print('joystick inicializado')
 
         self.event_loop_callback = self.process_event
         self.state = Intro(self)
+        self.previous_state_screenshot = pygame.Surface(self.canvas_size)
 
     def process_event(self, event: pygame.event):
         self.state.handle_event(event)

@@ -17,6 +17,7 @@ class Running(st.GameState):
 
     def exit(self):
         self.game.clock.pause_timer(self.timer_id)
+        self.game.previous_state_screenshot = self.game.active_canvas.copy()
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, TOGGLE_PAUSE):
@@ -27,8 +28,8 @@ class Running(st.GameState):
             self.change_state(st.Intro(self.game))
 
     def draw(self, canvas: gb.Canvas):
-        canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'RUNNING', (0, 0))
-        canvas.draw_text((255, 30, 30), self.game.fonts['big'], f'Game will end in {self.game.clock.get_timer_remaining(self.timer_id):.0f} s', (0, -.4))
+        canvas.draw_text((255, 255, 30), self.game.fonts['huge'], f'RUNNING', (0, 0))
+        canvas.draw_text((255, 255, 30), self.game.fonts['big'], f'Game will end in {self.game.clock.get_timer_remaining(self.timer_id):.0f} s', (0, -.4))
 
         angle = 0
         pos = self.game.mouse_world_pos

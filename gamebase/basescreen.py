@@ -54,10 +54,10 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.fullscreen = fullscreen
         self.blit_offset = 0, 0
 
-        self.fps = fps
+        # self.fps = fps
         self.clock: gb.Clock = gb.Clock(fps)
 
-        self.real_fps = self.fps
+        self.real_fps = fps
         self.last_time = time.perf_counter()
         self.last_active_frame_time = 0.0
         self.mm_fps = gb.MediaMovel(30)
@@ -223,7 +223,7 @@ class BaseScreen(metaclass=MetaLoopCall):
                 # f'│F12│ to hide info',
                 # f'╰───╯',
                 f'fps: {self.mm_fps.value:.1f} Hz',
-                f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
+                f'frame_time: {self.mm_frame_time.value * 1000:.1f} ms ({self.mm_frame_time.value * self.clock.fps * 100.0:.1f}%)',
                 f'sim_time: {self.clock.t:.1f} s',
                 f'antialiasing: {self.antialiasing}',
                 f'canvas_res: {canvas.get_size()} px',
@@ -252,7 +252,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.clock.update()
         # self.active_canvas.ticks += 1
 
-        ideal_period = 1/self.fps
+        ideal_period = 1/self.clock.fps
         self.last_active_frame_time = (time.perf_counter() - self.last_time)
 
         # self.real_fps = self.clock.get_fps()

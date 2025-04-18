@@ -66,18 +66,18 @@ class CartPoleGame(gb.BaseScreen):
                                       border_width=-1, fill_color=(0, 0, 0, 0))
 
         self.scopes = {
-            'p1': gb.Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps,
+            'p1': gb.Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
                            alpha=200,
                            color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
                            pos=(-1.75, 0.8), size=(320, 180), maxlen=400, visible=False),
-            'p2': gb.Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.fps,
+            'p2': gb.Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
                            alpha=200,
                            color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
                            pos=(-1.75, -0.01), size=(320, 180), maxlen=400, visible=False),
-            'inputs': gb.Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.fps, alpha=200,
+            'inputs': gb.Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.clock.fps, alpha=200,
                                color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
                                pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
-            'times': gb.Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.fps,
+            'times': gb.Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps,
                               alpha=200,
                               color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65),
                               size=(320, 180),
@@ -195,7 +195,7 @@ class CartPoleGame(gb.BaseScreen):
                 self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v,
                 self.players['p1'].omega),
             'inputs': (self.inputs['p1'].value, self.inputs['p2'].value),
-            'times': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1),
+            'times': (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1),
         }
 
         # fps
@@ -205,7 +205,7 @@ class CartPoleGame(gb.BaseScreen):
                          anchor='midtop')
 
         canvas.draw_text(self.cols['info'], self.fonts['small'],
-                         f'({self.mm_frame_time.value * self.fps * 100.0:.1f}%)',
+                         f'({self.mm_frame_time.value * self.clock.fps * 100.0:.1f}%)',
                          canvas.topleft + (0.11, -0.09),
                          anchor='midtop')
 
