@@ -14,7 +14,6 @@ class Clock:
 
     def reset(self):
         self._ticks: int = 0
-        self.unique_timer_count: int = 0
         self.timers: dict[int, Timer] = dict()
 
     def update(self):
@@ -26,17 +25,25 @@ class Clock:
         for i in ids_marked_for_delete:
             del self.timers[i]
 
-
-
-    def start_timer(self, event: pygame.event.Event, period_seconds: float | None = None, period_ticks: int | None = None):
+    def start_timer(self, event: pygame.event.Event, period_seconds: float | None = None, period_ticks: int | None = None) -> int:
         if period_seconds is None and period_ticks is None:
             raise ValueError("'period_s' e 'period_ticks' não podem ser ambos Nones.")
         if period_seconds is not None and period_ticks is not None:
             raise ValueError("O periodo do timer não pode ser setado simultaneamente po'period_s' e 'period_ticks'. Utilize apenas um deles.")
         if period_seconds is not None:
             period_ticks = round(period_seconds * self.fps)
-        self.timers[self.unique_timer_count] = Timer(event, period_ticks, self.ticks)
         self.unique_timer_count += 1
+        self.timers[self.unique_timer_count] = Timer(event, period_ticks, self.ticks)
+        return self.unique_timer_count
+
+    def get_timer_remaining(self, timer_id: int, return_in_ticks: bool = False) -> float | int:
+        if timer_id not in self.timers.keys():
+            return 0 if return_in_ticks else 0.0
+        remain_ticks = self.timers[timer_id].remaining(self.ticks)
+        return remain_ticks if return_in_ticks else remain_ticks/self.fps
+
+    def get_timers_ids(self) -> list:
+        return [*self.timers.keys()]
 
 
 
@@ -63,3 +70,6 @@ class Timer:
             pygame.event.post(self.event)
             return True
         return False
+
+    def remaining(self, tick: int):
+        return self.start + self.period - tick

@@ -40,7 +40,9 @@ class MinimalDemo(gb.BaseScreen):
 
 
         # if self.t < 5:
-        canvas.draw_text((255, 190, 30), self.fonts['small'], f'{self.clock.timers}', (0, 0))
+        remain = ', '.join(f"{self.clock.get_timer_remaining(id):.1f}" for id in self.clock.get_timers_ids())
+        canvas.draw_text((255, 190, 30), self.fonts['small'], f'{self.clock.get_timers_ids()}', (0, -.05))
+        canvas.draw_text((255, 190, 30), self.fonts['small'], f'{remain}', (0, 0))
         canvas.draw_text((255, 30, 30), self.fonts['huge'], f'{self.clock.t:.1f}s', (0, .4))
         # else:
         #     canvas.draw_text((255, 190, 30), self.fonts['huge'], f'TIMEOUT!', (0, 0))

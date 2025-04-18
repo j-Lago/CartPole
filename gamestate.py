@@ -45,7 +45,7 @@ class Running(GameState, ABC):
         if event.type == TIMEOUT:
             self.change_state(Timeout(self.game))
         if bind_test(event, TEST):
-            self.game.clock.start_timer(pygame.event.Event(END_OF_INTRO), period_seconds=2)
+            self.game.clock.start_timer(pygame.event.Event(END_OF_INTRO), period_seconds=9)
 
 
 class Paused(GameState, ABC):
