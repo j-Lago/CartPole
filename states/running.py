@@ -6,7 +6,7 @@ from bindings import *
 class Running(st.GameState):
     def __init__(self, game):
         super().__init__(game)
-        self.game_time = 10
+        self.game_time = 9
         self.timer_id = self.game.clock.start_timer(pygame.event.Event(TIMEOUT), period_seconds=self.game_time)
 
     def __str__(self):
