@@ -6,13 +6,14 @@ from bindings import *
 class Paused(st.GameState):
     def __init__(self, game):
         super().__init__(game)
+        self.previous_state = None
 
     def __str__(self):
         return 'Paused'
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, TOGGLE_PAUSE):
-            self.change_state(st.Running(self.game))
+            self.change_state(self.previous_state)
 
     def draw(self, canvas: gb.Canvas):
         remain = '(' + ', '.join(
@@ -20,4 +21,6 @@ class Paused(st.GameState):
         canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'PAUSED', (0, .4))
         canvas.draw_text((255, 30, 30), self.game.fonts['normal'], f'{self.game.clock.t:.1f}s', (0, .2))
         canvas.draw_text((255, 190, 30), self.game.fonts['normal'], f'{remain}', (0, 0))
+        canvas.draw_text((255, 30, 30), self.game.fonts['normal'], str(self.previous_state), (0, -.2))
+
 

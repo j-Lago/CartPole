@@ -15,7 +15,7 @@ class Timeout(st.GameState):
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, RESTART):
-            self.change_state(st.Running(self.game))
+            self.change_state(st.Intro(self.game))
 
     def draw(self, canvas: gb.Canvas):
         remain = '(' + ', '.join(f"{self.game.clock.get_timer_remaining(id):.1f}" for id in self.game.clock.get_timers_ids()) + ')'

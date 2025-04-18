@@ -48,6 +48,23 @@ class Clock:
     def cancel_timers(self):
         self.timers: dict[int, Timer] = dict()
 
+    def cancel_timer(self, timer_id) -> bool:
+        if timer_id in self.timers.keys():
+            del self.timers[timer_id]
+            return True
+        return False
+
+    def pause_timer(self, timer_id) -> bool:
+        if timer_id in self.timers.keys():
+            return self.timers[timer_id].pause(self.ticks)
+        return False
+
+    def resume_timer(self, timer_id) -> bool:
+        if timer_id in self.timers.keys():
+            return self.timers[timer_id].resume(self.ticks)
+        return False
+
+
 
 
     @property
@@ -67,12 +84,27 @@ class Timer:
         self.event = event
         self.period = period
         self.start = start
+        self.pause_start_ticks = None
 
     def update(self, tick):
-        if tick >= self.start + self.period:
-            pygame.event.post(self.event)
+        if self.pause_start_ticks is None:
+            if tick >= self.start + self.period:
+                pygame.event.post(self.event)
+                return True
+            return False
+
+    def remaining(self, ticks: int):
+        return self.start + self.period - ticks
+
+    def pause(self, ticks):
+        if self.pause_start_ticks is None:
+            self.pause_start_ticks = ticks
             return True
         return False
 
-    def remaining(self, tick: int):
-        return self.start + self.period - tick
+    def resume(self, ticks):
+        if self.pause_start_ticks is not None:
+            self.period += ticks - self.pause_start_ticks
+            self.pause_start_ticks = None
+            return True
+        return False

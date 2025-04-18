@@ -1,6 +1,6 @@
 import pygame.display
 import gamebase as gb
-from states import Running
+from states import Intro
 from bindings import *
 
 
@@ -17,7 +17,7 @@ class MinimalDemo(gb.BaseScreen):
             print('joystick inicializado')
 
         self.event_loop_callback = self.process_event
-        self.state = Running(self)
+        self.state = Intro(self)
 
     def process_event(self, event: pygame.event):
         self.state.handle_event(event)

@@ -6,9 +6,11 @@ from bindings import *
 class GameState(ABC):
     def __init__(self, game: gb.BaseScreen):
         self.game = game
+        self.previous_state = None
 
     def change_state(self, new_state):
         self.game.state.exit()
+        new_state.previous_state = self
         self.game.state = new_state
         self.game.state.enter()
 
