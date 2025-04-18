@@ -18,8 +18,6 @@ class Paused(st.GameState):
             self.change_state(st.Intro(self.game))
 
     def draw(self, canvas: gb.Canvas):
-        remain = '(' + ', '.join(
-            f"{self.game.clock.get_timer_remaining(id):.1f}" for id in self.game.clock.get_timers_ids()) + ')'
         canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'PAUSED', (0, 0))
         canvas.draw_text((255, 30, 30), self.game.fonts['normal'], 'previous: ' + str(self.previous_state), (0, -.2))
 

@@ -25,7 +25,6 @@ class Intro(st.GameState):
             self.change_state(st.Running(self.game))
 
     def draw(self, canvas: gb.Canvas):
-        remain = '(' + ', '.join(f"{self.game.clock.get_timer_remaining(id):.1f}" for id in self.game.clock.get_timers_ids()) + ')'
         canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'INTRO', (0, 0))
         canvas.draw_text((255, 30, 30), self.game.fonts['big'], f'Game will start in {self.game.clock.get_timer_remaining(self.timer_id):.0f} s', (0, -.4))
 
