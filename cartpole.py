@@ -48,7 +48,6 @@ class CartPoleGame(gb.BaseScreen):
         }
 
         self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw)
-        # self.pre_draw_callback = self.simulate
         self.event_loop_callback = self.handle_user_input_event
 
         self.cols['focus'] = (255, 255, 0)
@@ -156,16 +155,10 @@ class CartPoleGame(gb.BaseScreen):
             player.perturb(intensity)
             self.perturbation = intensity
 
-    def simulate(self):
-        simulate(self)
-
     def state_draw(self, canvas: gb.Canvas):
         pygame.display.set_caption(str(self.state))
         self.state.update()
         self.state.draw(canvas)
-
-    def draw_main(self, canvas: gb.Canvas):
-        draw(self, canvas)
 
     def stress_test(self):
         if self.stress_test_en:
