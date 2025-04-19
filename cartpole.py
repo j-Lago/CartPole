@@ -5,7 +5,7 @@ import math
 from pathlib import Path
 from random import random, uniform, randint, choice, choices
 from player import Cart
-from states import Intro, Running
+import states as st
 from bindings import *
 from game_draw import draw, simulate
 
@@ -104,9 +104,9 @@ class CartPoleGame(gb.BaseScreen):
             f'm_r: disable scope',
         ]
 
-        self.state = None
         self.previous_state_screenshot = None
         self.reset()
+        self.state = st.Intro(self)
 
     def reset(self):
         self.clock.reset()
@@ -128,7 +128,7 @@ class CartPoleGame(gb.BaseScreen):
             input_.reset()
 
         # self.previous_state_screenshot = None
-        self.state = Running(self)
+        # self.state = st.Running(self)
 
     def left_release(self, button: gb.MouseButton):
         pass
@@ -201,9 +201,9 @@ class CartPoleGame(gb.BaseScreen):
                 self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.reset()
-            elif event.key == pygame.K_s:
+            # if event.key == pygame.K_ESCAPE:
+            #     self.reset()
+            if event.key == pygame.K_s:
                 for scope in self.scopes.values():
                     scope.visible = True
             # elif event.key == pygame.K_UP:

@@ -13,8 +13,8 @@ from game_draw import draw, simulate
 class Running(st.GameState):
     def __init__(self, game):
         super().__init__(game)
-        self.game_time = 30
-        self.timer_id = self.game.clock.start_timer(pygame.event.Event(TIMEOUT), period_seconds=self.game_time)
+        self.game.reset()
+        self.timer_id = self.game.clock.start_timer(pygame.event.Event(TIMEOUT), period_seconds=self.game.game_duration)
 
     def __str__(self):
         return 'Running'

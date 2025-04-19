@@ -32,7 +32,7 @@ def simulate(state: st.GameState):
 
 
 
-def draw(state: st.GameState):
+def draw(state: st.GameState, intro=False):
     game: cartpole.CartPoleGame = state.game
     canvas: gb.Canvas = game.active_canvas
 
@@ -50,7 +50,8 @@ def draw(state: st.GameState):
             player.draw(game.t)
 
     # timer
-    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.clock.get_timer_remaining(state.timer_id):.1f}',
+    remain = game.clock.get_timer_remaining(state.timer_id) if not intro else game.game_duration
+    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{remain:.1f}',
                      (canvas.xmax - 0.05, 0), anchor='midright')
     canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
                      anchor='midright')
