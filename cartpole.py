@@ -5,7 +5,9 @@ import math
 from pathlib import Path
 from random import random, uniform, randint, choice, choices
 from player import Cart
-
+from states import Intro, Running
+from bindings import *
+from game_draw import draw, simulate
 
 class CartPoleGame(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
@@ -47,7 +49,7 @@ class CartPoleGame(gb.BaseScreen):
 
         self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
         self.pre_draw_callback = self.simulate
-        self.event_loop_callback = self.process_user_input_event
+        self.event_loop_callback = self.handle_user_input_event
 
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
@@ -103,6 +105,8 @@ class CartPoleGame(gb.BaseScreen):
             f'm_r: disable scope',
         ]
 
+        self.state = None
+        self.previous_state_screenshot = None
         self.reset()
 
     def reset(self):
@@ -121,6 +125,9 @@ class CartPoleGame(gb.BaseScreen):
             scope.clear()
         for player in self.players.values():
             player.reset()
+
+        self.previous_state_screenshot = None
+        self.state = Running(self)
 
     def left_release(self, button: gb.MouseButton):
         pass
@@ -148,79 +155,15 @@ class CartPoleGame(gb.BaseScreen):
             self.perturbation = intensity
 
     def simulate(self):
+        simulate(self)
 
-        combined_input = 0.0
-        for player in self.players.values():
-            if player.alive:
-                combined_input += math.fabs(player.input.update(player))
-
-        d = random() * self.chash_xoffset * 0.2
-        self.chash_xoffset -= d
-        shake_intensity = 1.3
-        self.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
-            -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1 + abs(d) * .3)
-
-        for player in self.players.values():
-            player.step()
-        self.sounds['jet'].set_volume(combined_input)
+    def state_draw(self, canvas: gb.Canvas):
+        pygame.display.set_caption(str(self.state))
+        self.state.update()
+        self.state.draw(canvas)
 
     def draw_main(self, canvas: gb.Canvas):
-        canvas.fill(self.cols['bg'])
-        pos = self.mouse_world_pos
-
-        self.stress_test()  # todo: retirar na versão final
-
-        # desenha os mortos por traz
-        for player in self.players.values():
-            if not player.alive:
-                player.draw(self.t)
-        for key, player in self.players.items():
-            if player.alive:
-                player.draw(self.t)
-
-        # timer
-        canvas.draw_text(self.cols['timer'], self.fonts['normal'], f'{self.game_duration - self.t:.1f}',
-                         (canvas.xmax - 0.05, 0), anchor='midright')
-        canvas.draw_text(self.cols['timer'], self.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
-                         anchor='midright')
-
-        # scope
-        x = self.t
-        total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
-        y = {
-            'p2': (
-                self.players['p2'].theta - math.pi, self.players['p2'].x, self.players['p2'].v,
-                self.players['p2'].omega),
-            'p1': (
-                self.players['p1'].theta - math.pi, self.players['p1'].x, self.players['p1'].v,
-                self.players['p1'].omega),
-            'inputs': (self.inputs['p1'].value, self.inputs['p2'].value),
-            'times': (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1),
-        }
-
-        # fps
-        canvas.draw_text(self.cols['info'], self.fonts['fps'],
-                         f'{self.mm_fps.value:.1f}',
-                         canvas.topleft + (0.11, -0.02),
-                         anchor='midtop')
-
-        canvas.draw_text(self.cols['info'], self.fonts['small'],
-                         f'({self.mm_frame_time.value * self.clock.fps * 100.0:.1f}%)',
-                         canvas.topleft + (0.11, -0.09),
-                         anchor='midtop')
-
-        def another_in_focus(self_key):
-            for ikey, iscope in self.scopes.items():
-                if ikey != self_key and iscope.focus:
-                    return True
-            return False
-
-        for key, scope in self.scopes.items():
-            scope.append(x, y[key])
-            scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
-            scope.draw()
-            scope.blit_to_main()
-
+        draw(self, canvas)
 
     def stress_test(self):
         if self.stress_test_en:
@@ -241,7 +184,8 @@ class CartPoleGame(gb.BaseScreen):
         self.sounds['crash'].play()
         self.chash_xoffset = player.v * 500
 
-    def process_user_input_event(self, event):
+    def handle_user_input_event(self, event):
+        self.state.handle_event(event)
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
             self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]),
                                        int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))

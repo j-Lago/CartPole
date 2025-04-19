@@ -35,8 +35,8 @@ class Demo(gb.BaseScreen):
         self.cols['scope'] = (55, 255, 200)
         # flags = pygame.HWSURFACE | pygame.SRCALPHA
         self.scopes = {
-            'ch1': gb.Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
-            'ch2': gb.Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
+            'ch1': gb.Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.clock.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
+            'ch2': gb.Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.clock.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
         }
 
         self.hue_ncols_exemple = 20
@@ -252,7 +252,7 @@ class Demo(gb.BaseScreen):
         self.sounds['jet'].set_volume(throttle)
 
         if self.particle_en:
-            for _ in range(int(2*60/self.fps)):
+            for _ in range(int(2*60/self.clock.fps)):
                 font_index = randint(0, len(self.particles_fonts)-1)
                 self.text_particles.append(
                     gb.TextParticle(canvas,
@@ -260,7 +260,7 @@ class Demo(gb.BaseScreen):
                                  text=choice(self.letters),
                                  font=self.particles_fonts[font_index],
                                  pos=(uniform(-1.8, 1.8), 1.05),
-                                 vel=(0, -0.8-font_index*.2), dt=1/self.fps, g=0, lifetime=-1,
+                                 vel=(0, -0.8-font_index*.2), dt=1/self.clock.fps, g=0, lifetime=-1,
                                  ))
         self.text_particles.step_and_draw()
 
@@ -305,7 +305,7 @@ class Demo(gb.BaseScreen):
         emmit_l = Vector2(-0.05*bias_throttle, -0.04).rotate_rad(angle)
         emmit_r = Vector2(0.05*bias_throttle, -0.04).rotate_rad(angle)
         if self.particle_en:
-            for _ in range(int(randint(round(8 * bias_throttle), round(10 * bias_throttle)) * 60 / self.fps)):
+            for _ in range(int(randint(round(8 * bias_throttle), round(10 * bias_throttle)) * 60 / self.clock.fps)):
                 vel = Vector2(uniform(-0.2, .07), uniform(-5, -8)) * bias_throttle
                 self.particles.append(gb.BallParticle(canvas,
                                                    gb.lerp_vec3(gb.lerp_vec3((255, 60, 0), (200, 200, 60), random()),
@@ -313,19 +313,12 @@ class Demo(gb.BaseScreen):
                                                    uniform(.003, .006),
                                                    pos=gb.lerp_vec2(emmit_l, emmit_r, random()),
                                                    vel=vel.rotate_rad(angle),
-                                                   dt=1 / self.fps, lifetime=uniform(.1, .15), g=0))
+                                                   dt=1 / self.clock.fps, lifetime=uniform(.1, .15), g=0))
             self.particles.step_and_draw()
 
 
         # rocket
-        canvas.draw_polygon((90, 90, 100),
-                            gb.rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle))  # angle
-        canvas.draw_polygon((120, 120, 130),
-                            ((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)))
-
-        canvas.draw_circle((255, 200, 60), (0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
-        canvas.draw_circle((0, 0, 0), (0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
-
+        draw_rocket(canvas, (0, 0), angle)
 
         # extrenal rects for debug
         if self.show_outer_rects:
@@ -337,7 +330,7 @@ class Demo(gb.BaseScreen):
         x = self.t
         total_frame_time = 1/self.real_fps if self.real_fps != 0 else 0
         y = {
-            'ch1': (self.last_active_frame_time * self.fps - 1, total_frame_time * self.fps - 1), #(self.mm_frame_time.value * self.fps - 1, self.last_active_frame_time * self.fps - 1),
+            'ch1': (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1), #(self.mm_frame_time.value * self.fps - 1, self.last_active_frame_time * self.fps - 1),
             'ch2': (throttle, angle),
         }
 
@@ -352,6 +345,20 @@ class Demo(gb.BaseScreen):
             scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
             scope.draw()
             scope.blit_to_main()
+
+
+def draw_rocket(canvas: gb.Canvas, pos = (0,0), angle=0):
+    canvas.draw_polygon((90, 90, 100),
+                        gb.translate_vec2s(
+                            gb.rotate_vec2s(((0.06, 0.05), (0.08, -0.1), (-0.08, -0.1), (-0.06, 0.05)), angle),
+                            pos))  # angle
+    canvas.draw_polygon((120, 120, 130),
+                        gb.translate_vec2s(
+                            ((0.1, 0.0), (0.1, 0.6), (0.06, 0.75), (0.0, 0.8), (-0.06, 0.75), (-0.1, 0.6), (-0.1, 0.0)),
+                            pos))
+
+    canvas.draw_circle((255, 200, 60), pos + (0, 0.25), 0.05, width=0, draw_top_left=True, draw_bottom_right=True)
+    canvas.draw_circle((0, 0, 0), pos + (0, 0.25), 0.05, width=0, draw_top_right=True, draw_bottom_left=True)
 
 
 
