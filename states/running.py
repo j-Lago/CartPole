@@ -23,6 +23,7 @@ class Running(st.GameState):
         self.game.clock.resume_timer(self.timer_id)
 
     def exit(self):
+        self.game.sounds['jet'].set_volume(0)
         self.game.clock.pause_timer(self.timer_id)
         self.game.previous_state_screenshot = self.game.active_canvas.copy()
 
