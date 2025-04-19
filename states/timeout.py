@@ -12,6 +12,7 @@ class Timeout(st.GameState):
 
     def enter(self):
         self.game.clock.cancel_timers()
+        self.game.sounds['whistle'].play()
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, RESTART):

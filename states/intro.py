@@ -8,7 +8,7 @@ class Intro(st.GameState):
     def __init__(self, game):
         super().__init__(game)
         self.intro_time = 3
-        self.beep_time = 1
+        self.beep_time = 1.01
         self.game.reset()
         self.timer_id = self.game.clock.start_timer(pygame.event.Event(END_OF_INTRO), period_seconds=self.intro_time)
         self.game.clock.start_timer(pygame.event.Event(BEEP_TIMER), period_seconds=0)
@@ -21,6 +21,7 @@ class Intro(st.GameState):
 
     def exit(self):
         self.game.clock.pause_timer(self.timer_id)
+        self.game.sounds['beeeep'].play()
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, ABORT_INTRO):
