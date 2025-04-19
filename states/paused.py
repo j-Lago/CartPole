@@ -11,6 +11,12 @@ class Paused(st.GameState):
     def __str__(self):
         return 'Paused'
 
+    def enter(self):
+        self.game.clock.pause()
+
+    def exit(self):
+        self.game.clock.resume()
+
     def handle_event(self, event: pygame.event):
         if bind_test(event, TOGGLE_PAUSE):
             self.change_state(self.previous_state)
@@ -21,7 +27,5 @@ class Paused(st.GameState):
         if self.game.previous_state_screenshot is not None:
             self.game.previous_state_screenshot.set_alpha(127)
             canvas.blit(self.game.previous_state_screenshot, canvas.topleft)
-        canvas.draw_text((255, 30, 30), self.game.fonts['huge'], f'PAUSED', (0, .5))
-        canvas.draw_text((255, 30, 30), self.game.fonts['normal'], 'previous: ' + str(self.previous_state), (0, .3))
-
-
+        canvas.draw_text((200, 200, 180), self.game.fonts['huge'], f'PAUSED', (0, 0))
+        canvas.draw_text((200, 200, 180), self.game.fonts['medium'], f'Press SPACE to resume', (0, -.2))

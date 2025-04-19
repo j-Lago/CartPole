@@ -1,10 +1,13 @@
+from __future__ import annotations
+
+import cartpole
 import gamebase as gb
 from abc import ABC, abstractmethod
 from bindings import *
 
 
 class GameState(ABC):
-    def __init__(self, game: gb.BaseScreen):
+    def __init__(self, game: cartpole.CartPoleGame):
         self.game = game
         self.previous_state = None
 

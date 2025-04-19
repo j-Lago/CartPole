@@ -11,19 +11,28 @@ class Clock:
         self._ticks: int = 0
         self.unique_timer_count: int = 0
         self.timers: dict[int, Timer] = dict()
+        self.active = True
 
     def reset(self):
         self._ticks: int = 0
         self.timers: dict[int, Timer] = dict()
 
-    def update(self):
-        self._ticks += 1
-        ids_marked_for_delete = []
-        for _id, _timer in self.timers.items():
-            if _timer.update(self.ticks):
-                ids_marked_for_delete.append(_id)
-        for i in ids_marked_for_delete:
-            del self.timers[i]
+    def pause(self):
+        self.active = False
+
+    def resume(self):
+        self.active = True
+
+    def update(self) -> int:
+        if self.active:
+            self._ticks += 1
+            ids_marked_for_delete = []
+            for _id, _timer in self.timers.items():
+                if _timer.update(self.ticks):
+                    ids_marked_for_delete.append(_id)
+            for i in ids_marked_for_delete:
+                del self.timers[i]
+        return self._ticks
 
     def start_timer(self, event: pygame.event.Event, period_seconds: float | None = None, period_ticks: int | None = None) -> int:
         if period_seconds is None and period_ticks is None:

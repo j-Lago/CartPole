@@ -9,30 +9,30 @@ import math
 from pathlib import Path
 from random import random, uniform, randint, choice, choices
 from player import Cart
-from states import Intro, Running
 from bindings import *
+import states as st
+
+
+def simulate(state: st.GameState):
+    game: cartpole.CartPoleGame = state.game
+    combined_input = 0.0
+    for player in game.players.values():
+        if player.alive:
+            combined_input += math.fabs(player.input.update(player))
+    game.sounds['jet'].set_volume(combined_input)
+
+    d = random() * game.chash_xoffset * 0.2
+    game.chash_xoffset -= d
+    shake_intensity = 1.3
+    game.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
+        -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1 + abs(d) * .3)
 
 
 
-def simulate(game: cartpole.CartPoleGame):
 
-        combined_input = 0.0
-        for player in game.players.values():
-            if player.alive:
-                combined_input += math.fabs(player.input.update(player))
-
-        d = random() * game.chash_xoffset * 0.2
-        game.chash_xoffset -= d
-        shake_intensity = 1.3
-        game.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
-            -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1 + abs(d) * .3)
-
-        for player in game.players.values():
-            player.step()
-        game.sounds['jet'].set_volume(combined_input)
-
-
-def draw(game: cartpole.CartPoleGame, canvas: gb.Canvas):
+def draw(state: st.GameState):
+    game: cartpole.CartPoleGame = state.game
+    canvas: gb.Canvas = game.active_canvas
 
     canvas.fill(game.cols['bg'])
     pos = game.mouse_world_pos
@@ -48,7 +48,7 @@ def draw(game: cartpole.CartPoleGame, canvas: gb.Canvas):
             player.draw(game.t)
 
     # timer
-    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.game_duration - game.t:.1f}',
+    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.clock.get_timer_remaining(state.timer_id):.1f}',
                      (canvas.xmax - 0.05, 0), anchor='midright')
     canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
                      anchor='midright')
@@ -89,3 +89,12 @@ def draw(game: cartpole.CartPoleGame, canvas: gb.Canvas):
         scope.focus = scope.collision(game.mouse_world_pos) and not another_in_focus(key)
         scope.draw()
         scope.blit_to_main()
+
+    # deve ocorrer depois de finalizar draw
+    all_dead = True
+    for player in game.players.values():
+        player.step()
+        all_dead &= not player.alive
+
+    if all_dead:
+        state.change_state(st.Timeout(state.game))

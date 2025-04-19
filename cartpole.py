@@ -47,8 +47,8 @@ class CartPoleGame(gb.BaseScreen):
             'none_p2': gb.NoneInput(),
         }
 
-        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.draw_main)
-        self.pre_draw_callback = self.simulate
+        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw)
+        # self.pre_draw_callback = self.simulate
         self.event_loop_callback = self.handle_user_input_event
 
         self.cols['focus'] = (255, 255, 0)
@@ -125,8 +125,10 @@ class CartPoleGame(gb.BaseScreen):
             scope.clear()
         for player in self.players.values():
             player.reset()
+        for input_ in self.inputs.values():
+            input_.reset()
 
-        self.previous_state_screenshot = None
+        # self.previous_state_screenshot = None
         self.state = Running(self)
 
     def left_release(self, button: gb.MouseButton):
