@@ -175,6 +175,12 @@ class CartPoleGame(gb.BaseScreen):
                                     ))
             self.stress_test_particles.step_and_draw()
 
+    def all_dead(self) -> bool:
+        all_dead = True
+        for player in self.players.values():
+            all_dead = all_dead and not player.alive
+        return all_dead
+
     def death(self, player):
         self.sounds['crash'].play()
         self.chash_xoffset = player.v * 500

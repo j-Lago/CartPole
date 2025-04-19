@@ -27,6 +27,8 @@ def simulate(state: st.GameState):
     game.blit_offset = uniform(-shake_intensity, shake_intensity) * combined_input * shake_intensity + d, uniform(
         -shake_intensity, shake_intensity) * combined_input * shake_intensity * (1 + abs(d) * .3)
 
+    for player in game.players.values():
+        player.step()
 
 
 
@@ -53,6 +55,14 @@ def draw(state: st.GameState):
     canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
                      anchor='midright')
 
+    # score
+    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'10247',
+                     (canvas.xmin + 0.05, 0), anchor='midleft')
+    canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'BEST SCORE', (canvas.xmin + 0.06, -0.08),
+                     anchor='midleft')
+    canvas.draw_text(game.cols['timer'], game.fonts['tiny'], 'Classic: Linear', (canvas.xmin + 0.06, -0.13),
+                     anchor='midleft')
+
     # scope
     x = game.t
     total_frame_time = 1 / game.real_fps if game.real_fps != 0 else 0
@@ -78,6 +88,7 @@ def draw(state: st.GameState):
                      canvas.topleft + (0.11, -0.09),
                      anchor='midtop')
 
+
     def another_in_focus(self_key):
         for ikey, iscope in game.scopes.items():
             if ikey != self_key and iscope.focus:
@@ -90,11 +101,6 @@ def draw(state: st.GameState):
         scope.draw()
         scope.blit_to_main()
 
-    # deve ocorrer depois de finalizar draw
-    all_dead = True
-    for player in game.players.values():
-        player.step()
-        all_dead &= not player.alive
-
-    if all_dead:
-        state.change_state(st.Timeout(state.game))
+    #
+    if game.all_dead():
+        state.change_state(st.GameOver(state.game))
