@@ -27,6 +27,7 @@ class CartPoleGame(gb.BaseScreen):
         self.mouse.scroll.down_callback = self.scroll_down
 
         self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
+        self.sounds['beep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.1)
         self.sounds['coin'] = self.load_sound(self.assets_path / 'coin.wav', volume=0.1)
         self.sounds['crash'] = self.load_sound(self.assets_path / 'crash.wav', volume=1.0)
         self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)

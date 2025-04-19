@@ -20,6 +20,7 @@ J_DOWN = 12
 
 END_OF_INTRO = pygame.USEREVENT + 1
 TIMEOUT = pygame.USEREVENT + 2
+BEEP_TIMER = pygame.USEREVENT + 3
 
 
 @dataclass
