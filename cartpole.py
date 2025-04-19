@@ -171,7 +171,7 @@ class CartPoleGame(gb.BaseScreen):
                                     text=choice(letters),
                                     font=self.particles_fonts[font_index],
                                     pos=(uniform(-1.8, 1.8), 1.05),
-                                    vel=(0, -0.8 - font_index * .2), dt=1 / self.fps, g=0, lifetime=-1,
+                                    vel=(0, -0.8 - font_index * .2), dt=1 / self.clock.fps, g=0, lifetime=-1,
                                     ))
             self.stress_test_particles.step_and_draw()
 
