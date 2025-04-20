@@ -18,4 +18,5 @@ from .scope import Scope
 from .gameclock import Clock, Timer
 from .lerp import *
 from .utils import *
+from .button import Button
 
