@@ -8,16 +8,20 @@ from player import Cart
 import states as st
 from bindings import *
 from game_draw import draw, simulate
+import json
+from codebase_hash import generate_folder_hash
 
 class CartPoleGame(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
         self.game_duration = 45
         self.info_popup.visible = False
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
+        self.save_file_path = self.rel_path / 'meta' / 'save.json'
 
         self.mouse.left.press_callback = self.left_click
         self.mouse.left.release_callback = self.left_release
@@ -107,6 +111,10 @@ class CartPoleGame(gb.BaseScreen):
             f'm_r: disable scope',
         ]
 
+        self.best_score = None
+        self.best_score_device = None
+        self.load_best_score()
+
         self.previous_state_screenshot = None
         self.reset()
         self.state = st.Intro(self)
@@ -187,6 +195,35 @@ class CartPoleGame(gb.BaseScreen):
     def death(self, player):
         self.sounds['crash'].play()
         self.chash_xoffset = player.v * 500
+
+    def load_best_score(self):
+        try:
+            with open(self.save_file_path, 'r') as json_file:
+                data = json.load(json_file)
+            if 'best_score' in data.keys() and 'best_score_device' in data.keys():
+                self.best_score = data['best_score']
+                self.best_score_device = data['best_score_device']
+            else:
+                self.best_score = 0
+                self.best_score_device = None
+        except FileNotFoundError:
+            self.best_score = 0
+            self.best_score_device = None
+
+    def save_best_score(self):
+        for key, player in self.players.items():
+            if player.score > self.best_score:
+                self.best_score = player.score
+                self.best_score_device = player.input.description
+
+
+
+
+        code_hash = generate_folder_hash(self.rel_path, {'.idea', '.git', 'venv', 'meta', '__pycache__', 'demos'})
+        save = {'version': '0.0.1', 'hash': code_hash, 'best_score': self.best_score, 'best_score_device': self.best_score_device}
+        with open(self.save_file_path, 'w') as json_file:
+            json.dump(save, json_file)
+
 
     def handle_user_input_event(self, event):
         self.state.handle_event(event)

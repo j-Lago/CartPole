@@ -12,6 +12,7 @@ class GameOver(st.GameState):
 
     def enter(self):
         self.game.clock.cancel_timers()
+        self.game.save_best_score()
 
     def handle_event(self, event: pygame.event):
         if bind_test(event, RESTART):

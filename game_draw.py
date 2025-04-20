@@ -57,11 +57,11 @@ def draw(state: st.GameState, intro=False):
                      anchor='midright')
 
     # score
-    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'10247',
+    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.best_score}',
                      (canvas.xmin + 0.05, 0), anchor='midleft')
     canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'BEST SCORE', (canvas.xmin + 0.06, -0.08),
                      anchor='midleft')
-    canvas.draw_text(game.cols['timer'], game.fonts['tiny'], 'Classic: Linear', (canvas.xmin + 0.06, -0.13),
+    canvas.draw_text(game.cols['timer'], game.fonts['tiny'], game.best_score_device, (canvas.xmin + 0.06, -0.13),
                      anchor='midleft')
 
     # scope

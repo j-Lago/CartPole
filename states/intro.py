@@ -4,6 +4,7 @@ import states as st
 from game_draw import draw
 import math
 
+
 class Intro(st.GameState):
     def __init__(self, game):
         super().__init__(game)
@@ -34,8 +35,12 @@ class Intro(st.GameState):
 
     def draw(self, canvas: gb.Canvas):
         draw(self, intro=True)
+
+        transp_canvas = canvas.surface.copy()
+        transp_canvas.set_alpha(127)
+        # canvas.fill(canvas._bg_color)
+        canvas.clear()
+        canvas.blit(transp_canvas, canvas.topleft)
+
         canvas.draw_text((200, 200, 180), self.game.fonts['huge'], f'GET READY', (0, 0))
         canvas.draw_text((200, 200, 180), self.game.fonts['normal'], f'Game will start in {math.ceil(self.game.clock.get_timer_remaining(self.timer_id))} s', (0, -.2))
-
-
-

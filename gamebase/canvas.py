@@ -52,6 +52,9 @@ class Canvas:
         if self.got_focus_callback is not None:
             self.got_focus_callback(self)
 
+    def clear(self):
+        self.fill(self._bg_color)
+
     def draw(self):
         self.fill(self._bg_color)
         if self.visible:
