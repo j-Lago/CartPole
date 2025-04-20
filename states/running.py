@@ -30,10 +30,12 @@ class Running(st.GameState):
     def handle_event(self, event: pygame.event):
         if bind_test(event, TOGGLE_PAUSE):
             self.change_state(st.Paused(self.game))
-        if event.type == TIMEOUT:
+        elif event.type == TIMEOUT:
             self.change_state(st.Timeout(self.game))
-        if bind_test(event, RESTART):
+        elif bind_test(event, RESTART):
             self.change_state(st.Intro(self.game))
+        elif bind_test(event, SETTINGS):
+            self.change_state(st.Settings(self.game))
 
     def draw(self, canvas: gb.Canvas):
         simulate(self)

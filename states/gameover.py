@@ -31,5 +31,5 @@ class GameOver(st.GameState):
 
         canvas.draw_text((200, 200, 180), self.game.fonts['huge'], f'GAME OVER', (0, 0))
         canvas.draw_text((200, 200, 180), self.game.fonts['big'], game_result, (0, -.3))
-        canvas.draw_text((200, 200, 180), self.game.fonts['medium'], f'Press SPACE to resume', (0, -.5))
+        canvas.draw_text((200, 200, 180), self.game.fonts['medium'], f'Press ESC to restart', (0, -.5))
 
