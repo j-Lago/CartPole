@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod, abstractproperty
 from typing import Callable, Self
 import pygame
 import math
+import gamebase as gb
 
 
 JOYBUTTON: dict[str, int] = {
@@ -25,6 +26,9 @@ JOYBUTTON: dict[str, int] = {
 
 
 class BaseInput(ABC):
+    def __init__(self):
+        self.active_player_key = None
+
     @property
     @abstractmethod
     def value(self):
@@ -62,7 +66,7 @@ class NoneInput(BaseInput):
 
 
 class Joystick(BaseInput):
-    def __init__(self, source: pygame.joystick, channel, active_player_key:str|None=None, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
+    def __init__(self, source: pygame.joystick, channel:int=0, active_player_key:str|None=None, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
         self.active_player_key = active_player_key
         self.source = source
         self.channel = channel
@@ -172,3 +176,35 @@ class LinearController(BaseInput):
         f = -th * 1.8 - a * 1.7 + 0.1 * v
 
         return min(max(f, -1.), 1.)
+
+
+class InputPool:
+    def __init__(self):
+        joystick = None
+        for i in range(pygame.joystick.get_count()):
+            joystick = pygame.joystick.Joystick(i)
+            joystick.init()
+
+        # self.input = Joystick(joystick, 2, normalization=lambda x: x)
+        self.inputs: dict[str, gb.BaseInput] = dict()
+        if joystick is not None:
+            self.inputs['joystick'] = gb.Joystick(joystick, channel=2, dead_zone=0.3)
+        self.inputs['linear'] = gb.LinearController()
+        self.inputs['none'] = gb.NoneInput()
+
+    def get(self, owner_name: str, input_key:str=None):
+        if input_key is None:
+            for key in self.inputs.keys():
+                if self.inputs[key].active_player_key is None:
+                    self.inputs[key].active_player_key = owner_name
+                    return self.inputs[key]
+        return self.inputs[input_key]
+
+    def values(self):
+        return self.inputs.values()
+
+    def keys(self):
+        return self.inputs.keys()
+
+    def items(self):
+        return self.inputs.items()

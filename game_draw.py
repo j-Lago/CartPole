@@ -77,7 +77,7 @@ def draw(state: st.GameState, intro=False):
         'p1': (
             game.players['p1'].theta - math.pi, game.players['p1'].x, game.players['p1'].v,
             game.players['p1'].omega),
-        'inputs': (game.inputs['p1'].value, game.inputs['p2'].value),
+        'inputs': (game.players['p1'].input.value, game.players['p2'].input.value),
         'times': (game.last_active_frame_time * game.clock.fps - 1, total_frame_time * game.clock.fps - 1),
     }
 

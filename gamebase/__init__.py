@@ -10,7 +10,7 @@ from .canvas import Canvas, remap, blit_with_aspect_ratio
 from .basescreen import BaseScreen
 from .filters import MediaMovel
 from .image import Image
-from .inputs import BaseInput, Joystick, LinearController, NoneInput
+from .inputs import BaseInput, Joystick, LinearController, NoneInput, InputPool
 from .mouse import Mouse, MouseScroll, MouseButton
 from .particles import Particles, Particle, TextParticle, BallParticle
 from .popup import PopUpText, PopUp

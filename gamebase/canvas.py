@@ -4,6 +4,7 @@ from typing import Sequence, Callable, Self
 from copy import copy
 from random import random, uniform, randint, gauss
 from pygame import Vector2, Vector3, Rect, Color
+from gamebase.utils import fRect
 
 
 class Canvas:
@@ -142,7 +143,7 @@ class Canvas:
     def draw_polygon(self, color: Color | tuple[int, int, int] | Vector3, points: Sequence, width: int = 0):
         return pygame.draw.polygon(self.surface, color, self.world_to_screen_points(points), width)
 
-    def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
+    def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: fRect | Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
         return pygame.draw.rect(self.surface, color, self.world_to_screen_rect(rect), width, border_radius)
 
     def draw_line(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):

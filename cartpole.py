@@ -43,18 +43,10 @@ class CartPoleGame(gb.BaseScreen):
         # self.images['jet'] = pygame.transform.smoothscale_by(self.load_image(self.assets_path / 'jet.png'), (0.35, 0.3))
 
         self.force_factor = 18
-        joystick = None
-        for i in range(pygame.joystick.get_count()):
-            joystick = pygame.joystick.Joystick(i)
-            joystick.init()
 
-        # self.input = Joystick(joystick, 2, normalization=lambda x: x)
-        self.inputs: dict[str, gb.BaseInput] = {
-            'p1': gb.Joystick(joystick, 2, dead_zone=0.03) if joystick is not None else gb.LinearController(),
-            'p2': gb.LinearController(),
-            'none_p1': gb.NoneInput(),
-            'none_p2': gb.NoneInput(),
-        }
+        self.inputs = gb.InputPool()
+
+
 
         self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw)
         self.event_loop_callback = self.handle_user_input_event
@@ -105,9 +97,9 @@ class CartPoleGame(gb.BaseScreen):
 
         th0 = uniform(-1, 1) * 0.0
         self.players = {
-            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],
+            'p1': Cart('P1', self, self.inputs.get('p1'), Vector2(-0.8, 0.35), base_color=self.cols['p1'],
                        rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'],
+            'p2': Cart('P2', self, self.inputs.get('p2'), Vector2(-0.8, -0.45), base_color=self.cols['p2'],
                        rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
