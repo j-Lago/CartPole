@@ -19,4 +19,5 @@ from .gameclock import Clock, Timer
 from .lerp import *
 from .utils import *
 from .button import Button
+from .progressbar import ProgressBar
 
