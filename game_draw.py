@@ -18,7 +18,7 @@ def simulate(state: st.GameState):
     combined_input = 0.0
     for player in game.players.values():
         if player.alive:
-            combined_input += math.fabs(player.input.update(player))
+            combined_input += math.fabs(player.input.update(player)) if player.fuel >0 else 0
     game.sounds['jet'].set_volume(combined_input)
 
     d = random() * game.chash_xoffset * 0.2
@@ -51,10 +51,13 @@ def draw(state: st.GameState, intro=False):
 
     # timer
     remain = game.clock.get_timer_remaining(state.timer_id) if not intro else game.game_duration
-    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{remain:.1f}',
-                     (canvas.xmax - 0.05, 0), anchor='midright')
-    canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, -0.08),
+    game.progress_timer.update(remain)
+    time_col = game.cols['timer'] if remain >= game.progress_timer.low_value else game.progress_timer.low_color
+    canvas.draw_text(time_col, game.fonts['normal'], f'{remain:.1f}',
+                     (canvas.xmax - 0.05, -0.04), anchor='midright')
+    canvas.draw_text(time_col, game.fonts['medium'], 'TIMER', (canvas.xmax - 0.06, 0.05),
                      anchor='midright')
+
 
     # score
     canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.best_score}',

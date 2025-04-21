@@ -16,8 +16,9 @@ class Cart:
     perturb_img = pygame.transform.smoothscale_by(pygame.image.load(assets_path / 'dedo.png'), 0.3)
 
     def __init__(self, name: str, game: gb.BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0,
-                 base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255),
+                 base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), bg_color: tuple[int, int, int] = (30, 30, 30),
                  alive: bool = True, death_callback: Callable = None):
+
 
 
         self.name = name
@@ -56,6 +57,8 @@ class Cart:
         self.alive = alive
         self.canvas: gb.Canvas = self.game.active_canvas
         self.input = input_device
+        self.fuel = 1.0
+        self.fuel_consumption_rate = 0.0001
         self.x_target = (-0.15, 0.15)
         tol = math.pi / 12
         self.th_target = (math.pi - tol, math.pi + tol)
@@ -70,6 +73,7 @@ class Cart:
 
         self.base_color = base_color
         self.rail_col = rail_color
+        self.bg_color = bg_color
         self.sleeper_col = (120, 100, 60)
         self.guardrail0_col = (60, 60, 60)
         self.guardrail1_col = (220, 200, 30)
@@ -91,6 +95,17 @@ class Cart:
         self.spark_density = 100
         self.spark_particle_size = 1, 2
 
+        y = (self.canvas.ymax - 0.04) if self.id % 2 == 1 else (self.canvas.ymin+0.07)
+        self.progress_fuel = gb.ProgressBar(
+            self.canvas,
+            (+1.72 - 0.7, y, 0.7, 0.04),
+            0, 1, 1, .2,
+            self.base_color, self.bg_color,
+            border_width=2,
+            border_radius=0,
+            show_particles=True,
+        )
+
         self.point_particles = None
         self.text_particles = None
 
@@ -103,6 +118,7 @@ class Cart:
         self.uncollected_score = 0
         self.reward = 0
         self.perturbation = 0
+        self.fuel = 1.0
         self.ticks_since_perturbation = 0
         self.alive = True
         self.point_particles = gb.Particles(100)
@@ -128,8 +144,9 @@ class Cart:
         return self.game.clock.fps
 
     def step(self):
-        force = self.input.value * self.game.force_factor
+        force = self.input.value * self.game.force_factor if self.fuel > 0 else 0
         if self.alive:
+            self.fuel -= self.fuel_consumption_rate * abs(force)
             if self.x - self.base_rect.w / 2 < self.canvas.xmin + self.guardrail_rect.w or self.x + self.base_rect.w / 2 > self.canvas.xmax - self.guardrail_rect.w:
                 self.alive = False
                 if self.death_callback is not None:
@@ -191,7 +208,7 @@ class Cart:
             self.canvas.draw_circle(self.flag_pole_col, top, 5 / self.canvas.scale)
 
         # flame
-        if self.alive:
+        if self.alive and self.fuel > 0:
             flame_gain = math.fabs(self.input.value) * uniform(0.8, 1.2)
             img0: pygame.Surface = pygame.transform.scale_by(self.jet_img, Vector2(flame_gain, max(flame_gain,
                                                                                                    0.8)) * self.canvas.relative_scale)
@@ -400,12 +417,12 @@ class Cart:
         pad = 0.05
         pad2 = 0.06
         if self.id % 2 == 1:
-            y_score = self.canvas.ymax - 0.04
+            y_score = self.canvas.ymax - 0.04 - 0.04
             y_label = y_score - 0.2
             y_description = y_label - 0.06
             anchor = 'topright'
         else:
-            y_score = self.canvas.ymin
+            y_score = self.canvas.ymin + 0.03
             y_label = y_score + 0.2 + 0.02
             y_description = y_label + 0.06
             anchor = 'bottomright'
@@ -415,6 +432,7 @@ class Cart:
         self.canvas.draw_text(self.base_color, self.game.fonts['big'], f'{self.score}', pos_score, anchor)
         self.canvas.draw_text(self.base_color, self.game.fonts['medium'], self.name.upper() + ' SCORE', pos_label, anchor)
         self.canvas.draw_text(self.base_color, self.game.fonts['tiny'], self.input.description, pos_description, anchor)
+        self.progress_fuel.update(self.fuel)
 
 
         #perturbtion

@@ -10,9 +10,11 @@ class ProgressBar:
                  min_value: float = 0.0,
                  max_value: float = 1.0,
                  initial_value: float = 0.5,
+                 low_value = 0,
                  on_color=(200, 200, 200),
                  off_color=(60, 60, 60),
-                 border_color=(120, 120, 120),
+                 low_color=(240, 60, 30),
+                 border_color=None,
                  border_radius=0,
                  border_width=1,
                  active=True,
@@ -27,8 +29,10 @@ class ProgressBar:
         self.min_value = min_value
         self.max_value = max_value
         self.value = initial_value
+        self.low_value = low_value
         self.on_color = on_color
         self.off_color = off_color
+        self.low_color = low_color
         self.border_color = border_color
         self.border_radius = border_radius
         self.border_width = border_width
@@ -50,8 +54,11 @@ class ProgressBar:
             else:
                 raise NotImplementedError
 
-            self.canvas.draw_rect(self.on_color, (x, y, w, h), border_radius=int(self.canvas.world_to_screen_f(self.border_radius)))
-            self.canvas.draw_rect(self.border_color, self.rect, border_radius=int(self.canvas.world_to_screen_f(self.border_radius)), width=self.border_width)
+            on_col = self.on_color if self.value >= self.low_value else self.low_color
+            border_col = self.border_color if self.border_color is not None else gb.lerp_vec3(on_col, self.off_color, 0.5)
+
+            self.canvas.draw_rect(on_col, (x, y, w, h), border_radius=int(self.canvas.world_to_screen_f(self.border_radius)))
+            self.canvas.draw_rect(border_col, self.rect, border_radius=int(self.canvas.world_to_screen_f(self.border_radius)), width=self.border_width)
 
             if self.last_value != self.value and self.show_particles:
                 for _ in range(random.randint(5, 8)):

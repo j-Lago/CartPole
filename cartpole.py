@@ -94,6 +94,15 @@ class CartPoleGame(gb.BaseScreen):
                               maxlen=400, visible=True),
         }
 
+        self.progress_timer = gb.ProgressBar(
+            self.active_canvas,
+            (+1.72-0.28, -0.1, 0.28, 0.03),
+            0, self.game_duration, self.game_duration, self.game_duration*.2,
+            self.cols['timer'], self.cols['bg'],
+            border_width=2,
+            border_radius=0,
+        )
+
         th0 = uniform(-1, 1) * 0.0
         self.players = {
             'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],
