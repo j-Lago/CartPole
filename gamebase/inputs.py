@@ -236,7 +236,11 @@ class InputPool:
         self.inputs['keyboard'] = gb.Keyboard(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
         self.inputs['linear'] = gb.LinearController()
         self.inputs['none'] = gb.NoneInput()
-        # self.inputs['none_2'] = gb.NoneInput()
+        self.inputs['ia dummy'] = gb.NoneInput()
+        self.inputs['joy2 dummy'] = gb.NoneInput()
+
+    def __len__(self):
+        return len(self.inputs)
 
     def get(self, owner_name: str, input_key:str=None):
         if input_key is None:

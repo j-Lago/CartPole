@@ -27,11 +27,14 @@ class Intro(st.GameState):
     def handle_event(self, event: pygame.event):
         if bind_test(event, ABORT_INTRO):
             self.change_state(st.Running(self.game))
+        elif bind_test(event, SETTINGS):
+            self.change_state(st.Settings(self.game))
         elif event.type == END_OF_INTRO:
             self.change_state(st.Running(self.game))
         elif event.type == BEEP_TIMER:
             self.game.clock.start_timer(pygame.event.Event(BEEP_TIMER), period_seconds=self.beep_time)
             self.game.sounds['beep'].play()
+
 
     def draw(self, canvas: gb.Canvas):
         draw(self, intro=True)
