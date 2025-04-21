@@ -58,7 +58,7 @@ class Cart:
         self.canvas: gb.Canvas = self.game.active_canvas
         self.input = input_device
         self.fuel = 1.0
-        self.fuel_consumption_rate = 0.0001
+        self.fuel_consumption_rate = 0.00002
         self.x_target = (-0.15, 0.15)
         tol = math.pi / 12
         self.th_target = (math.pi - tol, math.pi + tol)
