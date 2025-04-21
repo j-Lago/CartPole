@@ -4,6 +4,9 @@ import pygame
 import math
 import gamebase as gb
 
+import os
+os.environ['SDL_JOYSTICK_HIDAPI_PS4_RUMBLE'] = '1'
+
 
 JOYBUTTON: dict[str, int] = {
     'x': 0,

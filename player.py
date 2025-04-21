@@ -125,6 +125,14 @@ class Cart:
         self.text_particles = gb.Particles(6)
         self.model.reset()
 
+    def feedback(self):
+        if self.alive:
+            if isinstance(self.input, gb.Joystick):
+                l = self.model.linear_acceleration / 120
+                r = -self.model.linear_acceleration / 120
+
+                self.input.source.rumble(l * .05, r, 100)
+
     def collect_score(self, max_collect: int = None):
         x = min(self.uncollected_score, max_collect) if max_collect is not None else self.uncollected_score
         self.uncollected_score -= x

@@ -7,7 +7,7 @@ from random import random, uniform, randint, choice, choices
 from player import Cart
 import states as st
 from bindings import *
-from game_draw import draw, simulate
+from game_draw import draw, simulate, feedback
 
 
 class Running(st.GameState):
@@ -39,4 +39,5 @@ class Running(st.GameState):
 
     def draw(self, canvas: gb.Canvas):
         simulate(self)
+        feedback(self)
         draw(self)

@@ -12,7 +12,6 @@ from player import Cart
 from bindings import *
 import states as st
 
-
 def simulate(state: st.GameState):
     game: cartpole.CartPoleGame = state.game
     combined_input = 0.0
@@ -31,6 +30,9 @@ def simulate(state: st.GameState):
         player.step()
 
 
+def feedback(state: st.GameState):
+    for player in state.game.players.values():
+        player.feedback()
 
 def draw(state: st.GameState, intro=False):
     game: cartpole.CartPoleGame = state.game
