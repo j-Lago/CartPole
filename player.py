@@ -103,7 +103,7 @@ class Cart:
             self.base_color, self.bg_color,
             border_width=2,
             border_radius=0,
-            show_particles=False,
+            show_particles=True,
         )
 
         self.point_particles = None

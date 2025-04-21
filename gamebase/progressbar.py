@@ -20,8 +20,10 @@ class ProgressBar:
                  active=True,
                  selectable=False,
                  orientation='horizontal',
-                 show_particles=False
+                 show_particles=False,
+                 fps=60.0,
                  ):
+        self.fps = fps
         self.canvas = canvas
         if not isinstance(rect, gb.fRect):
             rect = gb.fRect(rect)
@@ -55,21 +57,21 @@ class ProgressBar:
                 raise NotImplementedError
 
             on_col = self.on_color if self.value >= self.low_value else self.low_color
-            border_col = self.border_color if self.border_color is not None else gb.lerp_vec3(on_col, self.off_color, 0.5)
+            border_col = self.border_color if self.border_color is not None else gb.lerp_vec3(on_col, self.off_color, 0.2)
 
             self.canvas.draw_rect(on_col, (x, y, w, h), border_radius=int(self.canvas.world_to_screen_f(self.border_radius)))
             self.canvas.draw_rect(border_col, self.rect, border_radius=int(self.canvas.world_to_screen_f(self.border_radius)), width=self.border_width)
 
             if self.last_value != self.value and self.show_particles:
-                for _ in range(random.randint(5, 8)):
+                for _ in range(round(random.randint(5000, 8000)*abs(self.last_value-self.value)/(self.max_value-self.min_value))):
                     self.particles.append(
                         gb.BallParticle(self.canvas,
                                         color=gb.lerp_vec3((230, 120, 60), (200,180,90), random.random()),
                                         radius=1/self.canvas.scale,
                                         pos=(x,random.uniform(y,y-h)),
-                                        vel=(random.uniform(-.3,0), -random.uniform(-.2,.2)),
-                                        dt=1 / 60,
-                                        lifetime=.5,
+                                        vel=(random.uniform(-.2,0), -random.uniform(-.1,.1)),
+                                        dt=1 / self.fps,
+                                        lifetime=.2,
                                         )
                     )
                 self.particles.step()
