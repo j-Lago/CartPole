@@ -17,12 +17,13 @@ class Running(st.GameState):
         self.timer_id = self.game.clock.start_timer(pygame.event.Event(TIMEOUT), period_seconds=self.game.game_duration)
         self.progress = gb.ProgressBar(
             self.game.active_canvas,
-            rect=(0,0,1,.06),
+            rect=(-.5, -.9, 1.5, .06),
             min_value=0,
             max_value=self.game.game_duration,
             initial_value=self.game.game_duration,
             show_particles=True,
-            border_radius=.01    )
+            border_radius=.01,
+        )
 
     def __str__(self):
         return 'Running'

@@ -48,8 +48,7 @@ class ProgressBar:
                 w = (t*w)
                 x += (self.rect[2] - w)
             else:
-                h = (t*h)
-                y += (self.rect[3]-h)
+                raise NotImplementedError
 
             self.canvas.draw_rect(self.on_color, (x, y, w, h), border_radius=int(self.canvas.world_to_screen_f(self.border_radius)))
             self.canvas.draw_rect(self.border_color, self.rect, border_radius=int(self.canvas.world_to_screen_f(self.border_radius)), width=self.border_width)
