@@ -16,6 +16,7 @@ class Button():
                  bg_color: pygame.Color | tuple[int, int, int] = (45, 45, 45),
                  bg_unselectable_color: pygame.Color | tuple[int, int, int] = (30, 30, 30),
                  unselectable_color: pygame.Color | tuple[int, int, int] = (60, 60, 60),
+                 font_unselectable_color: pygame.Color | tuple[int, int, int] = (60, 60, 60),
                  border_color: pygame.Color | tuple[int, int, int] = (100, 100, 100),
                  focus_color: pygame.Color | tuple[int, int, int] = (200, 200, 60),
                  bg_selected_color: pygame.Color | tuple[int, int, int] = (90, 90, 30),
@@ -33,6 +34,7 @@ class Button():
         self.text = text
         self.font_color = font_color
         self.unselectable_color = unselectable_color
+        self.font_unselectable_color = font_unselectable_color
 
         self.bg_color = bg_color
         self.bg_selected_color = bg_selected_color
@@ -65,7 +67,7 @@ class Button():
     def draw(self):
         if self.active:
             r_border = 15
-            font_color = self.selected_color if self.selected else self.font_color if self.selectable else self.unselectable_color
+            font_color = self.selected_color if self.selected else self.font_color if self.selectable else self.font_unselectable_color
             self.canvas.draw_rect(self.bg_selected_color if self.selected else self.bg_color if self.selectable else self.bg_unselectable_color, self.rect, border_radius=r_border)
             self.canvas.draw_rect(self.focus_color if self.on_focus else font_color, self.rect, border_radius=r_border, width=2)
             if self.selected:
@@ -73,7 +75,7 @@ class Button():
 
             if self.text is not None and self.font is not None:
                 pos = self.rect.center
-                self.canvas.draw_text(self.font_color, self.font, self.text, pos, anchor='center')
+                self.canvas.draw_text(font_color, self.font, self.text, pos, anchor='center')
             #     centered_text(self.canvas, self.rect, self.text, self.font, font_color)
 
             if self.custom_draw is not None:

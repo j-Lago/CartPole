@@ -190,7 +190,8 @@ class InputPool:
         if joystick is not None:
             self.inputs['joystick'] = gb.Joystick(joystick, channel=2, dead_zone=0.3)
         self.inputs['linear'] = gb.LinearController()
-        self.inputs['none'] = gb.NoneInput()
+        self.inputs['none_1'] = gb.NoneInput()
+        self.inputs['none_2'] = gb.NoneInput()
 
     def get(self, owner_name: str, input_key:str=None):
         if input_key is None:
@@ -208,3 +209,9 @@ class InputPool:
 
     def items(self):
         return self.inputs.items()
+
+    def __getitem__(self, item):
+        return self.inputs[item]
+
+    def __setitem__(self, key, value):
+        self.inputs[key] = value
