@@ -29,8 +29,8 @@ JOYBUTTON: dict[str, int] = {
 
 
 class BaseInput(ABC):
-    def __init__(self):
-        self.active_player_key = None
+    def __init__(self, active_player_key):
+        self.active_player_key = active_player_key
 
     @property
     @abstractmethod
@@ -53,6 +53,8 @@ class BaseInput(ABC):
 
 
 class NoneInput(BaseInput):
+    def __init__(self, active_player_key: str | None = None):
+        super().__init__(active_player_key)
     @property
     def value(self):
         return 0.0
@@ -70,7 +72,7 @@ class NoneInput(BaseInput):
 
 class Joystick(BaseInput):
     def __init__(self, source: pygame.joystick, channel:int=0, active_player_key:str|None=None, dead_zone: float = 0., initial_value = 0., normalization: Callable = lambda x: x):
-        self.active_player_key = active_player_key
+        super().__init__(active_player_key)
         self.source = source
         self.channel = channel
         self.initial_value = initial_value
@@ -105,7 +107,7 @@ def remove_dead_zone(x, dead_zone):
 
 class LinearController(BaseInput):
     def __init__(self, active_player_key:str|None=None, initial_value=0., normalization: Callable = lambda x: x):
-        self.active_player_key = active_player_key
+        super().__init__(active_player_key)
         self._value = initial_value
         self.initial_value = initial_value
         self.normalization = normalization
@@ -181,6 +183,45 @@ class LinearController(BaseInput):
         return min(max(f, -1.), 1.)
 
 
+class Keyboard(BaseInput):
+    def __init__(self, source, key_left, key_right, active_player_key:str|None=None, key_intensity=None, initial_value = 0., normalization: Callable = lambda x: x):
+        super().__init__(active_player_key)
+        self.source = source
+        self.key_left = key_left
+        self.key_right = key_right
+        self.key_intensity = key_intensity
+        self.initial_value = initial_value
+        self._value = initial_value
+        self.normalization = normalization
+
+    @property
+    def description(self):
+        return 'Human: Keyboard'
+
+    @property
+    def value(self):
+        return self._value
+
+    def reset(self):
+        self._value = self.initial_value
+
+    def update(self, player):
+        keys = self.source.get_pressed()
+        out = 0
+        if keys[self.key_left]:
+            out = -1
+        if keys[self.key_right]:
+            out = 1
+
+        if self.key_intensity is not None:
+            if keys[self.key_intensity]:
+                out *= 0.5
+
+        self._value = self.normalization(out)
+        return self._value
+
+
+
 class InputPool:
     def __init__(self):
         joystick = None
@@ -192,9 +233,10 @@ class InputPool:
         self.inputs: dict[str, gb.BaseInput] = dict()
         if joystick is not None:
             self.inputs['joystick'] = gb.Joystick(joystick, channel=2, dead_zone=0.3)
+        self.inputs['keyboard'] = gb.Keyboard(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
         self.inputs['linear'] = gb.LinearController()
-        self.inputs['none_1'] = gb.NoneInput()
-        self.inputs['none_2'] = gb.NoneInput()
+        self.inputs['none'] = gb.NoneInput()
+        # self.inputs['none_2'] = gb.NoneInput()
 
     def get(self, owner_name: str, input_key:str=None):
         if input_key is None:

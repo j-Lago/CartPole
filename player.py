@@ -128,8 +128,8 @@ class Cart:
     def feedback(self):
         if self.alive:
             if isinstance(self.input, gb.Joystick):
-                l = self.model.linear_acceleration / 120
-                r = -self.model.linear_acceleration / 120
+                l = self.model.linear_acceleration / 30
+                r = -self.model.linear_acceleration / 30
 
                 self.input.source.rumble(l * .05, r, 100)
 
