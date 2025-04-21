@@ -91,8 +91,8 @@ class Cart:
         self.spark_density = 100
         self.spark_particle_size = 1, 2
 
-        self.point_particles = gb.Particles(100)
-        self.text_particles = gb.Particles(6)
+        self.point_particles = None
+        self.text_particles = None
 
     def reset(self):
         self.cart_on_target = False
@@ -104,6 +104,9 @@ class Cart:
         self.reward = 0
         self.perturbation = 0
         self.ticks_since_perturbation = 0
+        self.alive = True
+        self.point_particles = gb.Particles(100)
+        self.text_particles = gb.Particles(6)
         self.model.reset()
 
     def collect_score(self, max_collect: int = None):
