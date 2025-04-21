@@ -90,9 +90,8 @@ class Button():
         self.draw()
 
     def callback(self):
-        print('mouse left')
         if self.custom_callback is not None:
-            self.custom_callback()
+            self.custom_callback(self)
 
     def focus(self, point: gb.Vector2 | tuple[float, float]):
         if self.custom_focus is not None:

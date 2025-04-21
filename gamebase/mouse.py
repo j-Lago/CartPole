@@ -90,7 +90,7 @@ class Mouse:
     def pos(self):
         return Vector2(pygame.mouse.get_pos())
 
-    def process_event(self, event, keys):
+    def handle_event(self, event, keys):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 self.left.press(event.pos, keys)

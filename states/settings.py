@@ -8,7 +8,20 @@ class Settings(st.GameState):
         super().__init__(game)
         self.previous_state = None
         # self.menu = gb.PopUp(main_canvas=self.game.active_canvas, size=(200, 150), bg_color=(200,180,90), fonts=self.game.fonts, draw_fun=draw_settings, got_focus_callback=None)
-        self.menu = gb.Button(self.game.active_canvas, (0.4, 0.4, .6, .4), 'Teste', font=self.game.fonts['normal'])
+
+        self.buttons = dict()
+        y, h, py = 0.8, 0.18, .02
+        x, w = -0.4, 0.6
+        for key, input_ in self.game.inputs.items():
+            self.buttons[key] = gb.Button(self.game.active_canvas, (x, y, w, h), key, font=self.game.fonts['normal'], custom_callback=self.select_bt, selected=input_ is self.game.players['p1'].input)
+            y -= h + py
+
+        # self.buttons = {
+        #     'label': gb.Button(self.game.active_canvas, (0.0, 0.8, .36, .58), 'P1', font=self.game.fonts['big'], selectable=False),
+        #     'bt1': gb.Button(self.game.active_canvas, (0.4, 0.4, .6, .18), 'Button 1', font=self.game.fonts['normal'], custom_callback=self.select_bt),
+        #     'bt2': gb.Button(self.game.active_canvas, (0.4, 0.6, .6, .18), 'Button 2', font=self.game.fonts['normal'], custom_callback=self.select_bt),
+        #     'bt3': gb.Button(self.game.active_canvas, (0.4, 0.8, .6, .18), 'Button 3', font=self.game.fonts['normal'], custom_callback=self.select_bt),
+        # }
 
     def __str__(self):
         return 'Settings'
@@ -32,11 +45,13 @@ class Settings(st.GameState):
         canvas.draw_text((200, 200, 180), self.game.fonts['huge'], f'SETTINGS', (0, 0))
         canvas.draw_text((200, 200, 180), self.game.fonts['medium'], f'Press ENTER to confirm new settings or ESC to resume', (0, -.2))
 
-        self.menu.update(self.game)
-        # self.menu.focus(self.game.mouse_world_pos)
-        # self.menu.draw()
+
+        for key, button in self.buttons.items():
+            button.update(self.game)
+
+    def select_bt(self, pressed_button: gb.Button):
+        for key, button in self.buttons.items():
+            button.selected =  button is pressed_button
+            self.game.players['p1'].input = self.game.inputs[key]
 
 
-# def draw_settings(canvas: gb.Canvas):
-    # canvas.fill((255,255,255))
-    # canvas.draw_text((255, 255, 0), canvas.fonts['normal'], 'teste', (-0, 0))

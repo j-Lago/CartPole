@@ -151,7 +151,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         while True:
             for event in pygame.event.get():
                 keys = pygame.key.get_pressed()
-                self.mouse.process_event(event, keys)
+                self.mouse.handle_event(event, keys)
 
                 if event.type == pygame.QUIT:
                     pygame.quit()
