@@ -51,7 +51,8 @@ class Settings(st.GameState):
 
     def select_bt(self, pressed_button: gb.Button):
         for key, button in self.buttons.items():
-            button.selected =  button is pressed_button
-            self.game.players['p1'].input = self.game.inputs[key]
+            button.selected = button == pressed_button
+            if button.selected:
+                self.game.players['p1'].input = self.game.inputs[key]
 
 

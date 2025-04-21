@@ -104,6 +104,7 @@ class Cart:
         self.reward = 0
         self.perturbation = 0
         self.ticks_since_perturbation = 0
+        self.model.reset()
 
     def collect_score(self, max_collect: int = None):
         x = min(self.uncollected_score, max_collect) if max_collect is not None else self.uncollected_score
@@ -374,19 +375,18 @@ class Cart:
         self.pole_on_target = pole_on_target
         self.both_on_target = pole_on_target and cart_on_target
 
-        if not self.game.paused:
-            self.steps_with_pole_on_target = self.steps_with_pole_on_target + 1 if self.pole_on_target else 0
-            self.steps_with_both_on_target = self.steps_with_both_on_target + 1 if self.both_on_target else 0
+        self.steps_with_pole_on_target = self.steps_with_pole_on_target + 1 if self.pole_on_target else 0
+        self.steps_with_both_on_target = self.steps_with_both_on_target + 1 if self.both_on_target else 0
 
-            self.reward = 0
-            if self.steps_with_pole_on_target > self.time_pole_on_target_short:
-                self.reward += self.reward_pole_on_target_short if self.steps_with_pole_on_target < self.time_pole_on_target_long else self.reward_pole_on_target_long
+        self.reward = 0
+        if self.steps_with_pole_on_target > self.time_pole_on_target_short:
+            self.reward += self.reward_pole_on_target_short if self.steps_with_pole_on_target < self.time_pole_on_target_long else self.reward_pole_on_target_long
 
-            if self.steps_with_both_on_target > self.time_cart_on_target_short:
-                self.reward += self.reward_cart_on_target_short if self.steps_with_both_on_target < self.time_cart_on_target_long else self.reward_cart_on_target_long
-            # self.ticks += 1
-        else:
-            self.reward = 0
+        if self.steps_with_both_on_target > self.time_cart_on_target_short:
+            self.reward += self.reward_cart_on_target_short if self.steps_with_both_on_target < self.time_cart_on_target_long else self.reward_cart_on_target_long
+        # self.ticks += 1
+        # else:
+        #     self.reward = 0
             # self.ticks_since_death += 1
 
         self.reward = int(self.reward * 60 / self.game.clock.fps)

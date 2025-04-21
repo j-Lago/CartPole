@@ -93,8 +93,15 @@ class CartPoleGame(gb.BaseScreen):
                               size=(320, 180),
                               maxlen=400, visible=True),
         }
-        self.paused = False
-        self.players = None
+
+        th0 = uniform(-1, 1) * 0.0
+        self.players = {
+            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],
+                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'],
+                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
+        }
+
         self.chash_xoffset = None
         self.perturbation = 0.0
 
@@ -123,16 +130,7 @@ class CartPoleGame(gb.BaseScreen):
 
     def reset(self):
         self.clock.reset()
-        th0 = uniform(-1, 1) * 0.0
-        self.players = {
-            'p1': Cart('P1', self, self.inputs['p1'], Vector2(-0.8, 0.35), base_color=self.cols['p1'],
-                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-            'p2': Cart('P2', self, self.inputs['p2'], Vector2(-0.8, -0.45), base_color=self.cols['p2'],
-                       rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
-        }
-
         self.chash_xoffset = 0.0
-        self.paused = False
         for scope in self.scopes.values():
             scope.clear()
         for player in self.players.values():
