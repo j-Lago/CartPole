@@ -48,6 +48,8 @@ class BaseScreen(metaclass=MetaLoopCall):
             'info': pygame.font.SysFont('Consolas', 22),
             'fps': pygame.font.SysFont('Consolas', 32),
             'fps_small': pygame.font.SysFont('Consolas', 20),
+            'scope_title': pygame.font.SysFont('Consolas', 24),
+            'scope_label': pygame.font.SysFont('Consolas', 18),
             'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.2571)),
             'small': pygame.font.SysFont(font_family, round(font_base_size*.342835)),
             'medium': pygame.font.SysFont(font_family, round(font_base_size*.42857)),

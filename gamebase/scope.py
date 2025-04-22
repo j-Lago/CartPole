@@ -121,13 +121,13 @@ class Scope(gb.PopUp):
                     canvas.draw_lines(color_line, False, seq, self.border_width)
                     # canvas.draw_circle(color_line, seq[-1], .045)
 
-        canvas.draw_text(color=color, font=self.main_canvas.fonts['small'], text=self.title, pos=(0, ymax), shift=(0, -0.05), anchor='midtop')
+        canvas.draw_text(color=color, font=self.main_canvas.fonts['scope_title'], text=self.title, pos=(0, ymax), shift=(0, -0.05), anchor='midtop')
         y_pad = .06
         x_pad = .06
         if self._legends is not None and self.line_colors is not None:
             for i, leg in enumerate(reversed(self._legends)):
                 # _, _, _, h = canvas.draw_text(color=self.line_colors[i], font=self.main_canvas.fonts['tiny'], text=self._legends[i], pos=Vector2(0, -2)+canvas.screen_to_world_v2((x_pad, -y_pad)), anchor='bottomleft')
-                _, _, _, h = canvas.draw_text(color=self.line_colors[i], font=self.main_canvas.fonts['tiny'],
+                _, _, _, h = canvas.draw_text(color=self.line_colors[i], font=self.main_canvas.fonts['scope_label'],
                                               text=self._legends[i],
                                               pos=Vector2(xmin, ymin) + (x_pad, y_pad),
                                               anchor='bottomleft')
