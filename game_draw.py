@@ -94,6 +94,9 @@ def draw(state: st.GameState, intro=False):
                      canvas.topleft + (0.11, -0.09),
                      anchor='midtop')
 
+    col = ((255,0,0), (0,255,0), (0,0,255))[game.clock.ticks % 2]
+    canvas.draw_circle(col, (-1.55, .946), .02)
+
 
     def another_in_focus(self_key):
         for ikey, iscope in game.scopes.items():
