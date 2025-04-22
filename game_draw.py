@@ -86,24 +86,6 @@ def draw(state: st.GameState, intro=False):
         'times': (game.last_active_frame_time * game.clock.fps - 1, total_frame_time * game.clock.fps - 1),
     }
 
-    # fps
-    # col = game.cols['info']
-    col = ((255,30, 30), (30,255, 30))[game.clock.ticks % 2]
-    # canvas.draw_circle(col, (-1.55, .946), .02)
-
-    canvas.draw_text(col, game.fonts['fps'],
-                     f'{game.mm_fps.value:.1f}',
-                     canvas.topleft + (0.11, -0.02),
-                     anchor='midtop')
-
-    canvas.draw_text(col, game.fonts['small'],
-                     f'({game.mm_frame_time.value * game.clock.fps * 100.0:.1f}%)',
-                     canvas.topleft + (0.11, -0.09),
-                     anchor='midtop')
-
-    # col = ((255,0,0), (0,255,0), (0,0,255))[game.clock.ticks % 2]
-    # canvas.draw_circle(col, (-1.55, .946), .02)
-
 
     def another_in_focus(self_key):
         for ikey, iscope in game.scopes.items():
@@ -118,5 +100,4 @@ def draw(state: st.GameState, intro=False):
         scope.blit_to_main()
 
     #
-    if game.all_dead():
-        state.change_state(st.GameOver(state.game))
+

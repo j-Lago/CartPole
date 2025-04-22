@@ -81,6 +81,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.last_active_canvas_key = None
 
         self.info_position = (30, 30)
+        self.show_fps = True
         self.mouse = gb.Mouse()
 
         if self.fullscreen:
@@ -96,7 +97,8 @@ class BaseScreen(metaclass=MetaLoopCall):
             f' F1: help',
             f'F12: toggle info',
             f'F11: fullsceen/windowned',
-            f'F10: toggle antialiasing',
+            f'F10: toggle fps',
+            f' F9: toggle antialiasing',
         ]
         self.help_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250),
                                        color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
@@ -166,10 +168,12 @@ class BaseScreen(metaclass=MetaLoopCall):
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F1:
                         self.help_popup.visible = not self.help_popup.visible
-                    if event.key == pygame.K_F10:
+                    if event.key == pygame.K_F9:
                         self.antialiasing = not self.antialiasing
                     elif event.key == pygame.K_F12:
                         self.info_popup.visible = not self.info_popup.visible
+                    elif event.key == pygame.K_F10:
+                        self.show_fps = not self.show_fps
                     elif event.key == pygame.K_F11:
                         self.fullscreen = not self.fullscreen
                         if self.fullscreen:
@@ -250,6 +254,22 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self.mm_fps.append(self.real_fps)
         self.mm_frame_time.append(self.last_active_frame_time)
+
+        # fps
+        if self.show_fps:
+            # col = game.cols['info']
+            col = ((255,30, 30), (30,255, 30))[self.clock.ticks % 2]
+            # canvas.draw_circle(col, (-1.55, .946), .02)
+
+            self.window.draw_text(col, self.fonts['fps'],
+                             f'{self.mm_fps.value:.1f}',
+                             self.window.topleft + (50, -10),
+                             anchor='midtop')
+
+            self.window.draw_text(col, self.fonts['small'],
+                             f'({self.mm_frame_time.value * self.clock.fps * 100.0:.1f}%)',
+                             self.window.topleft + (50, -45),
+                             anchor='midtop')
 
         pygame.display.flip()
 

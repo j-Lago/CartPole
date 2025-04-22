@@ -41,3 +41,6 @@ class Running(st.GameState):
         simulate(self)
         feedback(self)
         draw(self)
+
+        if self.game.all_dead():
+            self.change_state(st.GameOver(self.game))
