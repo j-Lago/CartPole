@@ -84,7 +84,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.active_canvas_key = None
         self.last_active_canvas_key = None
 
-        self.info_position = (30, 30)
+        # self.info_position = (30, 30)
         self.show_fps = True
         self.mouse = gb.Mouse()
         self.vsync = vsync
@@ -228,9 +228,11 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self.info_popup.main_canvas = self.window
         self.help_popup.main_canvas = self.window
+
+        self.info_popup.pos = self.window.screen_to_world_v2((10, 20 + (45 if self.show_fps else 0)))
         if self.info_popup.visible:
             rect = self.info_popup.surface.get_rect()
-            self.help_popup.pos = self.window.screen_to_world_v2((10, 20+rect[3]))
+            self.help_popup.pos = self.window.screen_to_world_v2((10, rect[3]+ 25 + (45 if self.show_fps else 0)))
             self.info_popup.text = [
                 # f'╭───╮',
                 # f'│F12│ to hide info',
@@ -248,7 +250,7 @@ class BaseScreen(metaclass=MetaLoopCall):
                 f'canvas_relative_scale: {self.active_canvas.relative_scale:.2f}',
                 ] + self.extra_info
         else:
-            self.help_popup.pos = self.window.screen_to_world_v2((10, 10))
+            self.help_popup.pos = self.window.screen_to_world_v2((10, 20 + (45 if self.show_fps else 0)))
 
         if self.help_popup.visible:
             self.help_popup.text = self.base_help + self.extra_help
