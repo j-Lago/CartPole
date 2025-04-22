@@ -3,14 +3,10 @@ from __future__ import annotations
 
 import cartpole
 import gamebase as gb
-import pygame
-from pygame import Vector2
 import math
-from pathlib import Path
 from random import random, uniform, randint, choice, choices
-from player import Cart
-from bindings import *
 import states as st
+
 
 def simulate(state: st.GameState):
     game: cartpole.CartPoleGame = state.game

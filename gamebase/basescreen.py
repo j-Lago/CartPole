@@ -6,8 +6,8 @@ from pygame import Vector2
 from pathlib import Path
 
 
-import os
-os.environ['SDL_HINT_RENDER_VSYNC'] = '1'
+# import os
+# os.environ['SDL_HINT_RENDER_VSYNC'] = '1'
 
 
 class MetaLoopCall(type):
@@ -28,7 +28,8 @@ class BaseScreen(metaclass=MetaLoopCall):
                  fullscreen: bool = False,
                  font_family: str = 'Consolas',
                  font_base_size: int = 70,
-                 flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF
+                 flags: int = pygame.RESIZABLE | pygame.HWSURFACE | pygame.DOUBLEBUF,
+                 vsync: bool = True
                  ):
 
         try:
@@ -45,7 +46,8 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         self.fonts = {
             'info': pygame.font.SysFont('Consolas', 22),
-            'fps': pygame.font.SysFont('Consolas', 38),
+            'fps': pygame.font.SysFont('Consolas', 32),
+            'fps_small': pygame.font.SysFont('Consolas', 20),
             'tiny': pygame.font.SysFont(font_family, round(font_base_size*0.2571)),
             'small': pygame.font.SysFont(font_family, round(font_base_size*.342835)),
             'medium': pygame.font.SysFont(font_family, round(font_base_size*.42857)),
@@ -83,11 +85,12 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.info_position = (30, 30)
         self.show_fps = True
         self.mouse = gb.Mouse()
+        self.vsync = vsync
 
         if self.fullscreen:
-            self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
+            self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN, vsync=self.vsync))
         else:
-            self.window = gb.Canvas(surface=pygame.display.set_mode(window_size, self._flags))
+            self.window = gb.Canvas(surface=pygame.display.set_mode(window_size, self._flags, vsync=self.vsync))
 
         self.extra_info = []
         self.info_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10),
@@ -95,10 +98,10 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.extra_help = []
         self.base_help = [
             f' F1: help',
-            f'F12: toggle info',
-            f'F11: fullsceen/windowned',
-            f'F10: toggle fps',
-            f' F9: toggle antialiasing',
+            f'F12: info',
+            f'F11: fullsceen',
+            f'F10: fps',
+            f' F9: antialiasing',
         ]
         self.help_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250),
                                        color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
@@ -163,7 +166,7 @@ class BaseScreen(metaclass=MetaLoopCall):
                     pygame.quit()
                     sys.exit()
                 elif event.type == pygame.VIDEORESIZE:
-                    screen = pygame.display.set_mode(event.size, self._flags)
+                    screen = pygame.display.set_mode(event.size, self._flags, vsync=self.vsync)
                     self.window_size = screen.get_size()
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F1:
@@ -181,9 +184,9 @@ class BaseScreen(metaclass=MetaLoopCall):
                             pygame.display.quit()
                             pygame.display.init()
                             pygame.mouse.set_visible(_mouse_visibility)
-                            self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN))
+                            self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN, vsync=self.vsync))
                         else:
-                            self.window = gb.Canvas(surface=pygame.display.set_mode(self.window_size, self._flags))
+                            self.window = gb.Canvas(surface=pygame.display.set_mode(self.window_size, self._flags, vsync=self.vsync))
                     elif event.key == pygame.K_a:
                         self.antialiasing = not self.antialiasing
 
@@ -266,9 +269,9 @@ class BaseScreen(metaclass=MetaLoopCall):
                              self.window.topleft + (50, -10),
                              anchor='midtop')
 
-            self.window.draw_text(col, self.fonts['small'],
+            self.window.draw_text(col, self.fonts['fps_small'],
                              f'({self.mm_frame_time.value * self.clock.fps * 100.0:.1f}%)',
-                             self.window.topleft + (50, -45),
+                             self.window.topleft + (50, -40),
                              anchor='midtop')
 
         pygame.display.flip()
