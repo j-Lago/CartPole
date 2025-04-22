@@ -39,6 +39,8 @@ class BaseScreen(metaclass=MetaLoopCall):
         finally:
             pygame.init()
 
+        self.pygame_clock = pygame.time.Clock()
+
         self.cols = {
             'bg': (30, 30, 30),
             'info': (255, 128, 128),
@@ -93,6 +95,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             self.window = gb.Canvas(surface=pygame.display.set_mode((0, 0), pygame.FULLSCREEN, vsync=self.vsync))
         else:
             self.window = gb.Canvas(surface=pygame.display.set_mode(window_size, self._flags, vsync=self.vsync))
+
 
         self.extra_info = []
         self.info_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10),
@@ -279,18 +282,18 @@ class BaseScreen(metaclass=MetaLoopCall):
                              anchor='midtop')
 
         pygame.display.flip()
+        self.fps_control()
 
+    def fps_control(self):
         self.clock.update()
-        # self.active_canvas.ticks += 1
+
+        # self.real_fps = self.pygame_clock.get_fps()
+        # self.pygame_clock.tick(self.clock.fps)  # parece impreciso
 
         ideal_period = 1/self.clock.fps
         self.last_active_frame_time = (time.perf_counter() - self.last_time)
-
-        # self.real_fps = self.clock.get_fps()
-        # self.clock.tick(self.fps)  # parece impreciso
         time.sleep(max(0.0, ideal_period - self.last_active_frame_time + self.mm_sleep_compensation.value))
         real_period = (time.perf_counter() - self.last_time)
-        # self.mm_sleep_compensation.append(0)
         self.mm_sleep_compensation.append(ideal_period-real_period)
         self.real_fps = 1/real_period
         self.last_time = time.perf_counter()
