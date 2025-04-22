@@ -93,6 +93,10 @@ class Canvas:
     def draw_circle(self, color: Color | tuple[int, int, int] | Vector3, center: Vector2 | tuple[float, float], radius: float, width: int = 0, draw_top_right: bool = False, draw_top_left: bool = False, draw_bottom_left: bool = False, draw_bottom_right: bool = False):
         return pygame.draw.circle(self.surface, color, self.world_to_screen_v2(center), self.world_to_screen_f(radius), width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)
 
+    def draw_arc(self, color: Color | tuple[int, int, int] | Vector3, rect: fRect | tuple[float, float, float, float], start_angle: float, stop_angle: float, width: int = 1):
+        return pygame.draw.arc(self.surface, color, self.world_to_screen_rect(rect), start_angle, stop_angle, width)
+
+
     def draw_sparkly_line(self, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], color1: Color | tuple[int, int, int] | Vector3 = None, color2: Color | tuple[int, int, int] | Vector3 = None, width: int = 1, density: float = 100, mu: float = 0.0, sigma: float = 1.0, both_sides:bool=True, particle_size: int | tuple[int, int]=1):
 
         if color1 is None and color2 is None:

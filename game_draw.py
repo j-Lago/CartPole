@@ -69,6 +69,9 @@ def draw(state: st.GameState, intro=False):
     canvas.draw_text(game.cols['timer'], game.fonts['tiny'], game.best_score_device, (canvas.xmin + 0.06, -0.13),
                      anchor='midleft')
 
+
+
+
     # scope
     x = game.t
     total_frame_time = 1 / game.real_fps if game.real_fps != 0 else 0
@@ -84,18 +87,22 @@ def draw(state: st.GameState, intro=False):
     }
 
     # fps
-    canvas.draw_text(game.cols['info'], game.fonts['fps'],
+    # col = game.cols['info']
+    col = ((255,30, 30), (30,255, 30))[game.clock.ticks % 2]
+    # canvas.draw_circle(col, (-1.55, .946), .02)
+
+    canvas.draw_text(col, game.fonts['fps'],
                      f'{game.mm_fps.value:.1f}',
                      canvas.topleft + (0.11, -0.02),
                      anchor='midtop')
 
-    canvas.draw_text(game.cols['info'], game.fonts['small'],
+    canvas.draw_text(col, game.fonts['small'],
                      f'({game.mm_frame_time.value * game.clock.fps * 100.0:.1f}%)',
                      canvas.topleft + (0.11, -0.09),
                      anchor='midtop')
 
-    col = ((255,0,0), (0,255,0), (0,0,255))[game.clock.ticks % 2]
-    canvas.draw_circle(col, (-1.55, .946), .02)
+    # col = ((255,0,0), (0,255,0), (0,0,255))[game.clock.ticks % 2]
+    # canvas.draw_circle(col, (-1.55, .946), .02)
 
 
     def another_in_focus(self_key):

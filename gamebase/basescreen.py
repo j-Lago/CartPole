@@ -5,8 +5,9 @@ import sys
 from pygame import Vector2
 from pathlib import Path
 
+
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+os.environ['SDL_HINT_RENDER_VSYNC'] = '1'
 
 
 class MetaLoopCall(type):
@@ -262,6 +263,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         # self.clock.tick(self.fps)  # parece impreciso
         time.sleep(max(0.0, ideal_period - self.last_active_frame_time + self.mm_sleep_compensation.value))
         real_period = (time.perf_counter() - self.last_time)
+        # self.mm_sleep_compensation.append(0)
         self.mm_sleep_compensation.append(ideal_period-real_period)
         self.real_fps = 1/real_period
         self.last_time = time.perf_counter()
