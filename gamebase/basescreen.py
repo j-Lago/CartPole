@@ -158,8 +158,13 @@ class BaseScreen(metaclass=MetaLoopCall):
 
     @property
     def mouse_world_pos(self) -> Vector2:
-        canvas = self.active_canvas
+        canvas: gb.Canvas = self.active_canvas
         return canvas.screen_to_world_v2(gb.remap(self.mouse.pos, self.window, canvas))
+
+    @mouse_world_pos.setter
+    def mouse_world_pos(self, pos: Vector2):
+        screen_pos = gb.remap(self.active_canvas.world_to_screen_v2(pos), self.active_canvas, self.window)
+        pygame.mouse.set_pos(screen_pos)
 
     def loop(self):
         while True:
