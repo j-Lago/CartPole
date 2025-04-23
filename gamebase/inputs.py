@@ -231,10 +231,10 @@ class InputPool:
 
         # self.input = Joystick(joystick, 2, normalization=lambda x: x)
         self.inputs: dict[str, gb.BaseInput] = dict()
-        if joystick is not None:
-            self.inputs['joystick'] = gb.Joystick(joystick, channel=2, dead_zone=0.3)
-        self.inputs['keyboard'] = gb.Keyboard(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
         self.inputs['linear'] = gb.LinearController()
+        if joystick is not None:
+            self.inputs['joystick'] = gb.Joystick(joystick, channel=2, dead_zone=0.03)
+        self.inputs['keyboard'] = gb.Keyboard(source=pygame.key, key_left=pygame.K_LEFT, key_right=pygame.K_RIGHT, key_intensity=pygame.K_RALT)
         self.inputs['none'] = gb.NoneInput()
         self.inputs['ia dummy'] = gb.NoneInput()
         self.inputs['joy2 dummy'] = gb.NoneInput()
