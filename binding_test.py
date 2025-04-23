@@ -1,5 +1,7 @@
 import pygame
 from dataclasses import dataclass
+
+
 from pygame.constants import *
 
 J_CROSS = 0
@@ -17,10 +19,6 @@ J_RIGHT = 14
 J_UP = 11
 J_DOWN = 12
 
-
-END_OF_INTRO = pygame.USEREVENT + 1
-TIMEOUT = pygame.USEREVENT + 2
-BEEP_TIMER = pygame.USEREVENT + 3
 
 
 @dataclass

@@ -8,13 +8,14 @@ from player import Cart
 import states as st
 from bindings import *
 from game_draw import draw, simulate, feedback
+from user_event import UserEvent
 
 
 class Running(st.GameState):
     def __init__(self, game):
         super().__init__(game)
         self.game.reset()
-        self.timer_id = self.game.clock.start_timer(pygame.event.Event(TIMEOUT), period_seconds=self.game.game_duration)
+        self.timer_id = self.game.clock.start_timer(pygame.event.Event(UserEvent.GAME_TIMEOUT), period_seconds=self.game.game_duration)
 
     def __str__(self):
         return 'Running'
@@ -28,10 +29,10 @@ class Running(st.GameState):
         self.game.previous_state_screenshot = self.game.active_canvas.copy()
 
     def handle_event(self, event: pygame.event):
-        if bind_test(event, TOGGLE_PAUSE):
-            self.change_state(st.Paused(self.game))
-        elif event.type == TIMEOUT:
+        if event.type == UserEvent.GAME_TIMEOUT:
             self.change_state(st.Timeout(self.game))
+        elif bind_test(event, TOGGLE_PAUSE):
+            self.change_state(st.Paused(self.game))
         elif bind_test(event, RESTART):
             self.change_state(st.Intro(self.game))
         elif bind_test(event, SETTINGS):
