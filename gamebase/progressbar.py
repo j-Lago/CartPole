@@ -6,7 +6,7 @@ import random
 class ProgressBar:
     def __init__(self,
                  canvas: gb.Canvas,
-                 rect: gb.fRect | tuple[float, float, float, float],
+                 rect: gb.Rect_f | tuple[float, float, float, float],
                  min_value: float = 0.0,
                  max_value: float = 1.0,
                  initial_value: float = 0.5,
@@ -25,8 +25,8 @@ class ProgressBar:
                  ):
         self.fps = fps
         self.canvas = canvas
-        if not isinstance(rect, gb.fRect):
-            rect = gb.fRect(rect)
+        if not isinstance(rect, gb.Rect_f):
+            rect = gb.Rect_f(rect)
         self.rect = rect
         self.min_value = min_value
         self.max_value = max_value

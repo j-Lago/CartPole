@@ -1,7 +1,5 @@
 import math
-
 import pygame
-# from canvas import Canvas
 import colorsys
 from typing import Sequence, Self
 from pygame import Vector2
@@ -11,30 +9,6 @@ Vec2 = tuple[float, float] | pygame.Vector2
 Vec3 = tuple[float, float, float] | pygame.Vector2
 Vec4 = tuple[float, float, float, float]
 Point = Vec2
-Points = tuple[Point, ...] | Sequence
-
-
-def points_from_rect(rect=Vec4) -> Points:
-    x0, y0, w, h = rect
-    return (x0 + w, y0), (x0 + w, y0 - h), (x0, y0 - h), (x0, y0)
-
-
-def perpendicular_normal(vec: Vec2) -> (Vec2, Vec2):
-    if not isinstance(vec, Vector2):
-        vec = Vector2(vec)
-    vec = vec.normalize()
-    return Vector2(-vec[1], vec[0]), vec
-
-
-def outer_rect(points: Points) -> Vec4:
-    min_x, max_x = float('inf'), float('-inf')
-    min_y, max_y = float('inf'), float('-inf')
-    for p in points:
-        min_x = min(min_x, p[0])
-        max_x = max(max_x, p[0])
-        min_y = min(min_y, p[1])
-        max_y = max(max_y, p[1])
-    return min_x, max_y, max_x - min_x, max_y - min_y
 
 
 def rotate_around_v2(vec: Vec2, angle: float, center: Vec2 = (0.0, 0.0)):
@@ -50,8 +24,9 @@ def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle:
 def translate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], shift: Vector2) -> Sequence:
     return tuple( (vec[0]+shift[0], vec[1]+shift[1]) for vec in vecs)
 
-def collision_point_rect(point: Vec2, rect: Vec4) -> bool:
-    return rect[0] < point[0] < rect[0] + rect[2] and rect[1] > point[1] > rect[1] - rect[3]
+# deprecated
+# def collision_point_rect(point: Vec2, rect: Vec4) -> bool:
+#     return rect[0] < point[0] < rect[0] + rect[2] and rect[1] > point[1] > rect[1] - rect[3]
 
 
 class ColorsDiscIterator:
@@ -129,7 +104,7 @@ class RotateMatrix(Mat2x2):
         self.angle_rad = value / 180 * math.pi
 
 
-class fRect:
+class Rect_f:
     def __init__(self, *args):
         if len(args) == 4:
             self.x, self.y, self.w, self.h = args
@@ -218,10 +193,10 @@ class fRect:
         self.x, self.y = point[0], point[1]+self.h
 
     def __add__(self, vec2: Vec2):
-        return fRect(self.x + vec2[0], self.y + vec2[1], self.w, self.h)
+        return Rect_f(self.x + vec2[0], self.y + vec2[1], self.w, self.h)
 
     def __sub__(self, vec2: Vec2):
-        return fRect(self.x - vec2[0], self.y - vec2[1], self.w, self.h)
+        return Rect_f(self.x - vec2[0], self.y - vec2[1], self.w, self.h)
 
     def __format__(self, format_spec):
         return f'fRect[{self.x:{format_spec}}, {self.y:{format_spec}}, {self.w:{format_spec}}, {self.h:{format_spec}}]'
@@ -229,8 +204,11 @@ class fRect:
     def __str__(self):
         return f'fRect[{self.x}, {self.y}, {self.w}, {self.h}]'
 
+    def point_collision(self, point: Vector2 | tuple[float, float]):
+        return self.x < point[0] < self.x+self.w and self.y > point[1] > self.y+self.h
 
-class fPoints:
+
+class Points:
     def __init__(self, *points_seq):
         if len(points_seq) == 1:
             points_seq = tuple(*points_seq)
@@ -248,22 +226,54 @@ class fPoints:
         return self._points[item]
 
     def rotate(self, angle: float, center: Vector2 | tuple[float, float]) -> Self:
-        return fPoints(rotate_around_v2(p, angle, center) for p in self._points)
+        return Points(rotate_around_v2(p, angle, center) for p in self._points)
 
     def translate(self, offset: Vector2 | tuple[float, float]) -> Self:
-        return fPoints(p+offset for p in self._points)
+        return Points(p + offset for p in self._points)
 
     def scale(self, scale: float | tuple[float, float] | Vector2, anchor: float | tuple[float, float] | Vector2 = (0, 0)) -> Self:
         if isinstance(scale, float | int):
             scale = (scale, scale)
-        return fPoints(((x - anchor[0]) * scale[0] + anchor[0], (y - anchor[1]) * scale[1] + anchor[1]) for x,y in self._points)
+        return Points(((x - anchor[0]) * scale[0] + anchor[0], (y - anchor[1]) * scale[1] + anchor[1]) for x,y in self._points)
 
-    def rect(self) -> fRect:
-        return fRect(outer_rect(self._points))
+    def rect(self) -> Rect_f:
+        return Rect_f(outer_rect(self._points))
+
+    def pairs_iter(self):
+        for start, end in zip(self, self[1:] + (self[0],)):
+            yield Vector2(start), Vector2(end)
+
+    def concat(self, other: Self) -> Self:
+        if isinstance(other, Points):
+            return Points(self._points + other._points)
+        return Points(self._points + other)
+
+
+def points_from_rect(rect=Vec4) -> Points:
+    x0, y0, w, h = rect
+    return Points( (x0 + w, y0), (x0 + w, y0 - h), (x0, y0 - h), (x0, y0) )
+
+
+def perpendicular_normal(vec: Vector2 | tuple[float, float]) -> (Vector2, Vector2):
+    if not isinstance(vec, Vector2):
+        vec = Vector2(vec)
+    vec = vec.normalize()
+    return Vector2(-vec[1], vec[0]), vec
+
+
+def outer_rect(points: Points) -> Vec4:
+    min_x, max_x = float('inf'), float('-inf')
+    min_y, max_y = float('inf'), float('-inf')
+    for p in points:
+        min_x = min(min_x, p[0])
+        max_x = max(max_x, p[0])
+        min_y = min(min_y, p[1])
+        max_y = max(max_y, p[1])
+    return min_x, max_y, max_x - min_x, max_y - min_y
 
 
 if __name__ == '__main__':
-    r = fRect(0.0, 0.0, 2.0, 1.0)
+    r = Rect_f(0.0, 0.0, 2.0, 1.0)
 
     print(f'{r:.2f}')
     print(r)
@@ -275,7 +285,7 @@ if __name__ == '__main__':
     print(r)
 
     r2 = (1,1,3,4)
-    r3 = fRect(r2)
+    r3 = Rect_f(r2)
 
 
 

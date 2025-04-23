@@ -4,7 +4,7 @@ from typing import Sequence, Callable, Self
 from copy import copy
 from random import random, uniform, randint, gauss
 from pygame import Vector2, Vector3, Rect, Color
-from gamebase.utils import fRect, fPoints
+from gamebase.utils import Rect_f, Points
 
 
 class Canvas:
@@ -93,7 +93,7 @@ class Canvas:
     def draw_circle(self, color: Color | tuple[int, int, int] | Vector3, center: Vector2 | tuple[float, float], radius: float, width: int = 0, draw_top_right: bool = False, draw_top_left: bool = False, draw_bottom_left: bool = False, draw_bottom_right: bool = False):
         return pygame.draw.circle(self.surface, color, self.world_to_screen_v2(center), self.world_to_screen_f(radius), width, draw_top_right, draw_top_left, draw_bottom_left, draw_bottom_right)
 
-    def draw_arc(self, color: Color | tuple[int, int, int] | Vector3, rect: fRect | tuple[float, float, float, float], start_angle: float, stop_angle: float, width: int = 1):
+    def draw_arc(self, color: Color | tuple[int, int, int] | Vector3, rect: Rect_f | tuple[float, float, float, float], start_angle: float, stop_angle: float, width: int = 1):
         return pygame.draw.arc(self.surface, color, self.world_to_screen_rect(rect), start_angle, stop_angle, width)
 
 
@@ -138,16 +138,16 @@ class Canvas:
     def draw_aaline(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
         return pygame.draw.aaline(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
-    def draw_lines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: fPoints | Sequence[tuple[float, float]] | Sequence[Vector2], width: int = 1):
+    def draw_lines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Points | Sequence[tuple[float, float]] | Sequence[Vector2], width: int = 1):
         return pygame.draw.lines(self.surface, color, closed, self.world_to_screen_points(points), width)
 
-    def draw_aalines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: fPoints | Sequence[tuple[float, float]], width: int = 1):
+    def draw_aalines(self, color: Color | tuple[int, int, int] | Vector3, closed: bool, points: Points | Sequence[tuple[float, float]], width: int = 1):
         return pygame.draw.aalines(self.surface, color, closed, self.world_to_screen_points(points), width)
 
-    def draw_polygon(self, color: Color | tuple[int, int, int] | Vector3, points: fPoints | Sequence, width: int = 0):
+    def draw_polygon(self, color: Color | tuple[int, int, int] | Vector3, points: Points | Sequence, width: int = 0):
         return pygame.draw.polygon(self.surface, color, self.world_to_screen_points(points), width)
 
-    def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: fRect | Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
+    def draw_rect(self, color: Color | tuple[int, int, int] | Vector3, rect: Rect_f | Rect | tuple[float, float, float, float], width: int = 0, border_radius: int=-1):
         return pygame.draw.rect(self.surface, color, self.world_to_screen_rect(rect), width, border_radius)
 
     def draw_line(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):

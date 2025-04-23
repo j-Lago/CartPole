@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+import datetime
+
 import cartpole
 import gamebase as gb
 import math
@@ -58,11 +60,14 @@ def draw(state: st.GameState, intro=False):
 
 
     # score
-    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.best_score}',
+    canvas.draw_text(game.cols['timer'], game.fonts['normal'], f'{game.best_score.value}',
                      (canvas.xmin + 0.05, 0), anchor='midleft')
     canvas.draw_text(game.cols['timer'], game.fonts['medium'], 'BEST SCORE', (canvas.xmin + 0.06, -0.08),
                      anchor='midleft')
-    canvas.draw_text(game.cols['timer'], game.fonts['tiny'], game.best_score_device, (canvas.xmin + 0.06, -0.13),
+    canvas.draw_text(game.cols['timer'], game.fonts['tiny'], game.best_score.input_device, (canvas.xmin + 0.06, -0.13),
+                     anchor='midleft')
+    if game.best_score.date > datetime.date.min:
+        canvas.draw_text(game.cols['timer'], game.fonts['tiny'], game.best_score.date.isoformat(), (canvas.xmin + 0.06, -0.17),
                      anchor='midleft')
 
 

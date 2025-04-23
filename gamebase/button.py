@@ -5,7 +5,7 @@ from typing import Callable
 class Button():
     def __init__(self,
                  canvas: gb.Canvas,
-                 rect: gb.fRect | tuple[float, float, float, float],
+                 rect: gb.Rect_f | tuple[float, float, float, float],
                  text: str | None = None,
                  font: pygame.font.Font = None,
                  active: bool = True,
@@ -30,8 +30,8 @@ class Button():
                  custom_callback: Callable = None,
                  ):
         self.canvas = canvas
-        if not isinstance(rect, gb.fRect):
-            rect = gb.fRect(rect)
+        if not isinstance(rect, gb.Rect_f):
+            rect = gb.Rect_f(rect)
         self.rect = rect
 
         self.font = font

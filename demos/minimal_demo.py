@@ -11,7 +11,7 @@ class MinimalDemo(gb.BaseScreen):
     def draw_main(self, canvas: gb.Canvas):
         pos = self.mouse_world_pos
 
-        points = gb.fPoints((0, 0), (0.4, 0.2), (0.4, 0.6))
+        points = gb.Points((0, 0), (0.4, 0.2), (0.4, 0.6))
 
         canvas.draw_polygon((255, 255, 255), points, 2)
         canvas.draw_polygon((255, 255, 0), points.translate(pos), 2)

@@ -125,7 +125,7 @@ class Image:
         if not isinstance(dest_pos, Vector2):
             dest_pos = Vector2(dest_pos)
 
-        rect = gb.fRect(self.get_rect())
+        rect = gb.Rect_f(self.get_rect())
         points = gb.points_from_rect(rect - anchor)
         rot_points = gb.RotateMatrix(angle) * points
         ext_rect = gb.outer_rect(rot_points)

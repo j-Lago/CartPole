@@ -1,22 +1,25 @@
+import datetime
+import warnings
+
 import gamebase as gb
 import pygame
 from pygame import Vector2
 import math
 from pathlib import Path
 from random import random, uniform, randint, choice, choices
-from player import Cart
+from player import Cart, Score
 import states as st
 from bindings import *
 from game_draw import draw, simulate
 import json
 from codebase_hash import generate_folder_hash
 
+
 class CartPoleGame(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.game_duration = 45
-        self.info_popup.visible = False
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
@@ -25,6 +28,7 @@ class CartPoleGame(gb.BaseScreen):
         self.hash_ignore_dirs = {'.idea', '.git', 'venv', '__pycache__', 'demos', 'hash'}
         self.version = '0.0.1'
 
+        # mouse callbacks
         self.mouse.left.press_callback = self.left_click
         self.mouse.left.release_callback = self.left_release
         self.mouse.right.press_callback = self.right_click
@@ -32,35 +36,12 @@ class CartPoleGame(gb.BaseScreen):
         self.mouse.scroll.up_callback = self.scroll_up
         self.mouse.scroll.down_callback = self.scroll_down
 
-        self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
-        self.sounds['beeeep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.5)
-        self.sounds['beep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.2)
-        self.sounds['whistle'] = self.load_sound(self.assets_path / 'whistle.wav', volume=0.2)
-        self.sounds['coin'] = self.load_sound(self.assets_path / 'coin.wav', volume=0.1)
-        self.sounds['crash'] = self.load_sound(self.assets_path / 'crash.wav', volume=1.0)
-        self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)
-        self.sounds['jet'].play(loops=-1)
-        # self.images['jet'] = pygame.transform.smoothscale_by(self.load_image(self.assets_path / 'jet.png'), (0.35, 0.3))
-
-        self.force_factor = 18
-
+        self.load_sounds()
+        self.load_colors()
         self.inputs = gb.InputPool()
 
-
-
-        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw)
+        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw, flags=pygame.HWSURFACE)
         self.event_loop_callback = self.handle_user_input_event
-
-        self.cols['focus'] = (255, 255, 0)
-        self.cols['scope'] = (55, 255, 200)
-        self.cols['fps'] = gb.lerp_vec3(self.cols['info'], (0, 0, 0), 0.6)
-        self.cols['p1'] = (90, 140, 190)
-        self.cols['p2'] = (190, 90, 140)
-        self.cols['tiny_collect'] = (235, 230, 180)
-        self.cols['small_collect'] = (220, 200, 60)
-        self.cols['big_collect'] = (200, 140, 240)
-        self.cols['huge_collect'] = (200, 90, 255)
-        self.cols['timer'] = (90, 60, 50)
 
         self.fps_popup = gb.PopUpText(self.active_canvas, alpha=255,
                                       pos=(self.active_canvas.xmin + 0.01, self.active_canvas.ymax - .04),
@@ -103,8 +84,9 @@ class CartPoleGame(gb.BaseScreen):
                        rail_color=(90, 90, 90), th0=th0, death_callback=self.death),
         }
 
-        self.chash_xoffset = None
-        self.perturbation = 0.0
+        self.info_popup.visible = False
+        self.chash_xoffset: float = 0.0
+        self.perturbation: float = 0.0
 
         self.stress_test_particles = gb.Particles(1200)
         self.stress_test_en = False
@@ -121,17 +103,17 @@ class CartPoleGame(gb.BaseScreen):
             f'm_r: disable scope',
         ]
 
-        self.best_score = None
-        self.best_score_device = None
-        self.load_best_score()
+        # self.best_score = None
+        # self.best_score_device = None
+        self.best_score = self.load_best_score()
 
-        self.previous_state_screenshot = None
         self.reset()
         self.state = st.Intro(self)
 
     def reset(self):
         self.clock.reset()
         self.chash_xoffset = 0.0
+        self.perturbation = 0.0
         for scope in self.scopes.values():
             scope.clear()
         for player in self.players.values():
@@ -139,8 +121,27 @@ class CartPoleGame(gb.BaseScreen):
         for input_ in self.inputs.values():
             input_.reset()
 
-        # self.previous_state_screenshot = None
-        # self.state = st.Running(self)
+    def load_sounds(self):
+        self.fonts['reward'] = pygame.font.SysFont('Comic Sans MS', 22)
+        self.sounds['beeeep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.5)
+        self.sounds['beep'] = self.load_sound(self.assets_path / 'beep.wav', volume=0.2)
+        self.sounds['whistle'] = self.load_sound(self.assets_path / 'whistle.wav', volume=0.2)
+        self.sounds['coin'] = self.load_sound(self.assets_path / 'coin.wav', volume=0.1)
+        self.sounds['crash'] = self.load_sound(self.assets_path / 'crash.wav', volume=1.0)
+        self.sounds['jet'] = self.load_sound(self.assets_path / 'jet.wav', volume=0.0)
+        self.sounds['jet'].play(loops=-1)
+
+    def load_colors(self):
+        self.cols['focus'] = (255, 255, 0)
+        self.cols['scope'] = (55, 255, 200)
+        self.cols['fps'] = gb.lerp_vec3(self.cols['info'], (0, 0, 0), 0.6)
+        self.cols['p1'] = (90, 140, 190)
+        self.cols['p2'] = (190, 90, 140)
+        self.cols['tiny_collect'] = (235, 230, 180)
+        self.cols['small_collect'] = (220, 200, 60)
+        self.cols['big_collect'] = (200, 140, 240)
+        self.cols['huge_collect'] = (200, 90, 255)
+        self.cols['timer'] = (90, 60, 50)
 
     def left_release(self, button: gb.MouseButton):
         pass
@@ -198,31 +199,33 @@ class CartPoleGame(gb.BaseScreen):
         self.chash_xoffset = player.v * 500
 
     def load_best_score(self):
+        score = Score(value=0, input_device='', date=datetime.date.min)
         try:
             with open(self.save_file_path, 'r') as save_file:
                 data = json.load(save_file)
             with open(self.hash_file_path, 'r') as hash_file:
                 hash_ = json.load(hash_file)
-            if 'best_score' in data.keys() and 'best_score_device' in data.keys() and 'version' in data.keys() and data['version'] == self.version and hash_['hash'] == generate_folder_hash(self.rel_path, self.hash_ignore_dirs):
-                self.best_score = data['best_score']
-                self.best_score_device = data['best_score_device']
-            else:
-                self.best_score = 0
-                self.best_score_device = None
+            if 'best_score' in data.keys() and 'best_score_device' in data.keys() and 'version' in data.keys() and 'date' in data.keys() and data['version'] == self.version and hash_['hash'] == generate_folder_hash(self.rel_path, self.hash_ignore_dirs):
+                score.value = data['best_score']
+                score.input_device = data['best_score_device']
+                score.date = datetime.date.fromisoformat(data['date'])
+
+
         except FileNotFoundError:
-            self.best_score = 0
-            self.best_score_device = None
+            warnings.warn(f"Não foi possivel carregar o arquivo {self.save_file_path}")
+
+        return score
 
     def save_best_score(self):
         for key, player in self.players.items():
-            if player.score > self.best_score:
-                self.best_score = player.score
-                self.best_score_device = player.input.description
+            if player.score > self.best_score.value:
+                self.best_score.value = player.score
+                self.best_score.input_device = player.input.description
+                self.best_score.date = datetime.date.today()
 
-        save = {'version': '0.0.1', 'best_score': self.best_score, 'best_score_device': self.best_score_device}
+        save = {'version': '0.0.1', 'best_score': self.best_score.value, 'best_score_device': self.best_score.input_device, 'date': self.best_score.date.isoformat()}
         with open(self.save_file_path, 'w') as save_file:
             json.dump(save, save_file)
-
 
         code_hash = generate_folder_hash(self.rel_path, self.hash_ignore_dirs)
         hash_ = {'hash': code_hash}

@@ -1,3 +1,6 @@
+import dataclasses
+import datetime
+
 import gamebase as gb
 import pygame
 from pygame import Vector2
@@ -17,7 +20,7 @@ class Cart:
 
     def __init__(self, name: str, game: gb.BaseScreen, input_device, pos: Vector2 = Vector2(0, 0), th0: float = 0,
                  base_color: tuple[int, int, int] = (180, 180, 180), rail_color: tuple[int, int, int] = (255, 255, 255), bg_color: tuple[int, int, int] = (30, 30, 30),
-                 alive: bool = True, death_callback: Callable = None):
+                 alive: bool = True, death_callback: Callable = None, max_force: float = 18):
 
 
 
@@ -28,6 +31,7 @@ class Cart:
         self.id = Cart.instance_count
         self.collect_every_x_ticks = 10
         self.collect_shift = self.collect_every_x_ticks // 2 if (self.id % 2 == 0) else 0
+        self.force_factor = max_force
 
         self.training_mode = False
 
@@ -82,8 +86,8 @@ class Cart:
             'pole': ((0.015, 0), (0.015, -0.35), (-0.015, -0.35), (-0.015, 0))
         }
 
-        self.base_rect = gb.fRect(0, 0, 0.35, 0.08)
-        self.guardrail_rect = gb.fRect(0, 0, 0.09, 0.18)
+        self.base_rect = gb.Rect_f(0, 0, 0.35, 0.08)
+        self.guardrail_rect = gb.Rect_f(0, 0, 0.09, 0.18)
 
         self.col1 = (255, 255, 0)
         self.col2 = (127, 180, 90)
@@ -152,7 +156,7 @@ class Cart:
         return self.game.clock.fps
 
     def step(self):
-        force = self.input.value * self.game.force_factor if self.fuel > 0 else 0
+        force = self.input.value * self.force_factor if self.fuel > 0 else 0
         if self.alive:
             self.fuel -= self.fuel_consumption_rate * abs(force)
             if self.x - self.base_rect.w / 2 < self.canvas.xmin + self.guardrail_rect.w or self.x + self.base_rect.w / 2 > self.canvas.xmax - self.guardrail_rect.w:
@@ -242,7 +246,7 @@ class Cart:
         self.canvas.draw_circle(cart_col, cart_center, 0.04)
         if cart_on_target:
             cart_points = self.base_rect.points
-            for start, end in zip(cart_points, cart_points[1:] + (cart_points[0],)):
+            for start, end in cart_points.pairs_iter():
                 self.canvas.draw_line(color=self.col1, start_pos=start, end_pos=end)
                 self.canvas.draw_circle(cart_col, cart_center, 0.04)
                 self.canvas.draw_circle(self.col1, cart_center, 0.04, 1, draw_top_right=True, draw_top_left=True)
@@ -265,7 +269,7 @@ class Cart:
             self.canvas.draw_circle(cart_col, wheel_center, wheel_r * .15, 10)
 
         # rail
-        rail_sleeper_rect = gb.fRect(0, 0, 0.03, 0.02)
+        rail_sleeper_rect = gb.Rect_f(0, 0, 0.03, 0.02)
         n_sleepers = 22
         mw = self.canvas.get_rect()[2] / (n_sleepers - 1)
         for i in range(n_sleepers):
@@ -462,3 +466,9 @@ class Cart:
                 self.ticks_since_perturbation = 0
 
 
+@dataclasses.dataclass
+class Score:
+    value: int
+    input_device: str
+    date: datetime.date | None
+    # player_name: str

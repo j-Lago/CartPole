@@ -12,7 +12,8 @@ class PopUp(gb.Canvas):
 
     def collision(self, pos) -> bool:
         _, _, w, h = self.surface.get_rect()
-        return gb.collision_point_rect(pos, (self.pos[0], self.pos[1], w*self.main_canvas.relative_scale/self.main_canvas.scale, h*self.main_canvas.relative_scale/self.main_canvas.scale))
+        rect = gb.Rect_f(self.pos[0], self.pos[1], w * self.main_canvas.relative_scale / self.main_canvas.scale, h * self.main_canvas.relative_scale / self.main_canvas.scale)
+        return rect.point_collision(pos)
 
     def blit_to_main(self):
         dest = self.main_canvas
