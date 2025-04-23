@@ -18,7 +18,7 @@ class Settings(st.GameState):
         y = y0
         x = -0.4
         for key, input_ in self.game.inputs.items():
-            self.buttons_p1[key] = gb.Button(self.game.active_canvas, (x, y, w, h), key,
+            self.buttons_p1[key] = gb.Button(self.game.canvas, (x, y, w, h), key,
                                              font=self.game.fonts['medium'],
                                              custom_callback=self.select_bt_p1,
                                              selected=input_ is self.game.players['p1'].input,
@@ -32,7 +32,7 @@ class Settings(st.GameState):
                                              )
             y -= h + py
         self.buttons_p1_dummy = gb.Button(
-            self.game.active_canvas, (x-w-py, y0, w, h*len(self.game.inputs)+py*(len(self.game.inputs)-1)),
+            self.game.canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
             text='P1', font=self.game.fonts['huge'],
             selectable=False,
             bg_unselectable_color=self.game.players['p1'].base_color,
@@ -44,7 +44,7 @@ class Settings(st.GameState):
         y = y0
         x = -0.4
         for key, input_ in self.game.inputs.items():
-            self.buttons_p2[key] = gb.Button(self.game.active_canvas, (x, y, w, h), key,
+            self.buttons_p2[key] = gb.Button(self.game.canvas, (x, y, w, h), key,
                                              font=self.game.fonts['medium'],
                                              custom_callback=self.select_bt_p2,
                                              selected=input_ is self.game.players['p2'].input,
@@ -56,7 +56,7 @@ class Settings(st.GameState):
                                              )
             y -= h + py
         self.buttons_p2_dummy = gb.Button(
-            self.game.active_canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
+            self.game.canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
             text='P2', font=self.game.fonts['huge'],
             selectable=False,
             bg_unselectable_color=self.game.players['p2'].base_color,

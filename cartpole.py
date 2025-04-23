@@ -40,27 +40,27 @@ class CartPoleGame(gb.BaseScreen):
         self.load_colors()
         self.inputs = gb.InputPool()
 
-        self.canvases['main'] = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw, flags=pygame.HWSURFACE)
+        self.canvas = gb.Canvas(self.canvas_size, fonts=self.fonts, draw_fun=self.state_draw, flags=pygame.HWSURFACE)
         self.event_loop_callback = self.handle_user_input_event
 
-        self.fps_popup = gb.PopUpText(self.active_canvas, alpha=255,
-                                      pos=(self.active_canvas.xmin + 0.01, self.active_canvas.ymax - .04),
+        self.fps_popup = gb.PopUpText(self.canvas, alpha=255,
+                                      pos=(self.canvas.xmin + 0.01, self.canvas.ymax - .04),
                                       color=self.cols['fps'], text='', font=self.fonts['medium'], visible=True,
                                       border_width=-1, fill_color=(0, 0, 0, 0))
 
         self.scopes = {
-            'p1': gb.Scope(self.active_canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
+            'p1': gb.Scope(self.canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
                            alpha=200,
                            color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
                            pos=(-1.75, 0.8), size=(320, 180), maxlen=400, visible=False),
-            'p2': gb.Scope(self.active_canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
+            'p2': gb.Scope(self.canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
                            alpha=200,
                            color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
                            pos=(-1.75, -0.01), size=(320, 180), maxlen=400, visible=False),
-            'inputs': gb.Scope(self.active_canvas, name='inputs', legend=('p1', 'p2'), fps=self.clock.fps, alpha=200,
+            'inputs': gb.Scope(self.canvas, name='inputs', legend=('p1', 'p2'), fps=self.clock.fps, alpha=200,
                                color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
                                pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
-            'times': gb.Scope(self.active_canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps,
+            'times': gb.Scope(self.canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps,
                               alpha=200,
                               color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65),
                               size=(320, 180),
@@ -68,7 +68,7 @@ class CartPoleGame(gb.BaseScreen):
         }
 
         self.progress_timer = gb.ProgressBar(
-            self.active_canvas,
+            self.canvas,
             (+1.72-0.28, -0.1, 0.28, 0.03),
             0, self.game_duration, self.game_duration, self.game_duration*.2,
             self.cols['timer'], self.cols['bg'],
@@ -179,7 +179,7 @@ class CartPoleGame(gb.BaseScreen):
             for _ in range(10):
                 font_index = randint(0, len(self.particles_fonts)-1)
                 self.stress_test_particles.append(
-                    gb.TextParticle(self.active_canvas,
+                    gb.TextParticle(self.canvas,
                                     color=gb.lerp_vec3((90, 250, 90), (30, 90, 30), random()),
                                     text=choice(letters),
                                     font=self.particles_fonts[font_index],
@@ -239,13 +239,13 @@ class CartPoleGame(gb.BaseScreen):
     def handle_user_input_event(self, event):
         self.state.handle_event(event)
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
-            self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]),
-                                       int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))
+            self.canvas.bias = (int(self.canvas.bias[0] + self.mouse.right.drag_delta[0]),
+                                int(self.canvas.bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
         for scope in self.scopes.values():
             if self.mouse.left.dragging and scope.focus:
-                canvas = self.active_canvas
+                canvas = self.canvas
                 delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
                 scope.pos = Vector2(scope.pos) + delta

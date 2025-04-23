@@ -34,7 +34,7 @@ def feedback(state: st.GameState):
 
 def draw(state: st.GameState, intro=False):
     game: cartpole.CartPoleGame = state.game
-    canvas: gb.Canvas = game.active_canvas
+    canvas: gb.Canvas = game.canvas
 
     canvas.fill(game.cols['bg'])
     pos = game.mouse_world_pos

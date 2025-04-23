@@ -14,7 +14,6 @@ class Demo(gb.BaseScreen):
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
 
-
         self.mouse.left.press_callback = self.left_click
         self.mouse.left.release_callback = self.left_release
         self.mouse.right.press_callback = self.right_click
@@ -22,29 +21,19 @@ class Demo(gb.BaseScreen):
         self.mouse.scroll.up_callback = self.scroll_up
         self.mouse.scroll.down_callback = self.scroll_down
 
-        self.canvases = {
-            'rocket': gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket, shortcut=pygame.K_1),
-            'menu': gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_menu, shortcut=pygame.K_2),
-            'test'  : gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun =self.draw_color_wheel, shortcut=pygame.K_3),
-        }
+        self.canvas = gb.Canvas(self.canvas_size, bg_color=self.cols['bg'], fonts=self.fonts, draw_fun=self.draw_rocket)
 
         self.event_loop_callback = self.process_user_input_event
-        self.canvases['rocket'].got_focus_callback = self.rocket_got_focus_callback
 
         self.cols['focus'] = (255, 255, 0)
         self.cols['scope'] = (55, 255, 200)
-        # flags = pygame.HWSURFACE | pygame.SRCALPHA
         self.scopes = {
-            'ch1': gb.Scope(self.canvases['rocket'], name='frame time', legend=('active', 'total'),   fps=self.clock.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
-            'ch2': gb.Scope(self.canvases['rocket'], name='inputs',     legend=('throttle', 'steer'), fps=self.clock.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
+            'ch1': gb.Scope(self.canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps, alpha=200, color=self.cols['scope'], focus_color=self.cols['focus'], pos=(0.5, 0.5), size=(400, 250), maxlen=400),
+            'ch2': gb.Scope(self.canvas, name='inputs', legend=('throttle', 'steer'), fps=self.clock.fps, alpha=200, color=self.cols['scope'], y_scale=(0.9, 1.7, 1.0), focus_color=self.cols['focus'], pos=(0.5, -0.1), size=(400, 250), maxlen=400),
         }
 
-        self.hue_ncols_exemple = 20
-        self.hue_shift_exemple = 0
-        self.hue_radius_exemple = 0.55
 
         self.particle_en = True
-
         self.steer = None
         self.throttle = None
         self.throttle_min = 0.1
@@ -62,13 +51,12 @@ class Demo(gb.BaseScreen):
             pygame.font.SysFont('Times', 54),
             pygame.font.SysFont('Times', 68),
         ]
-
         self.letters = [chr(i) for i in range(945, 970) if i != 962]
 
         self.extra_help = [
             f'────────────────────────',
             f' F7: enable/disable particles',
-            f' F8: show/hide external rects',
+            f' F6: show/hide external rects',
             f'  1: tab rocket example',
             f'  2: tab pause example',
             f'  3: tab hue dic example',
@@ -88,15 +76,12 @@ class Demo(gb.BaseScreen):
         self.sounds['jet'].play(loops=-1)
 
         self.images['jet'] = pygame.transform.smoothscale_by(pygame.transform.rotate(self.load_image(self.assets_path / 'jet.png'), 90), 0.5)
-
         self.show_outer_rects = False
-
         self.pre_draw_callback = self.pre_draw
 
 
     def pre_draw(self):
-        if self.active_canvas_key != 'rocket':
-            self.sounds['jet'].set_volume(0)
+        self.sounds['jet'].set_volume(0)
 
 
 
@@ -129,27 +114,27 @@ class Demo(gb.BaseScreen):
 
     def scroll_up(self, scroll: gb.MouseScroll):
         if scroll.up_keys[pygame.K_LCTRL]:
-            self.active_canvas.scale /= 1.1
+            self.canvas.scale /= 1.1
 
     def scroll_down(self, scroll: gb.MouseScroll):
         if scroll.down_keys[pygame.K_LCTRL]:
-            self.active_canvas.scale *= 1.1
+            self.canvas.scale *= 1.1
 
     def process_user_input_event(self, event):
         if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
-            self.active_canvas.bias = (int(self.active_canvas.bias[0] + self.mouse.right.drag_delta[0]), int(self.active_canvas.bias[1] + self.mouse.right.drag_delta[1]))
+            self.canvas.bias = (int(self.canvas.bias[0] + self.mouse.right.drag_delta[0]), int(self.canvas.bias[1] + self.mouse.right.drag_delta[1]))
             self.mouse.right.clear_drag_delta()
 
         for scope in self.scopes.values():
             if self.mouse.left.dragging and scope.focus:
-                canvas = self.active_canvas
+                canvas = self.canvas
                 delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
                 scope.pos = Vector2(scope.pos) + delta
                 self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_F8:
+            if event.key == pygame.K_F6:
                 self.show_outer_rects = not self.show_outer_rects
             elif event.key == pygame.K_F7:
                 self.particle_en = not self.particle_en
@@ -184,52 +169,36 @@ class Demo(gb.BaseScreen):
 
 
 
-    def draw_color_wheel(self, canvas: gb.Canvas):
-        width = 1
-        M = 10
-        grid_color = (100, 100, 100)
-        for m in range(4 * M + 1):
-            canvas.draw_line(grid_color, (-2 + m / M, -1), (-2 + m / M, 1), width=width)
-        for m in range(2 * M + 1):
-            canvas.draw_line(grid_color, (-2, -1 + m / M), (2, -1 + m / M), width=width)
+    # def draw_color_wheel(self, canvas: gb.Canvas):
+    #     width = 1
+    #     M = 10
+    #     grid_color = (100, 100, 100)
+    #     for m in range(4 * M + 1):
+    #         canvas.draw_line(grid_color, (-2 + m / M, -1), (-2 + m / M, 1), width=width)
+    #     for m in range(2 * M + 1):
+    #         canvas.draw_line(grid_color, (-2, -1 + m / M), (2, -1 + m / M), width=width)
+    #
+    #     radius = 0.12
+    #     for n in range(11):
+    #         canvas.draw_circle((180, 255, 180), (+0, +0), radius * n, width=1)
+    #     canvas.draw_circle((255, 0, 0), (-1, -1), radius)
+    #     canvas.draw_circle((0, 255, 0), (-1, +1), radius)
+    #     canvas.draw_circle((0, 0, 255), (+1, +1), radius)
+    #     canvas.draw_circle((255, 255, 0), (+1, -1), radius)
+    #
+    #     self.hue_shift_exemple += 3 / 360
+    #     r = radius
+    #     cols_iter = gb.ColorsDiscIterator(self.hue_ncols_exemple, self.hue_shift_exemple, 1.0, 0.9)
+    #     for i, col in enumerate(cols_iter):
+    #         ang = i * 2 * math.pi / len(cols_iter)
+    #         canvas.draw_circle(col, (self.hue_radius_exemple * math.cos(ang), self.hue_radius_exemple * math.sin(ang)), r)
+    #
+    #     canvas.draw_text(color=(255, 255, 255), font=self.fonts['big'], text='Use as setas!', pos=(0, 0), anchor='center')
+    #     canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, +1', pos=(-1, +1), anchor='midtop')
+    #     canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, +1', pos=(+1, +1), anchor='midtop')
+    #     canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
+    #     canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, -1', pos=(+1, -1), anchor='midbottom')
 
-        radius = 0.12
-        for n in range(11):
-            canvas.draw_circle((180, 255, 180), (+0, +0), radius * n, width=1)
-        canvas.draw_circle((255, 0, 0), (-1, -1), radius)
-        canvas.draw_circle((0, 255, 0), (-1, +1), radius)
-        canvas.draw_circle((0, 0, 255), (+1, +1), radius)
-        canvas.draw_circle((255, 255, 0), (+1, -1), radius)
-
-        self.hue_shift_exemple += 3 / 360
-        r = radius
-        cols_iter = gb.ColorsDiscIterator(self.hue_ncols_exemple, self.hue_shift_exemple, 1.0, 0.9)
-        for i, col in enumerate(cols_iter):
-            ang = i * 2 * math.pi / len(cols_iter)
-            canvas.draw_circle(col, (self.hue_radius_exemple * math.cos(ang), self.hue_radius_exemple * math.sin(ang)), r)
-
-        canvas.draw_text(color=(255, 255, 255), font=self.fonts['big'], text='Use as setas!', pos=(0, 0), anchor='center')
-        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, +1', pos=(-1, +1), anchor='midtop')
-        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, +1', pos=(+1, +1), anchor='midtop')
-        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='-1, -1', pos=(-1, -1), anchor='midbottom')
-        canvas.draw_text(color=(30, 30, 30), font=self.fonts['small'], text='+1, -1', pos=(+1, -1), anchor='midbottom')
-
-    def draw_menu(self, canvas: gb.Canvas):
-        prtsc = self.canvases[self.last_active_canvas_key].copy()
-        prtsc.set_alpha(128)
-        offset = (canvas.xmin, canvas.ymax)
-        canvas.blit(prtsc, offset)
-
-        blue = (30, 60, 255)
-        red = (255, 30, 60)
-        yellow = (255, 200, 30)
-        for n in range(N := 400):
-            color = gb.lerp_vec3(blue, red, n / N)
-            th = math.fmod(self.t * 2, 2 * math.pi) + 3 * math.pi * n / N
-            h = math.cos(self.t / 2) + 2
-            r = math.cos(h * th) * 0.5
-            canvas.draw_circle(color, (r * math.cos(th), r * math.sin(th)), .08)
-        canvas.draw_text(yellow, self.fonts['huge'], f'PAUSED!', (0, 0))
 
     def rocket_got_focus_callback(self, canvas: gb.Canvas):
         for key, scope in self.scopes.items():

@@ -59,7 +59,7 @@ class Cart:
 
         self.death_callback = death_callback
         self.alive = alive
-        self.canvas: gb.Canvas = self.game.active_canvas
+        self.canvas: gb.Canvas = self.game.canvas
         self.input = input_device
         self.fuel = 1.0
         self.fuel_consumption_rate = 0.00004

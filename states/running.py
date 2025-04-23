@@ -26,7 +26,7 @@ class Running(st.GameState):
     def exit(self):
         self.game.sounds['jet'].set_volume(0)
         self.game.clock.pause_timer(self.timer_id)
-        self.game.previous_state_screenshot = self.game.active_canvas.copy()
+        self.game.previous_state_screenshot = self.game.canvas.copy()
 
     def handle_event(self, event: pygame.event):
         if event.type == UserEvent.GAME_TIMEOUT:

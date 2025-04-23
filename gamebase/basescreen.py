@@ -83,9 +83,9 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.post_draw_callback = None
 
         self.popups = dict()
-        self.canvases = dict()
-        self.active_canvas_key = None
-        self.last_active_canvas_key = None
+        # self.canvases = dict()
+        # self.active_canvas_key = None
+        # self.last_active_canvas_key = None
 
         # self.info_position = (30, 30)
         self.show_fps = True
@@ -129,6 +129,9 @@ class BaseScreen(metaclass=MetaLoopCall):
         # images
         self.images = dict()
 
+        self.canvas: gb.Canvas = gb.Canvas(self.canvas_size, fonts=self.fonts)
+        self.hide_fps()
+
     def load_sound(self, file_path: Path, volume: float = 1):
         sound = self.mixer.Sound(file_path)
         sound.set_volume(volume)
@@ -143,12 +146,11 @@ class BaseScreen(metaclass=MetaLoopCall):
     def hide_info(self):
         self.info_popup.visible = False
 
+    def show_fps(self):
+        self.show_fps = True
 
-    @property
-    def active_canvas(self):
-        if self.active_canvas_key is None:
-            self.active_canvas_key = next(iter(self.canvases.keys()))
-        return self.canvases[self.active_canvas_key]
+    def hide_fps(self):
+        self.show_fps = False
 
     @property
     def t(self):
@@ -160,12 +162,12 @@ class BaseScreen(metaclass=MetaLoopCall):
 
     @property
     def mouse_world_pos(self) -> Vector2:
-        canvas: gb.Canvas = self.active_canvas
+        canvas: gb.Canvas = self.canvas
         return canvas.screen_to_world_v2(gb.remap(self.mouse.pos, self.window, canvas))
 
     @mouse_world_pos.setter
     def mouse_world_pos(self, pos: Vector2):
-        screen_pos = gb.remap(self.active_canvas.world_to_screen_v2(pos), self.active_canvas, self.window)
+        screen_pos = gb.remap(self.canvas.world_to_screen_v2(pos), self.canvas, self.window)
         pygame.mouse.set_pos(screen_pos)
 
     def loop(self):
@@ -204,13 +206,13 @@ class BaseScreen(metaclass=MetaLoopCall):
                     elif event.key == pygame.K_a:
                         self.antialiasing = not self.antialiasing
 
-                    for tab_key in self.canvases:
-                        if event.key == self.canvases[tab_key].shortcut:
-                            if self.active_canvas_key != tab_key:
-                                self.last_active_canvas_key = self.active_canvas_key
-                                self.active_canvas_key = tab_key
-                                self.canvases[tab_key].got_focus()
-                                # print(self.last_active_canvas_key, '->', self.active_canvas_key)
+                    # for tab_key in self.canvases:
+                    #     if event.key == self.canvases[tab_key].shortcut:
+                    #         if self.active_canvas_key != tab_key:
+                    #             self.last_active_canvas_key = self.active_canvas_key
+                    #             self.active_canvas_key = tab_key
+                    #             self.canvases[tab_key].got_focus()
+
 
                 if self.event_loop_callback is not None:
                     self.event_loop_callback(event)
@@ -228,15 +230,15 @@ class BaseScreen(metaclass=MetaLoopCall):
     def _draw(self):
         self.window.fill(self.cols['bg'])
 
-        canvas = self.active_canvas
-        canvas.fill(self.active_canvas._bg_color)
+        canvas = self.canvas
+        canvas.fill(self.canvas._bg_color)
         canvas.draw()
 
         for popup in self.popups.values():
             popup.draw()
             popup.blit_to_main()
 
-        gb.blit_with_aspect_ratio(self.window, self.active_canvas, self.antialiasing, offset=self.blit_offset)
+        gb.blit_with_aspect_ratio(self.window, self.canvas, self.antialiasing, offset=self.blit_offset)
 
         self.info_popup.main_canvas = self.window
         self.help_popup.main_canvas = self.window
@@ -257,9 +259,9 @@ class BaseScreen(metaclass=MetaLoopCall):
                 f'window_res: {self.window.get_size()} px',
                 f'mouse_window: {pygame.mouse.get_pos()} px',
                 f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
-                f'canvas_bias: {self.active_canvas.bias}',
-                f'canvas_scale: {self.active_canvas.scale:.1f}',
-                f'canvas_relative_scale: {self.active_canvas.relative_scale:.2f}',
+                f'canvas_bias: {self.canvas.bias}',
+                f'canvas_scale: {self.canvas.scale:.1f}',
+                f'canvas_relative_scale: {self.canvas.relative_scale:.2f}',
                 ] + self.extra_info
         else:
             self.help_popup.pos = self.window.screen_to_world_v2((10, 20 + (45 if self.show_fps else 0)))
