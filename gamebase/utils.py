@@ -3,7 +3,7 @@ import math
 import pygame
 # from canvas import Canvas
 import colorsys
-from typing import Sequence
+from typing import Sequence, Self
 from pygame import Vector2
 
 
@@ -229,6 +229,37 @@ class fRect:
     def __str__(self):
         return f'fRect[{self.x}, {self.y}, {self.w}, {self.h}]'
 
+
+class fPoints:
+    def __init__(self, *points_seq):
+        if len(points_seq) == 1:
+            points_seq = tuple(*points_seq)
+
+        self._points = tuple(Vector2(p) for p in points_seq)
+
+    def __str__(self):
+        points_str = ", ".join(f"({x}, {y})" for x, y in self._points)
+        return f"fPoints[ {points_str} ]"
+
+    def __iter__(self):
+        yield from self._points
+
+    def __getitem__(self, item):
+        return self._points[item]
+
+    def rotate(self, angle: float, center: Vector2 | tuple[float, float]) -> Self:
+        return fPoints(rotate_around_v2(p, angle, center) for p in self._points)
+
+    def translate(self, offset: Vector2 | tuple[float, float]) -> Self:
+        return fPoints(p+offset for p in self._points)
+
+    def scale(self, scale: float | tuple[float, float] | Vector2, anchor: float | tuple[float, float] | Vector2 = (0, 0)) -> Self:
+        if isinstance(scale, float | int):
+            scale = (scale, scale)
+        return fPoints(((x - anchor[0]) * scale[0] + anchor[0], (y - anchor[1]) * scale[1] + anchor[1]) for x,y in self._points)
+
+    def rect(self) -> fRect:
+        return fRect(outer_rect(self._points))
 
 
 if __name__ == '__main__':
