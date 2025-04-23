@@ -39,7 +39,8 @@ class BaseScreen(metaclass=MetaLoopCall):
         finally:
             pygame.init()
 
-        self.pygame_clock = pygame.time.Clock()
+        # self.pygame_clock = pygame.time.Clock()
+        self.free_fps = False
 
         self.cols = {
             'bg': (30, 30, 30),
@@ -107,6 +108,7 @@ class BaseScreen(metaclass=MetaLoopCall):
             f'F11: fullsceen',
             f'F10: fps',
             f' F9: antialiasing',
+            f' F8: free fps',
         ]
         self.help_popup = gb.PopUpText(self.window, alpha=200, pos=(10, -10), size=(400, 250),
                                        color=self.cols['info'], text='', font=self.fonts['info'], visible=False,
@@ -183,6 +185,8 @@ class BaseScreen(metaclass=MetaLoopCall):
                         self.help_popup.visible = not self.help_popup.visible
                     if event.key == pygame.K_F9:
                         self.antialiasing = not self.antialiasing
+                    if event.key == pygame.K_F8:
+                        self.free_fps = not self.free_fps
                     elif event.key == pygame.K_F12:
                         self.info_popup.visible = not self.info_popup.visible
                     elif event.key == pygame.K_F10:
@@ -297,7 +301,8 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         ideal_period = 1/self.clock.fps
         self.last_active_frame_time = (time.perf_counter() - self.last_time)
-        time.sleep(max(0.0, ideal_period - self.last_active_frame_time + self.mm_sleep_compensation.value))
+        if not self.free_fps:
+            time.sleep(max(0.0, ideal_period - self.last_active_frame_time + self.mm_sleep_compensation.value))
         real_period = (time.perf_counter() - self.last_time)
         self.mm_sleep_compensation.append(ideal_period-real_period)
         self.real_fps = 1/real_period

@@ -3,12 +3,6 @@ import pygame
 
 
 class UserEventEnum(Enum):
-    def __new__(cls, valor):
-        obj = object.__new__(cls)
-        obj._value_ = valor
-        cls.count = 100
-        return obj
-
     @staticmethod
     def _generate_next_value_(name, start, count, last_values):
         if count == 0:
