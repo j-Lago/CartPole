@@ -1,4 +1,3 @@
-import pygame
 import gamebase as gb
 import random
 
