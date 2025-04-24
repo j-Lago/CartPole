@@ -77,7 +77,7 @@ class MouseScroll:
 
 
 class Mouse:
-    def __init__(self, game):
+    def __init__(self, game: gb.BaseScreen):
         self.game = game
         self.left = MouseButton()
         self.right = MouseButton()

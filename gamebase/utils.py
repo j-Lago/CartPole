@@ -205,7 +205,7 @@ class Rect_f:
         return f'fRect[{self.x}, {self.y}, {self.w}, {self.h}]'
 
     def point_collision(self, point: Vector2 | tuple[float, float]):
-        return self.x < point[0] < self.x+self.w and self.y > point[1] > self.y+self.h
+        return self.x < point[0] < self.x+self.w and self.y > point[1] > self.y-self.h
 
 
 class Points:

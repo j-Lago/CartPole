@@ -152,24 +152,6 @@ class BaseScreen(metaclass=MetaLoopCall):
     def hide_fps(self):
         self.show_fps = False
 
-    # @property
-    # def t(self):
-    #     return self.clock.t
-
-    # @property
-    # def mouse_pos(self) -> Vector2:
-    #     return self.mouse.pos
-    #
-    # @property
-    # def mouse_world_pos(self) -> Vector2:
-    #     canvas: gb.Canvas = self.canvas
-    #     return canvas.screen_to_world_v2(gb.remap(self.mouse.pos, self.window, canvas))
-
-    # @mouse_world_pos.setter
-    # def mouse_world_pos(self, pos: Vector2):
-    #     screen_pos = gb.remap(self.canvas.world_to_screen_v2(pos), self.canvas, self.window)
-    #     pygame.mouse.set_pos(screen_pos)
-
     def loop(self):
         while True:
             for event in pygame.event.get():
@@ -231,7 +213,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.window.fill(self.cols['bg'])
 
         canvas = self.canvas
-        canvas.fill(self.canvas._bg_color)
+        canvas.fill(self.canvas.bg_color)
         canvas.draw()
 
         for popup in self.popups.values():

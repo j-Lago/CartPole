@@ -33,7 +33,7 @@ class PopUpText(PopUp):
         self.color = color
         self.bg_lerp_factor = bg_lerp_factor
         if fill_color is None:
-            fill_color = gb.lerp_vec3(self.color, self.main_canvas._bg_color, self.bg_lerp_factor)
+            fill_color = gb.lerp_vec3(self.color, self.main_canvas.bg_color, self.bg_lerp_factor)
         self.fill_color = fill_color
         self.border_radius = border_radius
         self.border_width = border_width

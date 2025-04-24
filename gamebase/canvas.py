@@ -25,7 +25,7 @@ class Canvas:
         self.fonts = fonts
         self.visible = visible
         self.got_focus_callback = got_focus_callback
-        self._bg_color: Color = bg_color
+        self.bg_color: Color = bg_color
         self.draw_fun = draw_fun
         self.shortcut = shortcut
         # self.ticks = 0
@@ -54,10 +54,10 @@ class Canvas:
             self.got_focus_callback(self)
 
     def clear(self):
-        self.fill(self._bg_color)
+        self.fill(self.bg_color)
 
     def draw(self):
-        self.fill(self._bg_color)
+        self.fill(self.bg_color)
         if self.visible:
             if self._last_alpha != self.surface.get_alpha():
                 self.surface.set_alpha(self._last_alpha)

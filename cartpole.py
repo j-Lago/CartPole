@@ -153,7 +153,7 @@ class CartPoleGame(gb.BaseScreen):
 
     def right_release(self, button: gb.MouseButton):
         for scope in self.scopes.values():
-            if scope.collision(self.mouse_world_pos):
+            if scope.collision(self.mouse.pos):
                 scope.visible = False
 
     def scroll_up(self, scroll: gb.MouseScroll):
