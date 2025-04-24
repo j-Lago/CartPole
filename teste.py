@@ -17,14 +17,14 @@ class Teste(gb.BaseScreen):
 
         points = gb.Points((0, 0), (0.4, 0.2), (0.4, 0.6))
 
-        canvas.draw_polygon((255, 255, 255), points, 2)
+        canvas.draw_polygon((255, 255, 255), points.rotate(-self.clock.t, (0.4, 0.2)))
         canvas.draw_circle((200, 200, 200), pos, .015)
         canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop',
                          shift=(0, -0.03))
 
         rect = gb.Rect_f(-0.9, -0.5, .5, .2)
-        color = (255, 255, 0) if rect.point_collision(pos) else (127,127,255)
-        canvas.draw_rect(color, rect, 2)
+        color, width = ((255, 255, 0), 3) if rect.point_collision(pos) else ((127, 127, 255), 2)
+        canvas.draw_rect(color, rect, width)
 
 
 
