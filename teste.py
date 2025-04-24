@@ -22,6 +22,10 @@ class Teste(gb.BaseScreen):
         canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop',
                          shift=(0, -0.03))
 
+        rect = gb.Rect_f(-0.9, -0.5, .5, .2)
+        color = (255, 255, 0) if rect.point_collision(pos) else (127,127,255)
+        canvas.draw_rect(color, rect, 2)
+
 
 
 
@@ -40,16 +44,12 @@ def draw_grid(game: Teste, canvas: gb.Canvas, dx=.05, dy=.05, snap_to_grid=True)
         canvas.draw_line(color, (xmin, y := center[1] + dy * i), (xmax, y))
         canvas.draw_line(color, (xmin, y := center[1] - dy * i), (xmax, y))
 
-    canvas.draw_line(origin_color, (center[0], ymin), (center[0], ymax))
-    canvas.draw_line(origin_color, (xmin, center[1]), (xmax, center[1]))
-
-    rect = gb.Rect_f(-0.9, -0.5, .5, .2)
-    color = (255, 255, 0) if rect.point_collision(game.mouse.pos) else (127,127,255)
-    canvas.draw_rect(color, rect, 2)
-
     mouse_pos = game.mouse.pos
     if snap_to_grid:
         mouse_pos = round((mouse_pos[0]-center[0]) / dx) * dx + center[0], round((mouse_pos[1]-center[1]) / dy) * dy + center[1]
+
+    canvas.draw_line(origin_color, (center[0], ymin), (center[0], ymax))
+    canvas.draw_line(origin_color, (xmin, center[1]), (xmax, center[1]))
 
     return mouse_pos
 
