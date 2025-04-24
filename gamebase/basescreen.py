@@ -89,7 +89,6 @@ class BaseScreen(metaclass=MetaLoopCall):
 
         # self.info_position = (30, 30)
         self.show_fps = True
-        self.mouse = gb.Mouse()
         self.vsync = vsync
 
         if self.fullscreen:
@@ -130,6 +129,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.images = dict()
 
         self.canvas: gb.Canvas = gb.Canvas(self.canvas_size, fonts=self.fonts)
+        self.mouse = gb.Mouse(self)
         self.hide_fps()
 
     def load_sound(self, file_path: Path, volume: float = 1):
@@ -152,23 +152,23 @@ class BaseScreen(metaclass=MetaLoopCall):
     def hide_fps(self):
         self.show_fps = False
 
-    @property
-    def t(self):
-        return self.clock.t
+    # @property
+    # def t(self):
+    #     return self.clock.t
 
-    @property
-    def mouse_pos(self) -> Vector2:
-        return self.mouse.pos
+    # @property
+    # def mouse_pos(self) -> Vector2:
+    #     return self.mouse.pos
+    #
+    # @property
+    # def mouse_world_pos(self) -> Vector2:
+    #     canvas: gb.Canvas = self.canvas
+    #     return canvas.screen_to_world_v2(gb.remap(self.mouse.pos, self.window, canvas))
 
-    @property
-    def mouse_world_pos(self) -> Vector2:
-        canvas: gb.Canvas = self.canvas
-        return canvas.screen_to_world_v2(gb.remap(self.mouse.pos, self.window, canvas))
-
-    @mouse_world_pos.setter
-    def mouse_world_pos(self, pos: Vector2):
-        screen_pos = gb.remap(self.canvas.world_to_screen_v2(pos), self.canvas, self.window)
-        pygame.mouse.set_pos(screen_pos)
+    # @mouse_world_pos.setter
+    # def mouse_world_pos(self, pos: Vector2):
+    #     screen_pos = gb.remap(self.canvas.world_to_screen_v2(pos), self.canvas, self.window)
+    #     pygame.mouse.set_pos(screen_pos)
 
     def loop(self):
         while True:
@@ -258,7 +258,7 @@ class BaseScreen(metaclass=MetaLoopCall):
                 f'canvas_res: {canvas.get_size()} px',
                 f'window_res: {self.window.get_size()} px',
                 f'mouse_window: {pygame.mouse.get_pos()} px',
-                f'mouse_world: ({self.mouse_world_pos[0]:.2f}, {self.mouse_world_pos[1]:.2f})',
+                f'mouse_world: ({self.mouse.pos[0]:.2f}, {self.mouse.pos[1]:.2f})',
                 f'canvas_bias: {self.canvas.bias}',
                 f'canvas_scale: {self.canvas.scale:.1f}',
                 f'canvas_relative_scale: {self.canvas.relative_scale:.2f}',

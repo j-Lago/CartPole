@@ -37,17 +37,17 @@ def draw(state: st.GameState, intro=False):
     canvas: gb.Canvas = game.canvas
 
     canvas.fill(game.cols['bg'])
-    pos = game.mouse_world_pos
+    pos = game.mouse.pos
 
     game.stress_test()  # todo: retirar na versão final
 
     # desenha os mortos por traz
     for player in game.players.values():
         if not player.alive:
-            player.draw(game.t)
+            player.draw(game.clock.t)
     for key, player in game.players.items():
         if player.alive:
-            player.draw(game.t)
+            player.draw(game.clock.t)
 
     # timer
     remain = game.clock.get_timer_remaining(state.timer_id) if not intro else game.game_duration
@@ -74,7 +74,7 @@ def draw(state: st.GameState, intro=False):
 
 
     # scope
-    x = game.t
+    x = game.clock.t
     total_frame_time = 1 / game.real_fps if game.real_fps != 0 else 0
     y = {
         'p2': (
@@ -96,7 +96,7 @@ def draw(state: st.GameState, intro=False):
 
     for key, scope in game.scopes.items():
         scope.append(x, y[key])
-        scope.focus = scope.collision(game.mouse_world_pos) and not another_in_focus(key)
+        scope.focus = scope.collision(game.mouse.pos) and not another_in_focus(key)
         scope.draw()
         scope.blit_to_main()
 

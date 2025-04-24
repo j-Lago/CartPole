@@ -2,7 +2,7 @@
 import pygame
 from copy import copy
 from pygame import Vector2
-
+import gamebase as gb
 
 class MouseButton:
     def __init__(self):
@@ -77,7 +77,8 @@ class MouseScroll:
 
 
 class Mouse:
-    def __init__(self):
+    def __init__(self, game):
+        self.game = game
         self.left = MouseButton()
         self.right = MouseButton()
         self.middle = MouseButton()
@@ -87,8 +88,17 @@ class Mouse:
         pygame.mouse.set_visible(visibility)
 
     @property
-    def pos(self):
+    def screen_pos(self):
         return Vector2(pygame.mouse.get_pos())
+
+    @property
+    def pos(self):
+        return self.game.canvas.screen_to_world_v2(gb.remap(pygame.mouse.get_pos(), self.game.window, self.game.canvas))
+
+    # @pos.setter
+    # def pos(self, pos: Vector2):
+    #     screen_pos = gb.remap(self.canvas.world_to_screen_v2(pos), self.canvas, self.window)
+    #     pygame.mouse.set_pos(screen_pos)
 
     def handle_event(self, event, keys):
         if event.type == pygame.MOUSEBUTTONDOWN:

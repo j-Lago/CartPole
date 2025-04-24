@@ -43,7 +43,7 @@ def draw_grid(game: Teste, canvas: gb.Canvas, dx=.05, dy=.05, snap_to_grid=True)
     canvas.draw_line(origin_color, (center[0], ymin), (center[0], ymax))
     canvas.draw_line(origin_color, (xmin, center[1]), (xmax, center[1]))
 
-    mouse_pos = game.mouse_world_pos
+    mouse_pos = game.mouse.pos
     if snap_to_grid:
         mouse_pos = round((mouse_pos[0]-center[0]) / dx) * dx + center[0], round((mouse_pos[1]-center[1]) / dy) * dy + center[1]
         # game.mouse_world_pos = snapped_pos

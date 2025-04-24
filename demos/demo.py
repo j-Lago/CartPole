@@ -296,7 +296,7 @@ class Demo(gb.BaseScreen):
 
 
         # scope
-        x = self.t
+        x = self.clock.t
         total_frame_time = 1/self.real_fps if self.real_fps != 0 else 0
         y = {
             'ch1': (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1), #(self.mm_frame_time.value * self.fps - 1, self.last_active_frame_time * self.fps - 1),
@@ -311,7 +311,7 @@ class Demo(gb.BaseScreen):
 
         for key, scope in self.scopes.items():
             scope.append(x, y[key])
-            scope.focus = scope.collision(self.mouse_world_pos) and not another_in_focus(key)
+            scope.focus = scope.collision(self.mouse.pos) and not another_in_focus(key)
             scope.draw()
             scope.blit_to_main()
 
