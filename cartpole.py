@@ -25,7 +25,7 @@ class CartPoleGame(gb.BaseScreen):
         self.assets_path = self.rel_path / 'assets'
         self.save_file_path = self.rel_path / 'meta' / 'save.json'
         self.hash_file_path = self.rel_path / 'hash' / 'hash.json'
-        self.hash_ignore_dirs = {'.idea', '.git', 'venv', '__pycache__', 'demos', 'hash'}
+        self.hash_ignore_dirs = {'.idea', '.git', '.venv', '__pycache__', 'hash'}
         self.version = '0.0.1'
 
         # mouse callbacks
@@ -103,9 +103,8 @@ class CartPoleGame(gb.BaseScreen):
             f'm_r: disable scope',
         ]
 
-        # self.best_score = None
-        # self.best_score_device = None
         self.best_score = self.load_best_score()
+        self.show_fps = True
 
         self.reset()
         self.state = st.Intro(self)
