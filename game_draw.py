@@ -74,6 +74,10 @@ def draw(state: st.GameState, intro=False):
 
 
     # scope
+    if isinstance(game.players['p1'].input, gb.LinearController):
+        pid = game.players['p1'].input.p_out, game.players['p1'].input.i_out,game.players['p1'].input.d_out
+    else:
+        pid = 0.0, 0.0, 0.0
     x = game.clock.t
     total_frame_time = 1 / game.real_fps if game.real_fps != 0 else 0
     y = {
@@ -85,6 +89,7 @@ def draw(state: st.GameState, intro=False):
             game.players['p1'].omega),
         'inputs': (game.players['p1'].input.value, game.players['p2'].input.value),
         'times': (game.last_active_frame_time * game.clock.fps - 1, total_frame_time * game.clock.fps - 1),
+        'pid': pid
     }
 
 

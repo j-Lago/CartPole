@@ -8,13 +8,14 @@ class Teste(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.canvas.draw_fun = self.draw_main
-        self.mouse.set_visible(False)
+        # self.mouse.set_visible(False)
         self.show_info()
-        self.slider = gb.Slider(self.canvas, (-.4, 0.8, 0.1, 0.6))
+        self.slider = gb.Slider(self.canvas, (-.4, 0.8, 0.1, 0.6), max_value=0.5, min_value=-0.5)
+        self.th = 0.0
 
     def draw_main(self, canvas: gb.Canvas):
-        # pos = self.mouse_world_pos
-        pos = draw_grid(self, canvas)
+        # pos = draw_grid(self, canvas)
+        pos = self.mouse.pos
 
         points = gb.Points((0, 0), (0.6, 0.1), (0.4, 0.6))
 
@@ -32,10 +33,11 @@ class Teste(gb.BaseScreen):
 
         self.slider.update(self)
 
-        canvas.draw_polygon((255, 255, 255), points.rotate(-self.clock.t, (0.4, 0.2)))
-        canvas.draw_circle((200, 200, 200), pos, .015)
-        canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop',
-                         shift=(0, -0.03))
+        self.th -= .1 * self.slider.value
+        canvas.draw_polygon((255, 255, 255), points.rotate(self.th, (0.4, 0.2)))
+        # canvas.draw_circle((200, 200, 200), pos, .015)
+        # canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop',
+        #                  shift=(0, -0.03))
 
 
 

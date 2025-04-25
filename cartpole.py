@@ -19,7 +19,7 @@ class CartPoleGame(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.game_duration = 45
+        self.game_duration = 120
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'
@@ -65,6 +65,10 @@ class CartPoleGame(gb.BaseScreen):
                               color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65),
                               size=(320, 180),
                               maxlen=400, visible=True),
+            'pid': gb.Scope(self.canvas, name='pid output', legend=('p', 'i', 'd'), fps=self.clock.fps,
+                           alpha=200,
+                           color=self.cols['p1'], y_scale=(3.0, 3.0, 3.0, 3.0), focus_color=self.cols['focus'],
+                           pos=(-1.5, 0.1), size=(320, 180), maxlen=400, visible=True),
         }
 
         self.progress_timer = gb.ProgressBar(

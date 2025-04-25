@@ -6,6 +6,9 @@ class Slider():
     def __init__(self,
                  canvas: gb.Canvas,
                  rect: gb.Rect_f | tuple[float, float, float, float],
+                 max_value = 1.0,
+                 min_value = 0.0,
+                 init_value = 0.0,
                  text: str | None = None,
                  font: pygame.font.Font = None,
                  active: bool = True,
@@ -22,6 +25,7 @@ class Slider():
                  font_focus_color: pygame.Color | tuple[int, int, int] = (200, 200, 60),
                  bg_selected_color: pygame.Color | tuple[int, int, int] = (90, 90, 30),
                  selected_color: pygame.Color | tuple[int, int, int] = (180, 180, 60),
+                 fg_color: pygame.Color | tuple[int, int, int] = (120, 120, 120),
                  font_selected_color: pygame.Color | tuple[int, int, int] = (180, 180, 60),
                  border_width: int = 2,
                  custom_draw: Callable = None,
@@ -30,6 +34,10 @@ class Slider():
                  ):
 
         self.canvas = canvas
+        self.max_value = max_value
+        self.min_value = min_value
+        self.init_value = init_value
+
         if not isinstance(rect, gb.Rect_f):
             rect = gb.Rect_f(rect)
         self.rect = rect
@@ -41,6 +49,7 @@ class Slider():
         self.font_unselectable_color = font_unselectable_color
         self.font_selected_color = font_selected_color
         self.font_focus_color = font_focus_color
+        self.fg_color = fg_color
 
         self.bg_color = bg_color
         self.bg_selected_color = bg_selected_color
@@ -65,7 +74,16 @@ class Slider():
 
         self._clicked = False
 
-        self.norm_value = 0.5 #todo temporario para teste
+        self.norm_value = 0.0
+        self.value = init_value # set self.norm_value
+
+    @property
+    def value(self):
+        return self.norm_value*(self.max_value-self.min_value) + self.min_value
+
+    @value.setter
+    def value(self, new_value):
+        self.norm_value = max(0.0, min(1.0, (new_value-self.min_value) / (self.max_value-self.min_value)))
 
     def collision(self, point: gb.Vector2 | tuple[float, float]) -> bool:
         if not self.selectable:
@@ -84,14 +102,13 @@ class Slider():
             if self.on_focus:
                 font_color = self.focus_color
             self.canvas.draw_rect(self.bg_selected_color if self.selected else self.bg_color if self.selectable else self.bg_unselectable_color, self.rect, border_radius=r_border)
-            self.canvas.draw_rect(self.focus_color if self.on_focus else font_color, self.rect, border_radius=r_border, width=self.border_width)
+
             if self.selected:
                 self.canvas.draw_rect(self.selected_color, self.rect, width=self.border_width, border_radius=r_border)
 
-            if self.text is not None and self.font is not None:
-                pos = self.rect.center
-                self.canvas.draw_text(font_color, self.font, self.text, pos, anchor='center')
-            #     centered_text(self.canvas, self.rect, self.text, self.font, font_color)
+            # if self.text is not None and self.font is not None:
+            #     pos = self.rect.center
+            #     self.canvas.draw_text(font_color, self.font, self.text, pos, anchor='center')
 
             if self.custom_draw is not None:
                 self.custom_draw(self.canvas, rect=self.rect)
@@ -107,14 +124,20 @@ class Slider():
             y_sup = self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)
             x_cen = self.rect.center[0]
 
-            color = (240, 30, 30)
-            self.canvas.draw_circle(color, (x_cen, y_inf), self.border_radius, 0)
-            self.canvas.draw_circle(color, (x_cen, y_sup), self.border_radius, 0)
+            self.canvas.draw_circle(self.fg_color, (x_cen, y_inf), self.border_radius, 0)
+            self.canvas.draw_circle(self.fg_color, (x_cen, y_sup), self.border_radius, 0)
 
-            self.canvas.draw_rect(color, gb.Rect_f(self.rect[0], y_sup, self.rect[2], y_sup-y_inf), 0)
+            self.canvas.draw_rect(self.fg_color, gb.Rect_f(self.rect[0], y_sup, self.rect[2], y_sup-y_inf), 0)
+
+
 
             color, width = ((200, 200, 30), 3) if self.handle_on_focus else (self.bg_color, 2)
             self.canvas.draw_circle(color, (x_cen, y_sup), self.border_radius, width)
+
+            if self.text is not None and self.font is not None:
+                self.canvas.draw_text(self.bg_color, self.font, self.text, (x_cen, y_sup), 'center')
+
+            self.canvas.draw_rect(self.focus_color if self.on_focus else font_color, self.rect, border_radius=r_border, width=self.border_width)
 
     def update(self, game: gb.BaseScreen):
         self.handle_on_focus = gb.point_circle_collision(game.mouse.pos, (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)

@@ -106,13 +106,23 @@ def remove_dead_zone(x, dead_zone):
 
 
 class LinearController(BaseInput):
-    def __init__(self, active_player_key:str|None=None, initial_value=0., normalization: Callable = lambda x: x):
+    def __init__(self,
+                 active_player_key: str | None = None,
+                 initial_value=0.,
+                 normalization: Callable = lambda x: x):
         super().__init__(active_player_key)
         self._value = initial_value
         self.initial_value = initial_value
         self.normalization = normalization
         self.intx = 0.
         self.th_target = math.pi
+
+        self.kp = 0.0042 * 3
+        self.ki = .0023/60 * 10
+        self.kd = 0.006 * 6
+        self.p_out = 0.0
+        self.i_out = 0.0
+        self.d_out = 0.0
 
     @property
     def value(self):
@@ -121,6 +131,7 @@ class LinearController(BaseInput):
     @property
     def description(self):
         return 'Classic: Linear'
+
     def reset(self):
         self._value = self.initial_value
         self.intx = 0.
@@ -160,18 +171,19 @@ class LinearController(BaseInput):
         DTH_MAX = 30./180.*math.pi
         # dth = - self.aux.value * 5/180*math.pi
         dth = 0.
-        kp = 0.0042 * 3
-        ki = .0023/player.fps * 10
-        kd = 0.006 * 6
 
         self.intx += dt * x
-        dth_p = kp*x
-        dth_i = ki*self.intx
-        dth_d = kd*v
+        dth_p = self.kp*x
+        dth_i = self.ki * self.intx
+        dth_d = self.kd * v
         dth = dth_p + dth_i + dth_d
 
+        self.p_out = dth_p
+        self.i_out = dth_i
+        self.d_out = dth_d
+
         dth_sat = max(min(dth, DTH_MAX), -DTH_MAX)
-        self.intx -= (dth-dth_sat)/ki  # anti windup
+        self.intx -= (dth-dth_sat)/self.ki  # anti windup
         self.th_target = math.pi + dth
         # print(dth)
 
