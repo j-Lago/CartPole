@@ -114,15 +114,21 @@ class LinearController(BaseInput):
         self._value = initial_value
         self.initial_value = initial_value
         self.normalization = normalization
-        self.intx = 0.
+
         self.th_target = math.pi
 
         self.kp = 0.0042 * 3
         self.ki = .0023/60 * 10
         self.kd = 0.006 * 6
+
         self.p_out = 0.0
         self.i_out = 0.0
         self.d_out = 0.0
+
+        self.err_dev_filt_1 = 0.0
+        self.int_err = 0.0
+        self.err = 0.0
+        self.err_1 = 0.0
 
     @property
     def value(self):
@@ -134,8 +140,12 @@ class LinearController(BaseInput):
 
     def reset(self):
         self._value = self.initial_value
-        self.intx = 0.
         self.th_target = math.pi
+
+        self.int_err = 0.0
+        self.err_dev_filt_1 = 0.0
+        self.err = 0.0
+        self.err_1 = 0.0
         # self.aux = Joystick(source=pygame.joystick.Joystick(0), channel=2, dead_zone=0.05)
 
     def update(self, player):
@@ -164,26 +174,40 @@ class LinearController(BaseInput):
         x = player.model.y[0][0]
         v = player.model.y[1][0]
 
-        # if time > 15:
-        #     self.intx += dt * x
-        #     self.th_target = math.pi + (+0.1*x +0.0*self.intx +0.000*v)
-        # self.aux.update('')
         DTH_MAX = 30./180.*math.pi
-        # dth = - self.aux.value * 5/180*math.pi
-        dth = 0.
 
-        self.intx += dt * x
-        dth_p = self.kp*x
-        dth_i = self.ki * self.intx
-        dth_d = self.kd * v
+        self.err_1 = self.err
+        self.err = x
+
+        # p
+        dth_p = self.kp * self.err
+
+        # i
+        self.int_err += dt * self.err
+        dth_i = self.ki * self.int_err
+
+        # d
+        # dth_d = self.kd * v
+        fc = 3
+
+
+        tau = 1 / (2 * math.pi * fc)
+        alpha = dt / (tau + dt)
+        err_dev = (self.err - self.err_1) / dt
+        err_dev_filt = alpha * err_dev + (1 - alpha) * self.err_dev_filt_1
+        dth_d = self.kd * err_dev_filt
+
         dth = dth_p + dth_i + dth_d
 
         self.p_out = dth_p
         self.i_out = dth_i
         self.d_out = dth_d
+        self.err_dev_filt_1 = err_dev_filt
+        self.d_out_1 = self.d_out
 
-        dth_sat = max(min(dth, DTH_MAX), -DTH_MAX)
-        self.intx -= (dth-dth_sat)/self.ki  # anti windup
+        # dth_sat = max(min(dth, DTH_MAX), -DTH_MAX)
+        # self.int_err -= (dth - dth_sat) / self.ki  # anti windup
+
         self.th_target = math.pi + dth
         # print(dth)
 
@@ -276,3 +300,6 @@ class InputPool:
 
     def __setitem__(self, key, value):
         self.inputs[key] = value
+
+
+
