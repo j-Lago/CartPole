@@ -2,7 +2,7 @@ import gamebase as gb
 import pygame
 from typing import Callable
 
-class Button():
+class Slider():
     def __init__(self,
                  canvas: gb.Canvas,
                  rect: gb.Rect_f | tuple[float, float, float, float],
@@ -24,11 +24,11 @@ class Button():
                  selected_color: pygame.Color | tuple[int, int, int] = (180, 180, 60),
                  font_selected_color: pygame.Color | tuple[int, int, int] = (180, 180, 60),
                  border_width: int = 2,
-                 border_radius: int = 15,
                  custom_draw: Callable = None,
                  custom_focus: Callable = None,
                  custom_callback: Callable = None,
                  ):
+
         self.canvas = canvas
         if not isinstance(rect, gb.Rect_f):
             rect = gb.Rect_f(rect)
@@ -49,18 +49,23 @@ class Button():
         self.selected_color = selected_color
         self.focus_color = focus_color
         self.border_width = border_width
-        self.border_radius = border_radius
+        self.border_radius = rect[2] / 2
 
         self.active = active
         self.on_focus = on_focus
         self.selected = selected
         self.selectable = selectable
 
+        self.handle_on_focus = False
+        self.drag_qualifier = False
+
         self.custom_draw = custom_draw
         self.custom_focus = custom_focus
         self.custom_callback = custom_callback
 
         self._clicked = False
+
+        self.norm_value = 0.5 #todo temporario para teste
 
     def collision(self, point: gb.Vector2 | tuple[float, float]) -> bool:
         if not self.selectable:
@@ -74,7 +79,7 @@ class Button():
 
     def draw(self):
         if self.active:
-            r_border = self.border_radius
+            r_border = round(self.border_radius * self.canvas.scale)
             font_color = self.font_selected_color if self.selected else self.font_color if self.selectable else self.font_unselectable_color
             if self.on_focus:
                 font_color = self.focus_color
@@ -91,14 +96,47 @@ class Button():
             if self.custom_draw is not None:
                 self.custom_draw(self.canvas, rect=self.rect)
 
+            # self.norm_value = self.norm_value + 0.001
+            # if self.norm_value > 1:
+            #     self.norm_value = 0.0
+
+            # print(self.norm_value)
+
+
+            y_inf = self.rect.y - self.rect.h + self.border_radius
+            y_sup = self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)
+            x_cen = self.rect.center[0]
+
+            color = (240, 30, 30)
+            self.canvas.draw_circle(color, (x_cen, y_inf), self.border_radius, 0)
+            self.canvas.draw_circle(color, (x_cen, y_sup), self.border_radius, 0)
+
+            self.canvas.draw_rect(color, gb.Rect_f(self.rect[0], y_sup, self.rect[2], y_sup-y_inf), 0)
+
+            color, width = ((200, 200, 30), 3) if self.handle_on_focus else (self.bg_color, 2)
+            self.canvas.draw_circle(color, (x_cen, y_sup), self.border_radius, width)
+
     def update(self, game: gb.BaseScreen):
+        self.handle_on_focus = gb.point_circle_collision(game.mouse.pos, (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
+
         self.focus(game.mouse.pos)
+
         if self.on_focus and game.mouse.left.pressed:
             if not self._clicked:
                 self._clicked = True
                 self.callback()
         else:
             self._clicked = False
+
+        if game.mouse.left.pressed:
+            self.drag_qualifier |= gb.point_circle_collision(game.mouse.left.presspos, (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
+        else:
+            self.drag_qualifier = False
+
+        if game.mouse.left.dragging and self.drag_qualifier:
+            self.norm_value = (game.mouse.left.dragpos[1] - (self.rect.y - self.rect.h + self.border_radius)) / (self.rect.h - 2*self.border_radius)
+            self.norm_value = max(0.0, min(1.0, self.norm_value))
+
         self.draw()
 
     def callback(self):

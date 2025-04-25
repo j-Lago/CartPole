@@ -19,6 +19,7 @@ class MouseButton:
         self.press_callback = None
         self.release_callback = None
         self.drag_callback = None
+        # self.state = False
 
     def press(self, pos, keys):
         self.press_keys = copy(keys)
@@ -93,7 +94,7 @@ class Mouse:
 
     @property
     def pos(self):
-        return self.game.canvas.screen_to_world_v2(gb.remap(pygame.mouse.get_pos(), self.game.window, self.game.canvas))
+        return screen_to_world_mouse_map(self.game.window, self.game.canvas, pygame.mouse.get_pos())
 
     # @pos.setter
     # def pos(self, pos: Vector2):
@@ -102,31 +103,39 @@ class Mouse:
 
     def handle_event(self, event, keys):
         if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = screen_to_world_mouse_map(self.game.window, self.game.canvas, event.pos)
             if event.button == 1:
-                self.left.press(event.pos, keys)
+                self.left.press(pos, keys)
             if event.button == 2:
-                self.middle.press(event.pos, keys)
+                self.middle.press(pos, keys)
             if event.button == 3:
-                self.right.press(event.pos, keys)
+                self.right.press(pos, keys)
 
         if event.type == pygame.MOUSEBUTTONUP:
+            pos = screen_to_world_mouse_map(self.game.window, self.game.canvas, event.pos)
             if event.button == 1:
-                self.left.release(event.pos, keys)
+                self.left.release(pos, keys)
             if event.button == 2:
-                self.middle.release(event.pos, keys)
+                self.middle.release(pos, keys)
             if event.button == 3:
-                self.right.release(event.pos, keys)
+                self.right.release(pos, keys)
 
         if event.type == pygame.MOUSEMOTION:
+            pos = screen_to_world_mouse_map(self.game.window, self.game.canvas, event.pos)
             if self.left.pressed:
-                self.left.drag(event.pos, keys)
+                self.left.drag(pos, keys)
             if self.middle.pressed:
-                self.middle.drag(event.pos, keys)
+                self.middle.drag(pos, keys)
             if self.right.pressed:
-                self.right.drag(event.pos, keys)
+                self.right.drag(pos, keys)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
+            pos = screen_to_world_mouse_map(self.game.window, self.game.canvas, event.pos)
             if event.button == 4:
-                self.scroll.down(event.pos, keys)
+                self.scroll.down(pos, keys)
             if event.button == 5:
-                self.scroll.up(event.pos, keys)
+                self.scroll.up(pos, keys)
+
+
+def screen_to_world_mouse_map(screen, canvas, pos):
+    return canvas.screen_to_world_v2(gb.remap(pos, screen, canvas))

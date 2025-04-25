@@ -245,7 +245,7 @@ class CartPoleGame(gb.BaseScreen):
         for scope in self.scopes.values():
             if self.mouse.left.dragging and scope.focus:
                 canvas = self.canvas
-                delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
+                delta = self.mouse.left.drag_delta #canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
                 scope.pos = Vector2(scope.pos) + delta
                 self.mouse.left.clear_drag_delta()

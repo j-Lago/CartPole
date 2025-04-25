@@ -21,3 +21,4 @@ from .utils import *
 from .button import Button
 from .progressbar import ProgressBar
 from .event_enum import UserEventEnum
+from .slider import Slider

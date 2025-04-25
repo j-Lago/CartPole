@@ -24,6 +24,12 @@ def rotate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], angle:
 def translate_vec2s(vecs: Sequence[Vector2] | Sequence[tuple[float, float]], shift: Vector2) -> Sequence:
     return tuple( (vec[0]+shift[0], vec[1]+shift[1]) for vec in vecs)
 
+
+def point_circle_collision(point: Vec2, circ_center: Vec2, circ_radius: float):
+    if not isinstance(point, Vector2):
+        point = Vector2(point)
+    return (point-circ_center).magnitude() <= circ_radius
+
 # deprecated
 # def collision_point_rect(point: Vec2, rect: Vec4) -> bool:
 #     return rect[0] < point[0] < rect[0] + rect[2] and rect[1] > point[1] > rect[1] - rect[3]

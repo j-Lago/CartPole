@@ -83,6 +83,7 @@ class BaseScreen(metaclass=MetaLoopCall):
         self.post_draw_callback = None
 
         self.popups = dict()
+        self.previous_state_screenshot = None
         # self.canvases = dict()
         # self.active_canvas_key = None
         # self.last_active_canvas_key = None
