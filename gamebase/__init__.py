@@ -22,3 +22,4 @@ from .button import Button
 from .progressbar import ProgressBar
 from .event_enum import UserEventEnum
 from .slider import Slider
+from .frame import Frame
