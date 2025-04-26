@@ -10,7 +10,7 @@ class Teste(gb.BaseScreen):
         self.canvas.draw_fun = self.draw_main
         # self.mouse.set_visible(False)
         self.show_info()
-        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .6, .6), alpha=200)
+        self.frame = gb.Frame(self.canvas, (0, 0, .6, .6), size=(300, 200), alpha=200)
         self.slider = gb.Slider(self.canvas, (-.4, 0.8, 0.1, 0.6), max_value=0.5, min_value=-0.5)
         self.th = 0.0
 

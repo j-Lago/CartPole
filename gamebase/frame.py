@@ -28,13 +28,19 @@ class Frame(gb.PopUp):
         self.draw_fun = self.default_draw
 
     def default_draw(self, canvas: gb.Canvas):
-        canvas.fill((60, 60, 60))
-        canvas.draw_rect(self.bg_color, self.rect, 0, self.border_radius)
-        canvas.draw_rect(self.border_color, self.rect, self.border_width, self.border_radius)
-        print(self._last_alpha)
+        self.fill((60, 30, 30))
+        # self.draw_rect(self.bg_color, self.rect, 0, self.border_radius)
+        # self.draw_rect(self.border_color, self.rect, self.border_width, self.border_radius)
+        self.draw_circle((255, 255, 0), (0, 0), .1)
+        self.draw_circle((255, 255, 0), (-1, 1), .1)
+        self.draw_circle((255, 255, 0), (-1, -1), .1)
+        self.draw_circle((255, 255, 0), (1, -1), .1)
+        self.draw_circle((255, 255, 0), (1, 1), .1)
+        canvas.blit(self.surface, (.4, -.2))
 
     def update(self, game:gb.BaseScreen):
-        self.draw()
+        self.default_draw(game.canvas)
+        # self.draw()
 
 
 
