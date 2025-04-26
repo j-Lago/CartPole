@@ -113,9 +113,9 @@ class Cart:
         self.point_particles = None
         self.text_particles = None
         self.sliders = {
-            'kp': gb.Slider(self.canvas, (pos[0]-.7, pos[1]+0.55, 0.1, 0.6), text='kp', font=self.game.fonts['small'],max_value=0.1, min_value=0.0, init_value=0.01),
-            'ki': gb.Slider(self.canvas, (pos[0]-.55, pos[1]+0.55, 0.1, 0.6), text='ki', font=self.game.fonts['small'],max_value=.005, min_value=.0000001, init_value=.0005),
-            'kd': gb.Slider(self.canvas, (pos[0]-.4, pos[1]+0.55, 0.1, 0.6), text='kd', font=self.game.fonts['small'],max_value=0.05, min_value=0.0, init_value=0.015),
+            'kp': gb.Slider(self.canvas, (pos[0]-.7, pos[1]+0.55, 0.1, 0.6), text='kp', font=self.game.fonts['small'],max_value=0.03, min_value=0.0, init_value=0.012),
+            'ki': gb.Slider(self.canvas, (pos[0]-.55, pos[1]+0.55, 0.1, 0.6), text='ki', font=self.game.fonts['small'],max_value=.002, min_value=.0000001, init_value=.0004),
+            'kd': gb.Slider(self.canvas, (pos[0]-.4, pos[1]+0.55, 0.1, 0.6), text='kd', font=self.game.fonts['small'],max_value=0.05, min_value=0.0, init_value=0.03),
         }
 
     def reset(self):

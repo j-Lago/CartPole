@@ -50,25 +50,26 @@ class CartPoleGame(gb.BaseScreen):
 
         self.scopes = {
             'p1': gb.Scope(self.canvas, name='p1 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
-                           alpha=200,
-                           color=self.cols['p1'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                           alpha=200, color=self.cols['p1'], focus_color=self.cols['focus'],
+                           y_scale=(0.25, 0.25, .25, .25), x_scale=0.5,
                            pos=(-1.75, 0.8), size=(320, 180), maxlen=400, visible=False),
             'p2': gb.Scope(self.canvas, name='p2 states', legend=('th', 'x', 'vel', 'w'), fps=self.clock.fps,
-                           alpha=200,
-                           color=self.cols['p2'], y_scale=(0.25, 0.25, .25, .25), focus_color=self.cols['focus'],
+                           alpha=200,color=self.cols['p2'], focus_color=self.cols['focus'],
+                           y_scale = (0.25, 0.25, .25, .25), x_scale=0.5,
                            pos=(-1.75, -0.01), size=(320, 180), maxlen=400, visible=False),
-            'inputs': gb.Scope(self.canvas, name='inputs', legend=('p1', 'p2'), fps=self.clock.fps, alpha=200,
-                               color=self.cols['info'], y_scale=(0.8, 0.8), focus_color=self.cols['focus'],
+            'inputs': gb.Scope(self.canvas, name='inputs', legend=('p1', 'p2'), fps=self.clock.fps,
+                               alpha=200,color=self.cols['info'], focus_color=self.cols['focus'],
+                               y_scale=(0.8, 0.8), x_scale=0.5,
                                pos=(-1.1, -0.65), size=(320, 180), maxlen=400, visible=False),
             'times': gb.Scope(self.canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps,
-                              alpha=200,
-                              color=self.cols['info'], focus_color=self.cols['focus'], pos=(-1.75, -0.65),
-                              size=(320, 180),
-                              maxlen=400, visible=True),
+                              alpha=200, color=self.cols['info'], focus_color=self.cols['focus'],
+                              x_scale=0.5,
+                              pos=(-1.75, -0.65),
+                              size=(320, 180), maxlen=400, visible=True),
             'pid': gb.Scope(self.canvas, name='pid output', legend=('p', 'i', 'd'), fps=self.clock.fps,
-                           alpha=200,
-                           color=self.cols['p1'], y_scale=(3.0, 3.0, 3.0, 3.0), focus_color=self.cols['focus'],
-                           pos=(-1.5, 0.1), size=(320, 180), maxlen=400, visible=True),
+                            alpha=200, color=self.cols['p1'], focus_color=self.cols['focus'],
+                            y_scale=(3.0, 3.0, 3.0, 3.0), x_scale=0.5,
+                            pos=(-1.5, 0.1), size=(320, 180), maxlen=400, visible=True),
         }
 
         self.progress_timer = gb.ProgressBar(
@@ -297,10 +298,12 @@ class CartPoleGame(gb.BaseScreen):
             #     self.scopes['ch1'].rolling = not self.scopes['ch1'].rolling
             # elif event.key == pygame.K_v:
             #     self.scopes['ch1'].visible = not self.scopes['ch1'].visible
-            # elif event.key == pygame.K_KP_MULTIPLY:
-            #     self.scopes['ch1'].x_scale *= 2
-            # elif event.key == pygame.K_KP_DIVIDE:
-            #     self.scopes['ch1'].x_scale /= 2
+            elif event.key == pygame.K_KP_MULTIPLY:
+                for scope in self.scopes.values():
+                    scope.x_scale *= 2
+            elif event.key == pygame.K_KP_DIVIDE:
+                for scope in self.scopes.values():
+                    scope.x_scale /= 2
             #
             # elif event.key == pygame.K_t:
             #     self.scopes['ch2'].clear()

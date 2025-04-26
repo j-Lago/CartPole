@@ -146,10 +146,18 @@ class LinearController(BaseInput):
         self.err_dev_filt_1 = 0.0
         self.err = 0.0
         self.err_1 = 0.0
+
+        self.p_out = 0.0
+        self.i_out = 0.0
+        self.d_out = 0.0
+        self.d_out_1 = 0.0
         # self.aux = Joystick(source=pygame.joystick.Joystick(0), channel=2, dead_zone=0.05)
 
     def update(self, player):
         time = player.ticks / player.fps
+
+        self.err_1 = self.err
+        self.err = player.model.y[0][0]
 
         # coreografia inicial
         # init_r, pause_1, swing_l, pause_2 = 1.25, 1.25, 0.68, 1.5
@@ -171,13 +179,12 @@ class LinearController(BaseInput):
 
     def linear_controller(self, player, time):
         dt = 1/player.fps
-        x = player.model.y[0][0]
+        # x = player.model.y[0][0]
         v = player.model.y[1][0]
 
-        DTH_MAX = 30./180.*math.pi
+        DTH_MAX = 35./180.*math.pi
 
-        self.err_1 = self.err
-        self.err = x
+
 
         # p
         dth_p = self.kp * self.err
@@ -188,7 +195,7 @@ class LinearController(BaseInput):
 
         # d
         # dth_d = self.kd * v
-        fc = 3
+        fc = 6
 
 
         tau = 1 / (2 * math.pi * fc)
@@ -205,10 +212,12 @@ class LinearController(BaseInput):
         self.err_dev_filt_1 = err_dev_filt
         self.d_out_1 = self.d_out
 
-        # dth_sat = max(min(dth, DTH_MAX), -DTH_MAX)
-        # self.int_err -= (dth - dth_sat) / self.ki  # anti windup
+        dth_sat = max(min(dth, DTH_MAX), -DTH_MAX)
+        # if dth_sat != dth:
+        #     print((dth - dth_sat) / self.ki)
+        self.int_err -= (dth - dth_sat) / self.ki  # anti windup
 
-        self.th_target = math.pi + dth
+        self.th_target = math.pi + dth_sat
         # print(dth)
 
         th = player.theta
