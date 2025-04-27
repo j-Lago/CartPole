@@ -10,8 +10,11 @@ class Teste(gb.BaseScreen):
         self.canvas.draw_fun = self.draw_main
         # self.mouse.set_visible(False)
         self.show_info()
-        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .7, .6), alpha=200, origin='topleft')
-        self.slider = gb.Slider(self.frame, (0, 0.0, 0.1, 0.6), max_value=0.5, min_value=-0.5)
+        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .7, .7), alpha=200, bg_color=(40, 40, 40), origin='topleft')
+        self.slider = gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.6), text='w', font=self.fonts['small'], max_value=0.5, min_value=-0.5)
+        self.slider2 = gb.Slider(self.frame, (0.2, -0.05, 0.1, 0.6), text='s', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
+
+        self.slider3 = gb.Slider(self.canvas, (0.2, -0.05, 0.1, 0.6), text='r', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
 
         self.th = 0.0
 
@@ -38,11 +41,11 @@ class Teste(gb.BaseScreen):
         # color, width = ((255, 255, 0), 3) if gb.point_circle_collision(pos, center, r) else ((127, 127, 255), 2)
         # canvas.draw_circle(color, center, r, width)
 
-        self.slider.update(self)
+        self.slider3.update(self)
         self.frame.update(self)
 
         self.th -= .1 * self.slider.value
-        canvas.draw_polygon((255, 255, 255), points.rotate(self.th, (0.4, 0.2)))
+        canvas.draw_polygon((255, 255, 255), points.rotate(self.th, (0.4, 0.2)).scale(self.slider2.value))
         # canvas.draw_circle((200, 200, 200), pos, .015)
         # canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop',
         #                  shift=(0, -0.03))

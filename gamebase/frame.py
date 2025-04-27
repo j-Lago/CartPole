@@ -8,7 +8,6 @@ class Frame(gb.PopUp):
                  rect: gb.Rect_f | tuple[float, float, float, float],
                  *args,
                  origin: str = 'topleft',
-                 items: gb.PopUp = None,
                  # bg_color = (35, 35, 35),
                  border_color = (60, 60, 60),
                  border_radius: int = 10,
@@ -29,9 +28,7 @@ class Frame(gb.PopUp):
             rect = gb.Rect_f(rect)
         self.rect = rect
 
-        if items is None:
-            items = []
-        self.items = items
+        self.components = []
 
         # self.bg_color = bg_color
         self.border_color = border_color
@@ -40,29 +37,31 @@ class Frame(gb.PopUp):
 
         self.draw_fun = self.default_draw
 
+    def register_component(self, new_component):
+        self.components.append(new_component)
+
+
 
     def default_draw(self, canvas: gb.Canvas):
 
-        # self.draw_rect(self.bg_color, self.rect, 0, self.border_radius)
-        # self.draw_rect(self.border_color, self.rect, self.border_width, self.border_radius)
-        self.draw_circle((255, 255, 0), (0, 0), .02)
-        self.draw_circle((255, 255, 0), (-1, 1), .1)
-        self.draw_circle((255, 255, 0), (-1, -1), .1)
-        self.draw_circle((255, 255, 0), (1, -1), .1)
-        self.draw_circle((255, 255, 0), (1, 1), .1)
-
-        for i in range(10):
-            self.draw_circle((255, 25 * (10-i), 25*i), (-0.1 * i, 0.1 * i), .02)
-            self.draw_circle((255, 25 * (10-i), 25*i), (-0.1 * i, -0.1 * i), .02)
-            self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, -0.1 * i), .02)
-            self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, 0.1 * i), .02)
+        # self.draw_circle((255, 255, 0), (0, 0), .02)
+        # self.draw_circle((255, 255, 0), (-1, 1), .1)
+        # self.draw_circle((255, 255, 0), (-1, -1), .1)
+        # self.draw_circle((255, 255, 0), (1, -1), .1)
+        # self.draw_circle((255, 255, 0), (1, 1), .1)
+        # for i in range(10):
+        #     self.draw_circle((255, 25 * (10-i), 25*i), (-0.1 * i, 0.1 * i), .02)
+        #     self.draw_circle((255, 25 * (10-i), 25*i), (-0.1 * i, -0.1 * i), .02)
+        #     self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, -0.1 * i), .02)
+        #     self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, 0.1 * i), .02)
 
         canvas.blit(self.surface, self.rect[0:2])
-        self.fill((60, 30, 30))
+        self.fill(self.bg_color)
 
-    def update(self, game:gb.BaseScreen):
+    def update(self, game: gb.BaseScreen):
+        for component in self.components:
+            component.update(game)
         self.default_draw(game.canvas)
-        # self.draw()
 
 
 

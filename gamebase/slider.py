@@ -33,6 +33,11 @@ class Slider():
                  custom_callback: Callable = None,
                  ):
 
+        if font is None and text is not None:
+            raise ValueError("Uma 'font' deve ser forncida já que 'text' não é 'None'.")
+
+        if isinstance(canvas, gb.Frame):
+            canvas.register_component(self)
         self.canvas = canvas
         self.max_value = max_value
         self.min_value = min_value
@@ -76,6 +81,7 @@ class Slider():
 
         self.norm_value = 0.0
         self.value = init_value # set self.norm_value
+
 
     @property
     def value(self):

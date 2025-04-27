@@ -17,7 +17,7 @@ class Settings(st.GameState):
         y0 = 0.9
         y = y0
         x = -0.4
-        for key, input_ in self.game.inputs.items():
+        for key, input_ in self.game.inputs.components():
             self.buttons_p1[key] = gb.Button(self.game.canvas, (x, y, w, h), key,
                                              font=self.game.fonts['medium'],
                                              custom_callback=self.select_bt_p1,
@@ -43,7 +43,7 @@ class Settings(st.GameState):
         y0 = -0.28
         y = y0
         x = -0.4
-        for key, input_ in self.game.inputs.items():
+        for key, input_ in self.game.inputs.components():
             self.buttons_p2[key] = gb.Button(self.game.canvas, (x, y, w, h), key,
                                              font=self.game.fonts['medium'],
                                              custom_callback=self.select_bt_p2,
@@ -93,7 +93,7 @@ class Settings(st.GameState):
         self.buttons_p2_dummy.draw()
 
     def select_bt(self, pressed_button: gb.Button, player, buttons):
-        for key, button in buttons.items():
+        for key, button in buttons.components():
             button.selected = button == pressed_button
             if button.selected:
                 player.input.active_player_key = None
