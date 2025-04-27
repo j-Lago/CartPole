@@ -19,7 +19,7 @@ class Slider():
                  fg_color: pygame.Color | tuple[int, int, int] = (120, 120, 120),
                  bg_color: pygame.Color | tuple[int, int, int] = (45, 45, 45),
                  focus_color: pygame.Color | tuple[int, int, int] | None = (200, 200, 60),
-                 handle_color: pygame.Color | tuple[int, int, int]  | None = None,
+                 handle_color: pygame.Color | tuple[int, int, int] | None = None,
                  border_width: int = 2,
                  custom_draw: Callable = None,
                  custom_focus: Callable = None,
@@ -119,7 +119,6 @@ class Slider():
             self.canvas.draw_rect(border_color, self.rect, border_radius=r_border, width=self.border_width) # border
 
     def update(self, game: gb.BaseScreen):
-        self.handle_on_focus = gb.point_circle_collision(self.mouse_remap(game.mouse.pos), (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
 
         self.focus(self.mouse_remap(game.mouse.pos))
 
@@ -139,6 +138,12 @@ class Slider():
             self.norm_value = (self.mouse_remap(game.mouse.left.dragpos)[1] - (self.rect.y - self.rect.h + self.border_radius)) / (self.rect.h - 2*self.border_radius)
             self.norm_value = max(0.0, min(1.0, self.norm_value))
 
+        self.on_focus |= self.drag_qualifier
+
+        self.handle_on_focus = self.on_focus and gb.point_circle_collision(self.mouse_remap(game.mouse.pos), (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
+        self.handle_on_focus |= self.drag_qualifier
+
+
         self.draw()
 
     def callback(self):
@@ -149,7 +154,10 @@ class Slider():
         if self.custom_focus is not None:
             self.custom_focus()
         else:
-            self.on_focus = self.collision(point)
+            if isinstance(self.canvas, gb.Frame):
+                self.on_focus = self.collision(point) and not self.canvas.another_on_focus(self)
+            else:
+                self.on_focus = self.collision(point)
 
 
     def mouse_remap(self, point: gb.Vector2):
