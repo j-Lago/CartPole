@@ -28,6 +28,7 @@ class Frame(gb.PopUp):
         if isinstance(rect, gb.Rect_f):
             rect = gb.Rect_f(rect)
         self.rect = rect
+
         if items is None:
             items = []
         self.items = items
@@ -38,6 +39,7 @@ class Frame(gb.PopUp):
         self.border_width = border_width
 
         self.draw_fun = self.default_draw
+
 
     def default_draw(self, canvas: gb.Canvas):
 
@@ -55,8 +57,7 @@ class Frame(gb.PopUp):
             self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, -0.1 * i), .02)
             self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, 0.1 * i), .02)
 
-
-        canvas.blit(self.surface, (.4, -.2))
+        canvas.blit(self.surface, self.rect[0:2])
         self.fill((60, 30, 30))
 
     def update(self, game:gb.BaseScreen):
@@ -65,3 +66,5 @@ class Frame(gb.PopUp):
 
 
 
+    def mouse_remap(self, point: Vector2):
+        return ((point*self.main_canvas.scale + self.main_canvas.bias) -(Vector2(self.rect[0:2])*self.scale+self.main_canvas.bias+(self.bias[0], -self.bias[1]))) / self.scale
