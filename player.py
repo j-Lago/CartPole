@@ -112,10 +112,11 @@ class Cart:
 
         self.point_particles = None
         self.text_particles = None
+        self.frame = gb.Frame(self.canvas, (pos[0]-.7, pos[1]+0.55, .5, .6), alpha=200, origin='topleft')
         self.sliders = {
-            'kp': gb.Slider(self.canvas, (pos[0]-.7, pos[1]+0.55, 0.1, 0.6), text='kp', font=self.game.fonts['small'],max_value=0.03, min_value=0.0, init_value=0.012),
-            'ki': gb.Slider(self.canvas, (pos[0]-.55, pos[1]+0.55, 0.1, 0.6), text='ki', font=self.game.fonts['small'],max_value=.002, min_value=.0000001, init_value=.0004),
-            'kd': gb.Slider(self.canvas, (pos[0]-.4, pos[1]+0.55, 0.1, 0.6), text='kd', font=self.game.fonts['small'],max_value=0.05, min_value=0.0, init_value=0.03),
+            'kp': gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.5), text='kp', font=self.game.fonts['small'],max_value=0.03, min_value=0.0, init_value=0.012),
+            'ki': gb.Slider(self.frame, (0.20, -0.05, 0.1, 0.5), text='ki', font=self.game.fonts['small'],max_value=.002, min_value=.0000001, init_value=.0004),
+            'kd': gb.Slider(self.frame, (0.35, -0.05, 0.1, 0.5), text='kd', font=self.game.fonts['small'],max_value=0.05, min_value=0.0, init_value=0.03),
         }
 
     def reset(self):
@@ -471,10 +472,9 @@ class Cart:
                 self.ticks_since_perturbation = 0
 
         if isinstance(self.input, gb.LinearController):
+            self.frame.update(self.game)
             for key, slider in self.sliders.items():
-                slider.update(self.game)
                 self.input.__dict__[key] = slider.value
-                # print(f'{key}: {slider.value}')
 
 
 @dataclasses.dataclass
