@@ -10,11 +10,14 @@ class Teste(gb.BaseScreen):
         self.canvas.draw_fun = self.draw_main
         # self.mouse.set_visible(False)
         self.show_info()
-        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .7, .7), alpha=200, bg_color=(40, 40, 40), origin='topleft')
+        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .35, .7), alpha=200, origin='topleft')
         self.slider = gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.6), text='w', font=self.fonts['small'], max_value=0.5, min_value=-0.5)
         self.slider2 = gb.Slider(self.frame, (0.2, -0.05, 0.1, 0.6), text='s', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
 
-        self.slider3 = gb.Slider(self.canvas, (0.2, -0.05, 0.1, 0.6), text='r', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
+        self.frame_rgb = gb.Frame(self.canvas, (0.8, -0.2, .5, .6), alpha=200, bg_color=None, origin='topleft', border_radius=50)
+        self.slider_r = gb.Slider(self.frame_rgb, (0.05, -0.05, 0.10, 0.5), text='r', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(255,90,90))
+        self.slider_g = gb.Slider(self.frame_rgb, (0.2, -0.05, 0.10, 0.5), text='g', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,255,90))
+        self.slider_b = gb.Slider(self.frame_rgb, (0.35, -0.05, 0.10, 0.5), text='b', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,90,255))
 
         self.th = 0.0
 
@@ -23,34 +26,18 @@ class Teste(gb.BaseScreen):
     def draw_main(self, canvas: gb.Canvas):
         canvas.fill(self.cols['bg'])
 
-        canvas.draw_circle((90, 240, 180), self.mouse.pos, .12, 2)
 
-        # pos = draw_grid(self, canvas)
-        pos = self.mouse.pos
 
         points = gb.Points((0, 0), (0.6, 0.1), (0.4, 0.6))
 
 
-
-        rect = gb.Rect_f(-0.9, -0.5, .5, .2)
-        color, width = ((255, 255, 0), 3) if rect.point_collision(pos) else ((127, 127, 255), 2)
-        canvas.draw_rect(color, rect, width)
-
-        center = Vector2(.6, -.6)
-        r = .2
-        # color, width = ((255, 255, 0), 3) if gb.point_circle_collision(pos, center, r) else ((127, 127, 255), 2)
-        # canvas.draw_circle(color, center, r, width)
-
-        self.slider3.update(self)
-        self.frame.update(self)
-
         self.th -= .1 * self.slider.value
-        canvas.draw_polygon((255, 255, 255), points.rotate(self.th, (0.4, 0.2)).scale(self.slider2.value))
-        # canvas.draw_circle((200, 200, 200), pos, .015)
-        # canvas.draw_text((200, 200, 200), self.fonts['small'], f'({pos[0]:.2f}, {pos[1]:.2f})', pos, anchor='midtop',
-        #                  shift=(0, -0.03))
+        color = int(self.slider_r.value), int(self.slider_g.value), int(self.slider_b.value)
+        canvas.draw_polygon(color, points.rotate(self.th, (0.4, 0.2)).scale(self.slider2.value))
 
-        canvas.draw_circle((240, 180, 90), self.mouse.pos, .1, 2)
+        self.frame.update(self)
+        self.frame_rgb.update(self)
+
 
 
 

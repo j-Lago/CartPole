@@ -8,14 +8,15 @@ class Frame(gb.PopUp):
                  rect: gb.Rect_f | tuple[float, float, float, float],
                  *args,
                  origin: str = 'topleft',
-                 # bg_color = (35, 35, 35),
-                 border_color = (60, 60, 60),
+                 orientation: str = 'vertical',
+                 bg_color: pygame.Color | tuple[int, int, int] | None = None,
+                 border_color: pygame.Color | tuple[int, int, int] | None = (60, 60, 60),
                  border_radius: int = 10,
                  border_width: int = 2,
                  **kwargs
                  ):
         size = Vector2(rect[2:])
-        super().__init__(main_canvas, *args, size=size * main_canvas.scale, **kwargs)
+        super().__init__(main_canvas, *args, bg_color=bg_color, size=size * main_canvas.scale, **kwargs)
         self.scale = main_canvas.scale
         if origin == 'topleft':
             self.bias = Vector2(0, 0)
@@ -28,14 +29,15 @@ class Frame(gb.PopUp):
             rect = gb.Rect_f(rect)
         self.rect = rect
 
-        self.components = []
+        if orientation.lower() != 'vertical':
+            raise NotImplementedError("Apenas orientation='vertical' foi implementado.")
 
-        # self.bg_color = bg_color
         self.border_color = border_color
         self.border_radius = border_radius
         self.border_width = border_width
-
         self.draw_fun = self.default_draw
+
+        self.components = []
 
     def register_component(self, new_component):
         self.components.append(new_component)
@@ -44,19 +46,13 @@ class Frame(gb.PopUp):
 
     def default_draw(self, canvas: gb.Canvas):
 
-        # self.draw_circle((255, 255, 0), (0, 0), .02)
-        # self.draw_circle((255, 255, 0), (-1, 1), .1)
-        # self.draw_circle((255, 255, 0), (-1, -1), .1)
-        # self.draw_circle((255, 255, 0), (1, -1), .1)
-        # self.draw_circle((255, 255, 0), (1, 1), .1)
-        # for i in range(10):
-        #     self.draw_circle((255, 25 * (10-i), 25*i), (-0.1 * i, 0.1 * i), .02)
-        #     self.draw_circle((255, 25 * (10-i), 25*i), (-0.1 * i, -0.1 * i), .02)
-        #     self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, -0.1 * i), .02)
-        #     self.draw_circle((255, 25 * (10-i), 25*i), (0.1 * i, 0.1 * i), .02)
+        if self.bg_color is not None:
+            canvas.draw_rect(self.bg_color, self.rect, 0, self.border_radius)
+        if self.border_color is not None:
+            canvas.draw_rect(self.border_color, self.rect, self.border_width, self.border_radius)
 
         canvas.blit(self.surface, self.rect[0:2])
-        self.fill(self.bg_color)
+        # self.fill(self.bg_color)
 
     def update(self, game: gb.BaseScreen):
         for component in self.components:
