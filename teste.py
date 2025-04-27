@@ -11,8 +11,12 @@ class Teste(gb.BaseScreen):
         # self.mouse.set_visible(False)
         self.show_info()
         self.frame = gb.Frame(self.canvas, (0, 0, .7, .6), alpha=200, origin='topleft')
+        self.slider1 = gb.Slider(self.frame, (0, 0.0, 0.1, 0.6), max_value=0.5, min_value=-0.5)
+
         self.slider = gb.Slider(self.canvas, (-.4, 0.8, 0.1, 0.6), max_value=0.5, min_value=-0.5)
         self.th = 0.0
+
+        # self.canvas.bias = (500, 500)
 
     def draw_main(self, canvas: gb.Canvas):
         canvas.fill(self.cols['bg'])
@@ -35,8 +39,9 @@ class Teste(gb.BaseScreen):
         # color, width = ((255, 255, 0), 3) if gb.point_circle_collision(pos, center, r) else ((127, 127, 255), 2)
         # canvas.draw_circle(color, center, r, width)
 
+        self.slider1.update(self)
         self.frame.update(self)
-        self.slider.update(self)
+        # self.slider.update(self)
 
         self.th -= .1 * self.slider.value
         canvas.draw_polygon((255, 255, 255), points.rotate(self.th, (0.4, 0.2)))

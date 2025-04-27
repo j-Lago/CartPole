@@ -40,7 +40,7 @@ class Frame(gb.PopUp):
         self.draw_fun = self.default_draw
 
     def default_draw(self, canvas: gb.Canvas):
-        self.fill((60, 30, 30))
+
         # self.draw_rect(self.bg_color, self.rect, 0, self.border_radius)
         # self.draw_rect(self.border_color, self.rect, self.border_width, self.border_radius)
         self.draw_circle((255, 255, 0), (0, 0), .02)
@@ -57,6 +57,7 @@ class Frame(gb.PopUp):
 
 
         canvas.blit(self.surface, (.4, -.2))
+        self.fill((60, 30, 30))
 
     def update(self, game:gb.BaseScreen):
         self.default_draw(game.canvas)
