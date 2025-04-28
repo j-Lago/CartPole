@@ -17,21 +17,21 @@ class Settings(st.GameState):
         y0 = 0.9
         y = y0
         x = -0.4
-        for key, input_ in self.game.inputs.components():
-            self.buttons_p1[key] = gb.Button(self.game.canvas, (x, y, w, h), key,
-                                             font=self.game.fonts['medium'],
-                                             custom_callback=self.select_bt_p1,
-                                             selected=input_ is self.game.players['p1'].input,
-                                             bg_selected_color=self.game.players['p1'].base_color,
-                                             selected_color=self.game.players['p1'].base_color,
-                                             font_selected_color=self.game.cols['bg'],
-                                             focus_color=self.game.players['p1'].base_color,
-                                             font_focus_color=self.game.players['p1'].base_color,
-                                             border_width=2,
+        for key, input_ in self.game.inputs.items():
+            self.buttons_p1[key] = gb.BaseButton(self.game.canvas, (x, y, w, h), key,
+                                                 font=self.game.fonts['medium'],
+                                                 custom_callback=self.select_bt_p1,
+                                                 selected=input_ is self.game.players['p1'].input,
+                                                 bg_selected_color=self.game.players['p1'].base_color,
+                                                 selected_color=self.game.players['p1'].base_color,
+                                                 font_selected_color=self.game.cols['bg'],
+                                                 focus_color=self.game.players['p1'].base_color,
+                                                 font_focus_color=self.game.players['p1'].base_color,
+                                                 border_width=2,
 
-                                             )
+                                                 )
             y -= h + py
-        self.buttons_p1_dummy = gb.Button(
+        self.buttons_p1_dummy = gb.BaseButton(
             self.game.canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
             text='P1', font=self.game.fonts['huge'],
             selectable=False,
@@ -43,19 +43,19 @@ class Settings(st.GameState):
         y0 = -0.28
         y = y0
         x = -0.4
-        for key, input_ in self.game.inputs.components():
-            self.buttons_p2[key] = gb.Button(self.game.canvas, (x, y, w, h), key,
-                                             font=self.game.fonts['medium'],
-                                             custom_callback=self.select_bt_p2,
-                                             selected=input_ is self.game.players['p2'].input,
-                                             bg_selected_color=self.game.players['p2'].base_color,
-                                             selected_color=self.game.players['p2'].base_color,
-                                             font_selected_color=self.game.cols['bg'],
-                                             focus_color=self.game.players['p2'].base_color,
-                                             font_focus_color=self.game.players['p2'].base_color,
-                                             )
+        for key, input_ in self.game.inputs.items():
+            self.buttons_p2[key] = gb.BaseButton(self.game.canvas, (x, y, w, h), key,
+                                                 font=self.game.fonts['medium'],
+                                                 custom_callback=self.select_bt_p2,
+                                                 selected=input_ is self.game.players['p2'].input,
+                                                 bg_selected_color=self.game.players['p2'].base_color,
+                                                 selected_color=self.game.players['p2'].base_color,
+                                                 font_selected_color=self.game.cols['bg'],
+                                                 focus_color=self.game.players['p2'].base_color,
+                                                 font_focus_color=self.game.players['p2'].base_color,
+                                                 )
             y -= h + py
-        self.buttons_p2_dummy = gb.Button(
+        self.buttons_p2_dummy = gb.BaseButton(
             self.game.canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
             text='P2', font=self.game.fonts['huge'],
             selectable=False,
@@ -92,18 +92,18 @@ class Settings(st.GameState):
         self.buttons_p1_dummy.draw()
         self.buttons_p2_dummy.draw()
 
-    def select_bt(self, pressed_button: gb.Button, player, buttons):
-        for key, button in buttons.components():
+    def select_bt(self, pressed_button: gb.BaseButton, player, buttons):
+        for key, button in buttons.items():
             button.selected = button == pressed_button
             if button.selected:
                 player.input.active_player_key = None
                 player.input = self.game.inputs[key]
                 player.input.active_player_key = player.name
 
-    def select_bt_p1(self, pressed_button: gb.Button):
+    def select_bt_p1(self, pressed_button: gb.BaseButton):
         self.select_bt(pressed_button, self.game.players['p1'], self.buttons_p1)
 
-    def select_bt_p2(self, pressed_button: gb.Button):
+    def select_bt_p2(self, pressed_button: gb.BaseButton):
         self.select_bt(pressed_button, self.game.players['p2'], self.buttons_p2)
 
 

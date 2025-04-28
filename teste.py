@@ -26,6 +26,7 @@ class Teste(gb.BaseScreen):
         self.slider_g = gb.Slider(self.frame_rgb, (0.2, -0.05, 0.10, 0.5), text='g', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,255,90))
         self.slider_b = gb.Slider(self.frame_rgb, (0.35, -0.05, 0.10, 0.5), text='b', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,90,255))
 
+        self.button = gb.BaseButton(self.canvas, (-0.2, -0.2, .3, .1), text='button', font=self.fonts['small'])
 
         self.th = 0.0
 
@@ -52,6 +53,8 @@ class Teste(gb.BaseScreen):
         y = (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1)
         self.scope.append(x, y)
         self.scope.update(self)
+
+        self.button.draw()
 
 
 

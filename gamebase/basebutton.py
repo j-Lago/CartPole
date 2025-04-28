@@ -2,7 +2,7 @@ import gamebase as gb
 import pygame
 from typing import Callable
 
-class Button():
+class BaseButton():
     def __init__(self,
                  canvas: gb.Canvas,
                  rect: gb.Rect_f | tuple[float, float, float, float],

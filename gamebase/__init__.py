@@ -18,7 +18,7 @@ from .scope import Scope
 from .gameclock import Clock, Timer
 from .lerp import *
 from .utils import *
-from .button import Button
+from .basebutton import BaseButton
 from .progressbar import ProgressBar
 from .event_enum import UserEventEnum
 from .slider import Slider
