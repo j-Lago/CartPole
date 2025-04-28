@@ -18,6 +18,9 @@ class Frame(gb.PopUp):
                  ):
         size = Vector2(rect[2:])
         super().__init__(main_canvas, *args, bg_color=bg_color, size=size * main_canvas.scale, **kwargs)
+
+        gb.DraggableController.register_instance(self)
+
         self.scale = main_canvas.scale
         if origin == 'topleft':
             self.bias = Vector2(0, 0)
@@ -74,7 +77,7 @@ class Frame(gb.PopUp):
 
     def update(self, game: gb.BaseScreen):
 
-        self.on_focus = self.rect.point_collision(game.mouse.pos) and not self.another_on_focus(self)
+        self.on_focus = self.rect.point_collision(game.mouse.pos) and (not self.component_on_focus(self)) and (not gb.DraggableController.another_on_focus(self))
 
         if game.mouse.left.pressed:
             if not self._clicked and self.on_focus:
@@ -82,7 +85,6 @@ class Frame(gb.PopUp):
             self._clicked = True
         else:
             self._clicked = False
-
 
         if self.drag_qualifier and not game.mouse.left.pressed:
             self.drag_qualifier = False
@@ -93,17 +95,11 @@ class Frame(gb.PopUp):
             self.world_pos = self.prev_drag_pos + delta
 
 
-
-
-
-
-
-
         for component in self.components:
             component.update(game)
         self.default_draw(game.canvas)
 
-    def another_on_focus(self, component):
+    def component_on_focus(self, component):
         if component != self and self.drag_qualifier:
             return True
         ret = False

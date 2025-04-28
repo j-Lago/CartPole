@@ -95,15 +95,15 @@ def draw(state: st.GameState, intro=False):
 
     def another_in_focus(self_key):
         for ikey, iscope in game.scopes.items():
-            if ikey != self_key and iscope.focus:
+            if ikey != self_key and iscope.on_focus:
                 return True
         return False
 
     for key, scope in game.scopes.items():
         scope.append(x, y[key])
-        scope.focus = scope.collision(game.mouse.pos) and not another_in_focus(key)
-        scope.draw()
-        scope.blit_to_main()
+        # scope.on_focus = scope.collision(game.mouse.pos) and not another_in_focus(key)
+        scope.update(game)
+
 
     #
 

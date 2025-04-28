@@ -126,7 +126,7 @@ class Demo(gb.BaseScreen):
             self.mouse.right.clear_drag_delta()
 
         for scope in self.scopes.values():
-            if self.mouse.left.dragging and scope.focus:
+            if self.mouse.left.dragging and scope.on_focus:
                 canvas = self.canvas
                 delta = canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
                 # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
@@ -305,13 +305,13 @@ class Demo(gb.BaseScreen):
 
         def another_in_focus(self_key):
             for ikey, iscope in self.scopes.items():
-                if ikey != self_key and iscope.focus:
+                if ikey != self_key and iscope.on_focus:
                     return True
             return False
 
         for key, scope in self.scopes.items():
             scope.append(x, y[key])
-            scope.focus = scope.collision(self.mouse.pos) and not another_in_focus(key)
+            scope.on_focus = scope.collision(self.mouse.pos) and not another_in_focus(key)
             scope.draw()
             scope.blit_to_main()
 

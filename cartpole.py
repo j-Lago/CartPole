@@ -242,18 +242,17 @@ class CartPoleGame(gb.BaseScreen):
 
     def handle_user_input_event(self, event):
         self.state.handle_event(event)
-        if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
-            self.canvas.bias = (int(self.canvas.bias[0] + self.mouse.right.drag_delta[0]),
-                                int(self.canvas.bias[1] + self.mouse.right.drag_delta[1]))
-            self.mouse.right.clear_drag_delta()
 
-        for scope in self.scopes.values():
-            if self.mouse.left.dragging and scope.focus:
-                canvas = self.canvas
-                delta = self.mouse.left.drag_delta #canvas.screen_to_world_delta_v2(gb.remap(self.mouse.left.drag_delta, self.window, canvas))
-                # print(self.mouse.left.drag_delta, '->', remap(self.mouse.left.drag_delta, self.window, canvas), '->', canvas.screen_to_world_delta_v2(remap(self.mouse.left.drag_delta, self.window, canvas)))
-                scope.pos = Vector2(scope.pos) + delta
-                self.mouse.left.clear_drag_delta()
+        # if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
+        #     self.canvas.bias = (int(self.canvas.bias[0] + self.mouse.right.drag_delta[0]),
+        #                         int(self.canvas.bias[1] + self.mouse.right.drag_delta[1]))
+        #     self.mouse.right.clear_drag_delta()
+        #
+        # for scope in self.scopes.values():
+        #     if self.mouse.left.dragging and scope.focus:
+        #         delta = self.mouse.left.drag_delta
+        #         scope.pos = Vector2(scope.pos) + delta
+        #         self.mouse.left.clear_drag_delta()
 
         if event.type == pygame.KEYDOWN:
             # if event.key == pygame.K_ESCAPE:

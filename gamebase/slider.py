@@ -155,7 +155,7 @@ class Slider():
             self.custom_focus()
         else:
             if isinstance(self.canvas, gb.Frame):
-                self.on_focus = self.collision(point) and not self.canvas.another_on_focus(self)
+                self.on_focus = (self.collision(point) and (not self.canvas.component_on_focus(self))) and (not gb.DraggableController.another_on_focus(self.canvas))
             else:
                 self.on_focus = self.collision(point)
 

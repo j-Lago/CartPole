@@ -5,7 +5,7 @@ try:
 except PackageNotFoundError:
     __version__ = '0.0.0'
 
-
+from .draggable_controller import DraggableController
 from .canvas import Canvas, remap, blit_with_aspect_ratio
 from .basescreen import BaseScreen
 from .filters import MediaMovel
@@ -23,3 +23,5 @@ from .progressbar import ProgressBar
 from .event_enum import UserEventEnum
 from .slider import Slider
 from .frame import Frame
+
+
