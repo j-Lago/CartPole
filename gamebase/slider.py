@@ -120,7 +120,26 @@ class Slider():
 
     def update(self, game: gb.BaseScreen):
 
-        self.focus(self.mouse_remap(game.mouse.pos))
+        self.focus(game)
+
+
+
+
+        self.draw()
+
+    def callback(self):
+        if self.custom_callback is not None:
+            self.custom_callback(self)
+
+    def focus(self, game: gb.BaseScreen):
+        point = self.mouse_remap(game.mouse.pos)
+        if self.custom_focus is not None:
+            self.custom_focus()
+        else:
+            if isinstance(self.canvas, gb.Frame):
+                self.on_focus = (self.collision(point) and (not self.canvas.any_subcomponent_on_focus(self))) and (not gb.DragLock.another_on_focus(self.canvas))
+            else:
+                self.on_focus = self.collision(point)
 
         if self.on_focus and game.mouse.left.pressed:
             if not self._clicked:
@@ -130,7 +149,7 @@ class Slider():
             self._clicked = False
 
         if game.mouse.left.pressed:
-            self.drag_qualifier |= gb.point_circle_collision(self.mouse_remap(game.mouse.left.presspos), (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
+            self.drag_qualifier |= self.on_focus and gb.point_circle_collision(self.mouse_remap(game.mouse.left.presspos), (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
         else:
             self.drag_qualifier = False
 
@@ -142,22 +161,6 @@ class Slider():
 
         self.handle_on_focus = self.on_focus and gb.point_circle_collision(self.mouse_remap(game.mouse.pos), (self.rect.center[0],self.rect.y - self.border_radius - (1 - self.norm_value) * (self.rect.h - 2 * self.border_radius)),self.border_radius)
         self.handle_on_focus |= self.drag_qualifier
-
-
-        self.draw()
-
-    def callback(self):
-        if self.custom_callback is not None:
-            self.custom_callback(self)
-
-    def focus(self, point: gb.Vector2 | tuple[float, float]):
-        if self.custom_focus is not None:
-            self.custom_focus()
-        else:
-            if isinstance(self.canvas, gb.Frame):
-                self.on_focus = (self.collision(point) and (not self.canvas.component_on_focus(self))) and (not gb.DragLock.another_on_focus(self.canvas))
-            else:
-                self.on_focus = self.collision(point)
 
 
     def mouse_remap(self, point: gb.Vector2):

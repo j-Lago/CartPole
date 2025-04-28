@@ -95,7 +95,7 @@ def draw(state: st.GameState, intro=False):
 
     def another_in_focus(self_key):
         for ikey, iscope in game.scopes.items():
-            if ikey != self_key and iscope.on_focus:
+            if ikey != self_key and iscope._on_focus:
                 return True
         return False
 

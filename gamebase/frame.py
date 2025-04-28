@@ -41,13 +41,17 @@ class Frame(gb.PopUp):
         self.border_radius = border_radius
         self.border_width = border_width
         self.draw_fun = self.default_draw
-        self.on_focus = False
+        self._on_focus = False
         self.drag_qualifier = False
         self._clicked = False
 
         self.prev_drag_pos = Vector2(rect[0:2])
 
         self.components = []
+
+    @property
+    def on_focus(self):
+        return self._on_focus or self.any_subcomponent_on_focus(self)
 
     def register_component(self, new_component):
         self.components.append(new_component)
@@ -58,9 +62,9 @@ class Frame(gb.PopUp):
 
         if self.bg_color is not None:
             canvas.draw_rect(self.bg_color, self.rect, 0, self.border_radius)
-        if self.border_color is not None and not self.on_focus:
+        if self.border_color is not None and not self._on_focus:
             canvas.draw_rect(self.border_color, self.rect, self.border_width, self.border_radius)
-        if self.focus_color is not None and self.on_focus:
+        if self.focus_color is not None and self._on_focus:
             canvas.draw_rect(self.focus_color, self.rect, self.border_width, self.border_radius)
 
 
@@ -77,10 +81,10 @@ class Frame(gb.PopUp):
 
     def update(self, game: gb.BaseScreen):
 
-        self.on_focus = self.rect.point_collision(game.mouse.pos) and (not self.component_on_focus(self)) and (not gb.DragLock.another_on_focus(self))
+        self._on_focus = self.rect.point_collision(game.mouse.pos) and (not self.any_subcomponent_on_focus(self)) and (not gb.DragLock.another_on_focus(self))
 
         if game.mouse.left.pressed:
-            if not self._clicked and self.on_focus:
+            if not self._clicked and self._on_focus:
                 self.drag_qualifier = True
             self._clicked = True
         else:
@@ -94,21 +98,20 @@ class Frame(gb.PopUp):
             delta = Vector2(game.mouse.left.drag_delta)
             self.world_pos = self.prev_drag_pos + delta
 
-        self.on_focus |= self.drag_qualifier
+        self._on_focus |= self.drag_qualifier
 
 
         for component in self.components:
             component.update(game)
         self.default_draw(game.canvas)
 
-    def component_on_focus(self, component):
+    def any_subcomponent_on_focus(self, component):
         if self.drag_qualifier:
             return True
         ret = False
         for other in self.components:
             if component is not other:
                 ret |= other.on_focus
-
         return ret
 
 
