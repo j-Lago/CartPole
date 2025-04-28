@@ -14,7 +14,7 @@ class Teste(gb.BaseScreen):
         self.slider = gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.6), text='w', font=self.fonts['small'], max_value=0.5, min_value=-0.5)
         self.slider2 = gb.Slider(self.frame, (0.2, -0.05, 0.1, 0.6), text='s', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
 
-        self.frame_rgb = gb.Frame(self.canvas, (0.8, -0.2, .5, .6), alpha=200, bg_color=None, origin='topleft', border_radius=50)
+        self.frame_rgb = gb.Frame(self.canvas, (0.8, -0.2, .5, .6), alpha=200, origin='topleft')
         self.slider_r = gb.Slider(self.frame_rgb, (0.05, -0.05, 0.10, 0.5), text='r', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(255,90,90))
         self.slider_g = gb.Slider(self.frame_rgb, (0.2, -0.05, 0.10, 0.5), text='g', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,255,90))
         self.slider_b = gb.Slider(self.frame_rgb, (0.35, -0.05, 0.10, 0.5), text='b', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,90,255))

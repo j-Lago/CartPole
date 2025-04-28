@@ -39,6 +39,10 @@ class Frame(gb.PopUp):
         self.border_width = border_width
         self.draw_fun = self.default_draw
         self.on_focus = False
+        self.drag_qualifier = False
+        self._clicked = False
+
+        self.prev_drag_pos = Vector2(rect[0:2])
 
         self.components = []
 
@@ -60,18 +64,48 @@ class Frame(gb.PopUp):
         canvas.blit(self.surface, self.rect[0:2])
         # self.fill(self.bg_color)
 
+    @property
+    def world_pos(self):
+        return Vector2(self.rect[0:2])
+
+    @world_pos.setter
+    def world_pos(self, value):
+        self.rect.x, self.rect.y = value
+
     def update(self, game: gb.BaseScreen):
 
-        if self.rect.point_collision(game.mouse.pos) and not self.another_on_focus(self):
-            self.on_focus = True
+        self.on_focus = self.rect.point_collision(game.mouse.pos) and not self.another_on_focus(self)
+
+        if game.mouse.left.pressed:
+            if not self._clicked and self.on_focus:
+                self.drag_qualifier = True
+            self._clicked = True
         else:
-            self.on_focus = False
+            self._clicked = False
+
+
+        if self.drag_qualifier and not game.mouse.left.pressed:
+            self.drag_qualifier = False
+            self.prev_drag_pos = self.world_pos
+
+        if game.mouse.left.dragging and self.drag_qualifier:
+            delta = Vector2(game.mouse.left.drag_delta)
+            self.world_pos = self.prev_drag_pos + delta
+
+
+
+
+
+
+
 
         for component in self.components:
             component.update(game)
         self.default_draw(game.canvas)
 
     def another_on_focus(self, component):
+        if component != self and self.drag_qualifier:
+            return True
         ret = False
         for other in self.components:
             if component is not other:

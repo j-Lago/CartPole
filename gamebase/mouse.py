@@ -54,6 +54,11 @@ class MouseButton:
     def drag_delta(self):
         return self.dragpos[0]-self.presspos[0], self.dragpos[1]-self.presspos[1]
 
+    def consume_drag_delta(self):
+        ret = self.drag_delta
+        self.presspos = self.dragpos
+        return ret
+
 
 class MouseScroll:
     def __init__(self):
