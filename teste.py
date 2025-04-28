@@ -10,6 +10,13 @@ class Teste(gb.BaseScreen):
         self.canvas.draw_fun = self.draw_main
         # self.mouse.set_visible(False)
         self.show_info()
+
+        self.scope = gb.Scope(self.canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps,
+                              alpha=200, color=self.cols['info'],
+                              x_scale=0.5,
+                              pos=(-1.6, -0.65),
+                              size=(320, 180), maxlen=400, visible=True)
+
         self.frame = gb.Frame(self.canvas, (0.4, -0.2, .35, .7), alpha=200, origin='topleft')
         self.slider = gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.6), text='w', font=self.fonts['small'], max_value=0.5, min_value=-0.5)
         self.slider2 = gb.Slider(self.frame, (0.2, -0.05, 0.1, 0.6), text='s', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
@@ -18,6 +25,7 @@ class Teste(gb.BaseScreen):
         self.slider_r = gb.Slider(self.frame_rgb, (0.05, -0.05, 0.10, 0.5), text='r', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(255,90,90))
         self.slider_g = gb.Slider(self.frame_rgb, (0.2, -0.05, 0.10, 0.5), text='g', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,255,90))
         self.slider_b = gb.Slider(self.frame_rgb, (0.35, -0.05, 0.10, 0.5), text='b', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,90,255))
+
 
         self.th = 0.0
 
@@ -37,6 +45,13 @@ class Teste(gb.BaseScreen):
 
         self.frame.update(self)
         self.frame_rgb.update(self)
+
+        # scope
+        x = self.clock.t
+        total_frame_time = 1 / self.real_fps if self.real_fps != 0 else 0
+        y = (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1)
+        self.scope.append(x, y)
+        self.scope.update(self)
 
 
 
@@ -63,6 +78,7 @@ def draw_grid(game: Teste, canvas: gb.Canvas, dx=.05, dy=.05, snap_to_grid=True)
 
     canvas.draw_line(origin_color, (center[0], ymin), (center[0], ymax))
     canvas.draw_line(origin_color, (xmin, center[1]), (xmax, center[1]))
+
 
     return mouse_pos
 

@@ -5,7 +5,7 @@ try:
 except PackageNotFoundError:
     __version__ = '0.0.0'
 
-from .draggable_controller import DraggableController
+from .drag_lock import DragLock
 from .canvas import Canvas, remap, blit_with_aspect_ratio
 from .basescreen import BaseScreen
 from .filters import MediaMovel

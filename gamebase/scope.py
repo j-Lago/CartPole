@@ -9,7 +9,7 @@ class Scope(gb.PopUp):
     def __init__(self, *args, fps, name: str = '', maxlen: int = 400, color=(0, 255, 255), line_colors=None, legend=None, focus_color=(255, 255, 0), rolling: bool = True, x_scale: float = 1.0, y_scale: float | tuple[float, ...] = 1.0, grid_lerp_factor: float = 0.6, bg_lerp_factor: float = 0.9, border_width: int = 2, border_radius: int = 13, **kwargs):
         super().__init__(*args, **kwargs)
 
-        gb.DraggableController.register_instance(self)
+        gb.DragLock.register_instance(self)
 
         self.bg_lerp_factor = bg_lerp_factor
         self.grid_lerp_factor = grid_lerp_factor
@@ -150,7 +150,7 @@ class Scope(gb.PopUp):
         return gb.Rect_f(*self.pos, *self.main_canvas.screen_to_world_v2(self.surface.get_size()))
 
     def update(self, game: gb.BaseScreen):
-        self.on_focus = self.collision(game.mouse.pos) and (not gb.DraggableController.another_on_focus(self))
+        self.on_focus = self.collision(game.mouse.pos) and (not gb.DragLock.another_on_focus(self))
 
         if game.mouse.left.pressed:
             if not self._clicked and self.on_focus:
@@ -166,6 +166,8 @@ class Scope(gb.PopUp):
         if game.mouse.left.dragging and self.drag_qualifier:
             delta = Vector2(game.mouse.left.drag_delta)
             self.pos = self.prev_drag_pos + delta
+
+        self.on_focus |= self.drag_qualifier
 
         self.draw()
         self.blit_to_main()

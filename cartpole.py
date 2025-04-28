@@ -29,12 +29,8 @@ class CartPoleGame(gb.BaseScreen):
         self.version = '0.0.1'
 
         # mouse callbacks
-        self.mouse.left.press_callback = self.left_click
-        self.mouse.left.release_callback = self.left_release
-        self.mouse.right.press_callback = self.right_click
         self.mouse.right.release_callback = self.right_release
-        self.mouse.scroll.up_callback = self.scroll_up
-        self.mouse.scroll.down_callback = self.scroll_down
+
 
         self.load_sounds()
         self.load_colors()
@@ -147,25 +143,10 @@ class CartPoleGame(gb.BaseScreen):
         self.cols['huge_collect'] = (200, 90, 255)
         self.cols['timer'] = (90, 60, 50)
 
-    def left_release(self, button: gb.MouseButton):
-        pass
-
-    def left_click(self, button: gb.MouseButton):
-        pass
-
-    def right_click(self, button: gb.MouseButton):
-        pass
-
     def right_release(self, button: gb.MouseButton):
         for scope in self.scopes.values():
             if scope.collision(self.mouse.pos):
                 scope.visible = False
-
-    def scroll_up(self, scroll: gb.MouseScroll):
-        pass
-
-    def scroll_down(self, scroll: gb.MouseScroll):
-        pass
 
     def perturb(self, intensity):
         for player in self.players.values():
@@ -213,11 +194,8 @@ class CartPoleGame(gb.BaseScreen):
                 score.value = data['best_score']
                 score.input_device = data['best_score_device']
                 score.date = datetime.date.fromisoformat(data['date'])
-
-
         except FileNotFoundError:
             warnings.warn(f"Não foi possivel carregar o arquivo {self.save_file_path}")
-
         return score
 
     def save_best_score(self):
@@ -226,44 +204,22 @@ class CartPoleGame(gb.BaseScreen):
                 self.best_score.value = player.score
                 self.best_score.input_device = player.input.description
                 self.best_score.date = datetime.date.today()
-
         save = {'version': '0.0.1', 'best_score': self.best_score.value, 'best_score_device': self.best_score.input_device, 'date': self.best_score.date.isoformat()}
         with open(self.save_file_path, 'w') as save_file:
             json.dump(save, save_file)
-
         code_hash = generate_folder_hash(self.rel_path, self.hash_ignore_dirs)
         hash_ = {'hash': code_hash}
         with open(self.hash_file_path, 'w') as hash_file:
             json.dump(hash_, hash_file)
-
         hash_file.close()
-
-
 
     def handle_user_input_event(self, event):
         self.state.handle_event(event)
 
-        # if self.mouse.right.dragging and self.mouse.right.drag_keys[pygame.K_LCTRL]:
-        #     self.canvas.bias = (int(self.canvas.bias[0] + self.mouse.right.drag_delta[0]),
-        #                         int(self.canvas.bias[1] + self.mouse.right.drag_delta[1]))
-        #     self.mouse.right.clear_drag_delta()
-        #
-        # for scope in self.scopes.values():
-        #     if self.mouse.left.dragging and scope.focus:
-        #         delta = self.mouse.left.drag_delta
-        #         scope.pos = Vector2(scope.pos) + delta
-        #         self.mouse.left.clear_drag_delta()
-
         if event.type == pygame.KEYDOWN:
-            # if event.key == pygame.K_ESCAPE:
-            #     self.reset()
             if event.key == pygame.K_s:
                 for scope in self.scopes.values():
                     scope.visible = True
-            # elif event.key == pygame.K_UP:
-            #     self.players['p1'].alive = not self.players['p1'].alive
-            # elif event.key == pygame.K_DOWN:
-            #     self.players['p2'].alive = not self.players['p2'].alive
 
             elif event.key == pygame.K_2:
                 self.inputs['p2'], self.inputs['none_p2'] = self.inputs['none_p2'], self.inputs['p2']
@@ -286,30 +242,14 @@ class CartPoleGame(gb.BaseScreen):
                 elif 'particles_fonts' in self.__dict__:
                     del self.particles_fonts
 
-
             elif event.key == pygame.K_COMMA:
                 self.perturb(0.4)
             elif event.key == pygame.K_PERIOD:
                 self.perturb(-0.4)
 
-            # elif event.key == pygame.K_r:
-            #     self.scopes['ch1'].clear()
-            #     self.scopes['ch1'].rolling = not self.scopes['ch1'].rolling
-            # elif event.key == pygame.K_v:
-            #     self.scopes['ch1'].visible = not self.scopes['ch1'].visible
             elif event.key == pygame.K_KP_MULTIPLY:
                 for scope in self.scopes.values():
                     scope.x_scale *= 2
             elif event.key == pygame.K_KP_DIVIDE:
                 for scope in self.scopes.values():
                     scope.x_scale /= 2
-            #
-            # elif event.key == pygame.K_t:
-            #     self.scopes['ch2'].clear()
-            #     self.scopes['ch2'].rolling = not self.scopes['ch2'].rolling
-            # elif event.key == pygame.K_b:
-            #     self.scopes['ch2'].visible = not self.scopes['ch2'].visible
-            # elif event.key == pygame.K_KP_PLUS:
-            #     self.scopes['ch2'].x_scale *= 2
-            # elif event.key == pygame.K_KP_MINUS:
-            #     self.scopes['ch2'].x_scale /= 2
