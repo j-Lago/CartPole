@@ -41,9 +41,9 @@ class Settings(st.GameState):
         )
 
         self.frame_rgb1 = gb.Frame(self.game.canvas, (x-2*dw-2*py, y0, dw, dh), alpha=255, bg_color=self.game.cols['bg'], origin='topleft')
-        self.slider_r1 = gb.Slider(self.frame_rgb1, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[0], fg_color=(255,60,60))
-        self.slider_g1 = gb.Slider(self.frame_rgb1, (0.2, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[1], fg_color=(60,255,60))
-        self.slider_b1 = gb.Slider(self.frame_rgb1, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[2], fg_color=(60,60,255))
+        self.slider_r1 = gb.Slider(self.frame_rgb1, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
+        self.slider_g1 = gb.Slider(self.frame_rgb1, (0.20, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
+        self.slider_b1 = gb.Slider(self.frame_rgb1, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
 
 
 
@@ -73,9 +73,9 @@ class Settings(st.GameState):
 
 
         self.frame_rgb2 = gb.Frame(self.game.canvas, (x-2*dw-2*py, y0, dw, dh), alpha=255, bg_color=self.game.cols['bg'], origin='topleft')
-        self.slider_r2 = gb.Slider(self.frame_rgb2, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[0], fg_color=(255,60,60))
-        self.slider_g2 = gb.Slider(self.frame_rgb2, (0.2, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[1], fg_color=(60,255,60))
-        self.slider_b2 = gb.Slider(self.frame_rgb2, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[2], fg_color=(60,60,255))
+        self.slider_r2 = gb.Slider(self.frame_rgb2, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
+        self.slider_g2 = gb.Slider(self.frame_rgb2, (0.20, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
+        self.slider_b2 = gb.Slider(self.frame_rgb2, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
 
 
     def __str__(self):
@@ -85,6 +85,9 @@ class Settings(st.GameState):
         self.game.clock.pause()
 
     def exit(self):
+        gb.DragLock.remove(self.frame_rgb1)
+        gb.DragLock.remove(self.frame_rgb2)
+
         self.game.clock.resume()
 
     def handle_event(self, event: pygame.event):
@@ -113,7 +116,6 @@ class Settings(st.GameState):
         self.game.players['p1'].base_color = self.slider_r1.value, self.slider_g1.value, self.slider_b1.value
         self.buttons_p1_dummy.bg_unselectable_color = self.game.players['p1'].base_color
         self.game.players['p1'].progress_fuel.on_color = self.game.players['p1'].base_color
-        self.game.scopes['p1'].color = self.game.players['p1'].base_color
         for key, input_ in self.game.inputs.items():
             self.buttons_p1[key].bg_selected_color=self.game.players['p1'].base_color
             self.buttons_p1[key].selected_color=self.game.players['p1'].base_color

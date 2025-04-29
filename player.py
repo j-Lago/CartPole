@@ -97,6 +97,8 @@ class Cart:
         self.spark_density = 100
         self.spark_particle_size = 1, 2
 
+
+
         y = (self.canvas.ymax - 0.04) if self.id % 2 == 1 else (self.canvas.ymin+0.07)
         self.progress_fuel = gb.ProgressBar(
             self.canvas,
@@ -110,11 +112,11 @@ class Cart:
 
         self.point_particles = None
         self.text_particles = None
-        self.frame = gb.Frame(self.canvas, (pos[0]-.6, pos[1]+0.55, .36, .56), alpha=200, origin='topleft')
-        self.sliders = {
-            'kp': gb.Slider(self.frame, (0.03, -0.03, 0.09, 0.5), text='kp', font=self.game.fonts['small'] ,max_value=0.03, min_value=0.0, init_value=0.012),
-            'ki': gb.Slider(self.frame, (0.14, -0.03, 0.09, 0.5), text='ki', font=self.game.fonts['small'] ,max_value=.002, min_value=.0000001, init_value=.0004),
-            'kd': gb.Slider(self.frame, (0.25, -0.03, 0.09, 0.5), text='kd', font=self.game.fonts['small'] ,max_value=0.05, min_value=0.0, init_value=0.03),
+        self.frame = gb.Frame(self.canvas, (pos[0]-.6, pos[1]+0.55, .36, .46), alpha=200, origin='topleft', border_color=None, bg_color=None)
+        self.sliders_pid = {
+            'kp': gb.Slider(self.frame, (0.03, -0.03, 0.09, 0.4), text='kp', font=self.game.fonts['small'],fg_color=(180, 90, 90), max_value=0.03, min_value=0.0, init_value=0.012),
+            'ki': gb.Slider(self.frame, (0.14, -0.03, 0.09, 0.4), text='ki', font=self.game.fonts['small'],fg_color=(180, 90, 90), max_value=.002, min_value=.0000001, init_value=.0004),
+            'kd': gb.Slider(self.frame, (0.25, -0.03, 0.09, 0.4), text='kd', font=self.game.fonts['small'],fg_color=(180, 90, 90), max_value=0.05, min_value=0.0, init_value=0.03),
         }
 
     def reset(self):
@@ -471,7 +473,7 @@ class Cart:
 
         if isinstance(self.input, gb.LinearController):
             self.frame.update(self.game)
-            for key, slider in self.sliders.items():
+            for key, slider in self.sliders_pid.items():
                 self.input.__dict__[key] = slider.value
 
 

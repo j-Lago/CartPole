@@ -15,7 +15,7 @@ class Slider():
                  active: bool = True,
                  on_focus: bool = False,
                  fg_color: pygame.Color | tuple[int, int, int] = (120, 120, 120),
-                 bg_color: pygame.Color | tuple[int, int, int] = (45, 45, 45),
+                 bg_color: pygame.Color | tuple[int, int, int] | None = None,
                  focus_color: pygame.Color | tuple[int, int, int] | None = (200, 200, 60),
                  handle_color: pygame.Color | tuple[int, int, int] | None = None,
                  border_width: int = 2,
@@ -41,8 +41,10 @@ class Slider():
         self.font = font
         self.text = text
 
-        self.fg_color = fg_color
+        if bg_color is None:
+            bg_color = (0, 0, 0, 0)
         self.bg_color = bg_color
+        self.fg_color = fg_color
         self.focus_color = focus_color
         if handle_color is None:
             handle_color = fg_color
