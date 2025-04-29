@@ -68,6 +68,9 @@ class Slider():
         self.norm_value = 0.0
         self.value = init_value  # set self.norm_value
 
+    def reset(self):
+        self.value = self.init_value
+
 
     @property
     def value(self):
@@ -78,14 +81,7 @@ class Slider():
         self.norm_value = max(0.0, min(1.0, (new_value-self.min_value) / (self.max_value-self.min_value)))
 
     def collision(self, point: gb.Vector2 | tuple[float, float]) -> bool:
-        # if not self.selectable:
-        #     return False
-
-        xmin = self.rect[0]
-        xmax = self.rect[0] + self.rect[2]
-        ymax = self.rect[1]
-        ymin = self.rect[1] - self.rect[3]
-        return (xmin <= point[0] <= xmax) and (ymin <= point[1] <= ymax)
+        return self.rect.point_collision(point)
 
     def draw(self):
         if self.active:

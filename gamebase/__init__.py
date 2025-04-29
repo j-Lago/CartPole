@@ -19,6 +19,7 @@ from .gameclock import Clock, Timer
 from .lerp import *
 from .utils import *
 from .basebutton import BaseButton
+from .button import Button
 from .progressbar import ProgressBar
 from .event_enum import UserEventEnum
 from .slider import Slider
