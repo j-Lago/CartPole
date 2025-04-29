@@ -1,10 +1,4 @@
 import gamebase as gb
-import pygame
-from pygame import Vector2
-import math
-from pathlib import Path
-from random import random, uniform, randint, choice, choices
-from player import Cart
 import states as st
 from bindings import *
 from game_draw import draw, simulate, feedback
