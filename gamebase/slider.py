@@ -3,8 +3,6 @@ import pygame
 from typing import Callable
 
 
-
-
 class Slider():
     def __init__(self,
                  canvas: gb.Canvas,

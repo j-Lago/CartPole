@@ -19,7 +19,8 @@ class Button():
                  on_color: pygame.Color | tuple[int, int, int] = (120, 120, 120),
                  off_color: pygame.Color | tuple[int, int, int] = (45, 45, 45),
                  focus_color: pygame.Color | tuple[int, int, int] | None = (200, 200, 60),
-                 unselectable_color: pygame.Color | tuple[int, int, int] = (60, 60, 60),
+                 unselectable_color: pygame.Color | tuple[int, int, int] | None = None,
+                 unselectable_text_color: pygame.Color | tuple[int, int, int] | None = None,
                  label_color: pygame.Color | tuple[int, int, int] | None = None,
                  label_bg_color: pygame.Color | tuple[int, int, int] | None = (30, 30, 30, 0),
                  border_width: int = 2,
@@ -71,8 +72,13 @@ class Button():
         self.on_color = on_color
         self.off_color = off_color
         self.focus_color = focus_color
-        self.unselectable_color = unselectable_color
         self.label_bg_color = label_bg_color
+        if unselectable_color is None:
+            unselectable_color = gb.lerp_vec3(on_color, (0, 0, 0), 0.7)
+        self.unselectable_color = unselectable_color
+        if unselectable_text_color is None:
+            unselectable_text_color = gb.lerp_vec3(on_color, (0, 0, 0), 0.4)
+        self.unselectable_text_color = unselectable_text_color
 
         self.border_width = border_width
         self.border_radius = rect[2] / 2
@@ -91,7 +97,7 @@ class Button():
 
 
     def collision(self, point: gb.Vector2 | tuple[float, float]) -> bool:
-        if self.unselectable:
+        if self.unselectable or not self.active:
             return False
         return self.rect.point_collision(point)
 
@@ -103,9 +109,37 @@ class Button():
 
             r_border = round(self.border_radius * self.canvas.scale)
 
-            font_color = self.focus_color if self.on_focus and self.focus_color is not None else (self.off_color if self.state else self.on_color)
-            border_color = self.focus_color if self.on_focus and self.focus_color is not None else (self.off_color if self.state else self.on_color)
-            self.canvas.draw_rect((self.on_color if self.state else self.off_color), self.rect, border_radius=r_border)  # sombra
+            if self.on_focus and self.focus_color is not None:
+                font_color = self.focus_color
+            elif self.unselectable:
+                font_color = self.unselectable_text_color
+            elif self.state:
+                font_color = self.off_color
+            else:
+                font_color = self.on_color
+
+            if self.on_focus and self.focus_color is not None:
+                border_color = self.focus_color
+            elif self.unselectable:
+                border_color = self.unselectable_text_color
+            elif self.state:
+                border_color = self.off_color
+            else:
+                border_color = self.on_color
+
+            if self.on_focus and self.focus_color is not None:
+                fill_color = self.on_color if self.state else self.off_color
+            elif self.unselectable:
+                fill_color = self.unselectable_color
+            elif self.state:
+                fill_color = self.on_color
+            else:
+                fill_color = self.off_color
+
+
+
+
+            self.canvas.draw_rect(fill_color, self.rect, border_radius=r_border)  # sombra
 
             if self.text is not None and self.text_font is not None:
                 self.canvas.draw_text(font_color, self.text_font, self.text[0] if self.state else self.text[1], self.rect.center, 'center')
@@ -135,19 +169,18 @@ class Button():
                 if self.toggle:
                     if not self.radio:
                         self.state = not self.state
+                        self.toggle_callback(self)
                     else:
-                        if self._clicked:
-                            if not self.state:
-                                self.state = True
-                                if self.toggle_callback is not None:
-                                    self.toggle_callback(self)
-                            for comp in self.canvas.components:
-                                if comp is not self and isinstance(comp, Button):
-                                    if comp.radio and comp.state:
-                                        comp.state = False
-                                        if comp.toggle_callback is not None:
-                                            comp.toggle_callback(comp)
-
+                        if not self.state:
+                            self.state = True
+                            if self.toggle_callback is not None:
+                                self.toggle_callback(self)
+                        for comp in self.canvas.components:
+                            if comp is not self and isinstance(comp, Button):
+                                if comp.radio and comp.state:
+                                    comp.state = False
+                                    if comp.toggle_callback is not None:
+                                        comp.toggle_callback(comp)
 
                 if not self.toggle and self.press_callback is not None:
                     self.press_callback(self)
@@ -162,10 +195,6 @@ class Button():
 
         if not self.toggle:
             self.state = self._clicked
-
-
-
-
 
     def mouse_remap(self, point: gb.Vector2):
         if isinstance(self.canvas, gb.Frame):

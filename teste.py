@@ -28,7 +28,7 @@ class Teste(gb.BaseScreen):
 
         self.button = gb.Button(self.frame_rgb, (0.1, -0.6, .3, .1), text='reset', text_font=self.fonts['small'], release_callback=self.color_reset)
 
-        self.frame_bt = gb.Frame(self.canvas, (-.5, -0.2, .2, .56), alpha=200, origin='topleft')
+        self.frame_bt = gb.Frame(self.canvas, (-.45, -0.2, .2, .56), alpha=200, origin='topleft')
         self.button_a = gb.Button(self.frame_bt, (0.05, -0.05, .1, .1), text='A', text_font=self.fonts['small'], toggle=True)
         self.button_b = gb.Button(self.frame_bt, (0.05, -0.17, .1, .1), text='B', text_font=self.fonts['small'], toggle=True)
         self.button_c = gb.Button(self.frame_bt, (0.05, -0.29, .1, .1), text='C', text_font=self.fonts['small'], toggle=True)
@@ -36,15 +36,16 @@ class Teste(gb.BaseScreen):
 
         self.frame_bt2 = gb.Frame(self.canvas, (-.2, -0.2, .43, .56), alpha=200, origin='topleft')
         self.button_e = gb.Button(self.frame_bt2, (0.05, -0.05, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button E')
-        self.button_f = gb.Button(self.frame_bt2, (0.05, -0.17, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button B', toggle_callback=self.toggle_callback)
+        self.button_f = gb.Button(self.frame_bt2, (0.05, -0.17, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button B')
         self.button_g = gb.Button(self.frame_bt2, (0.05, -0.29, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button G')
         self.button_h = gb.Button(self.frame_bt2, (0.05, -0.41, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button H')
 
-
+        self.frame_bt3 = gb.Frame(self.canvas, (-0.95, -0.2, .45, .56), alpha=200, origin='topleft')
+        self.button_i = gb.Button(self.frame_bt3, (0.05, -0.05, .35, .1), text='normal', text_font=self.fonts['small'], press_callback=lambda b: print('clicked'))
+        self.button_j = gb.Button(self.frame_bt3, (0.05, -0.17, .35, .1), text='toggle', text_font=self.fonts['small'], toggle=True, toggle_callback=lambda b: print(f'toggled: {b.state}'))
+        self.button_k = gb.Button(self.frame_bt3, (0.05, -0.29, .35, .1), text='inactive', text_font=self.fonts['small'], active=False, press_callback=lambda b: print('should not be clicked'))
+        self.button_l = gb.Button(self.frame_bt3, (0.05, -0.41, .35, .1), text='unselectable', text_font=self.fonts['small'], unselectable=True, press_callback=lambda b: print('should not be clicked'))
         self.th = 0.0
-
-    def toggle_callback(self, button):
-        print(f'button F: {button.state}')
 
     def color_reset(self, button):
         print('color reset')
@@ -67,6 +68,7 @@ class Teste(gb.BaseScreen):
         self.frame_rgb.update(self)
         self.frame_bt.update(self)
         self.frame_bt2.update(self)
+        self.frame_bt3.update(self)
 
         # scope
         x = self.clock.t
