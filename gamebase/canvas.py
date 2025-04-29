@@ -153,10 +153,16 @@ class Canvas:
     def draw_line(self, color: Color | tuple[int, int, int] | Vector3, start_pos: Vector2 | tuple[float, float], end_pos: Vector2 | tuple[float, float], width: int = 1):
         return pygame.draw.line(self.surface, color, self.world_to_screen_v2(start_pos), self.world_to_screen_v2(end_pos), width)
 
-    def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center', shift: Vector2 | tuple[float, float] = (0, 0)):
+    def draw_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str, pos: Vector2 | tuple[float, float], anchor='center', shift: Vector2 | tuple[float, float] = (0, 0), bg_color: Color | None = None):
         rendered_text = self.render_text(color, font, text)
         if not isinstance(shift, Vector2):
             shift = Vector2(shift)
+
+
+        if bg_color is not None:
+            rect = gb.Rect_f(self.screen_to_world_rect(rendered_text.get_rect()))
+            rect.set_anchor(shift + pos, anchor)
+            self.draw_rect(bg_color, rect)
         return self.blit_text(rendered_text, shift+pos, anchor)
 
     def render_text(self, color: Color | tuple[int, int, int] | Vector3, font: pygame.font.Font, text: str):

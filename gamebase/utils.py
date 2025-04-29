@@ -198,6 +198,29 @@ class Rect_f:
     def bottomleft(self, point):
         self.x, self.y = point[0], point[1]+self.h
 
+    def set_anchor(self, pos, anchor):
+        match anchor:
+            case 'center':
+                self.center = pos
+            case 'topleft':
+                self.topleft = pos
+            case 'topright':
+                self.topright = pos
+            case 'bottomleft':
+                self.bottomleft = pos
+            case 'bottomright':
+                self.bottomright = pos
+            case 'midbottom':
+                self.midbottom = pos
+            case 'midtop':
+                self.midtop = pos
+            case 'midleft':
+                self.midleft = pos
+            case 'midright':
+                self.midright = pos
+            case _:
+                ValueError(f"Anchor '{anchor}' não suportado.")
+
     def __add__(self, vec2: Vec2):
         return Rect_f(self.x + vec2[0], self.y + vec2[1], self.w, self.h)
 

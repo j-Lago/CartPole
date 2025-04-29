@@ -26,19 +26,19 @@ class Teste(gb.BaseScreen):
         self.slider_g = gb.Slider(self.frame_rgb, (0.2, -0.05, 0.10, 0.5), text='g', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,255,90))
         self.slider_b = gb.Slider(self.frame_rgb, (0.35, -0.05, 0.10, 0.5), text='b', font=self.fonts['small'], min_value=0, max_value=255, init_value=127, fg_color=(90,90,255))
 
-        self.button = gb.Button(self.frame_rgb, (0.1, -0.6, .3, .1), text='reset', font=self.fonts['small'], release_callback=self.color_reset)
+        self.button = gb.Button(self.frame_rgb, (0.1, -0.6, .3, .1), text='reset', text_font=self.fonts['small'], release_callback=self.color_reset)
 
         self.frame_bt = gb.Frame(self.canvas, (-.5, -0.2, .2, .56), alpha=200, origin='topleft')
-        self.button_a = gb.Button(self.frame_bt, (0.05, -0.05, .1, .1), text='A', font=self.fonts['small'], toggle=True)
-        self.button_b = gb.Button(self.frame_bt, (0.05, -0.17, .1, .1), text='B', font=self.fonts['small'], toggle=True)
-        self.button_c = gb.Button(self.frame_bt, (0.05, -0.29, .1, .1), text='C', font=self.fonts['small'], toggle=True)
-        self.button_d = gb.Button(self.frame_bt, (0.05, -0.41, .1, .1), text='D', font=self.fonts['small'], toggle=True)
+        self.button_a = gb.Button(self.frame_bt, (0.05, -0.05, .1, .1), text='A', text_font=self.fonts['small'], toggle=True)
+        self.button_b = gb.Button(self.frame_bt, (0.05, -0.17, .1, .1), text='B', text_font=self.fonts['small'], toggle=True)
+        self.button_c = gb.Button(self.frame_bt, (0.05, -0.29, .1, .1), text='C', text_font=self.fonts['small'], toggle=True)
+        self.button_d = gb.Button(self.frame_bt, (0.05, -0.41, .1, .1), text='D', text_font=self.fonts['small'], toggle=True)
 
-        self.frame_bt2 = gb.Frame(self.canvas, (-.2, -0.2, .2, .56), alpha=200, origin='topleft')
-        self.button_e = gb.Button(self.frame_bt2, (0.05, -0.05, .1, .1), text='E', font=self.fonts['small'], radio=True)
-        self.button_f = gb.Button(self.frame_bt2, (0.05, -0.17, .1, .1), text='F', font=self.fonts['small'], radio=True, toggle_callback=self.toggle_callback)
-        self.button_g = gb.Button(self.frame_bt2, (0.05, -0.29, .1, .1), text='G', font=self.fonts['small'], radio=True)
-        self.button_h = gb.Button(self.frame_bt2, (0.05, -0.41, .1, .1), text='H', font=self.fonts['small'], toggle=True, on_color=(30,180,180))
+        self.frame_bt2 = gb.Frame(self.canvas, (-.2, -0.2, .43, .56), alpha=200, origin='topleft')
+        self.button_e = gb.Button(self.frame_bt2, (0.05, -0.05, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button E')
+        self.button_f = gb.Button(self.frame_bt2, (0.05, -0.17, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button B', toggle_callback=self.toggle_callback)
+        self.button_g = gb.Button(self.frame_bt2, (0.05, -0.29, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button G')
+        self.button_h = gb.Button(self.frame_bt2, (0.05, -0.41, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button H')
 
 
         self.th = 0.0
@@ -47,6 +47,7 @@ class Teste(gb.BaseScreen):
         print(f'button F: {button.state}')
 
     def color_reset(self, button):
+        print('color reset')
         for slider in (self.slider_r, self.slider_g, self.slider_b):
             slider.reset()
 
