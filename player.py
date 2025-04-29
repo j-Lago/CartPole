@@ -110,7 +110,7 @@ class Cart:
 
         self.point_particles = None
         self.text_particles = None
-        self.frame = gb.Frame(self.canvas, (pos[0]-.7, pos[1]+0.55, .36, .56), alpha=200, origin='topleft')
+        self.frame = gb.Frame(self.canvas, (pos[0]-.6, pos[1]+0.55, .36, .56), alpha=200, origin='topleft')
         self.sliders = {
             'kp': gb.Slider(self.frame, (0.03, -0.03, 0.09, 0.5), text='kp', font=self.game.fonts['small'] ,max_value=0.03, min_value=0.0, init_value=0.012),
             'ki': gb.Slider(self.frame, (0.14, -0.03, 0.09, 0.5), text='ki', font=self.game.fonts['small'] ,max_value=.002, min_value=.0000001, init_value=.0004),

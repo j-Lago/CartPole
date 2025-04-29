@@ -63,9 +63,9 @@ class CartPoleGame(gb.BaseScreen):
                               pos=(-1.75, -0.65),
                               size=(320, 180), maxlen=400, visible=True),
             'pid': gb.Scope(self.canvas, name='pid output', legend=('p', 'i', 'd'), fps=self.clock.fps,
-                            alpha=200, color=self.cols['p1'], focus_color=self.cols['focus'],
+                            alpha=200, color=self.cols['info'], focus_color=self.cols['focus'],
                             y_scale=(3.0, 3.0, 3.0, 3.0), x_scale=0.5,
-                            pos=(-1.5, 0.1), size=(320, 180), maxlen=400, visible=True),
+                            pos=(1.05, 0.6), size=(320, 180), maxlen=400, visible=True),
         }
 
         self.progress_timer = gb.ProgressBar(
@@ -220,14 +220,6 @@ class CartPoleGame(gb.BaseScreen):
             if event.key == pygame.K_s:
                 for scope in self.scopes.values():
                     scope.visible = True
-
-            elif event.key == pygame.K_2:
-                self.inputs['p2'], self.inputs['none_p2'] = self.inputs['none_p2'], self.inputs['p2']
-                self.reset()
-
-            elif event.key == pygame.K_1:
-                self.inputs['p1'], self.inputs['none_p1'] = self.inputs['none_p1'], self.inputs['p1']
-                self.reset()
 
             elif event.key == pygame.K_F7:
                 self.stress_test_en = not self.stress_test_en

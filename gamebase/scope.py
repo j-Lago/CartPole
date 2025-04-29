@@ -33,7 +33,9 @@ class Scope(gb.PopUp):
         self.drag_qualifier = False
         self.prev_drag_pos = self.pos
 
-
+    @property
+    def active(self):
+        return self.visible
 
     @property
     def get_legend(self):

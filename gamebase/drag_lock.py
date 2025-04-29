@@ -8,7 +8,7 @@ class DragLock:
     @staticmethod
     def another_on_focus(instance):
         for other in DragLock._draggable_instances:
-            if (other is not instance) and other.on_focus:
+            if (other is not instance) and other.on_focus and other.active:
                 return True
         return False
 

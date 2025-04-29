@@ -50,6 +50,10 @@ class Frame(gb.PopUp):
         self.components = []
 
     @property
+    def active(self):
+        return True
+
+    @property
     def on_focus(self):
         return self._on_focus or self.any_subcomponent_on_focus(self)
 
