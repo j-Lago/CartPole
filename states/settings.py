@@ -40,9 +40,9 @@ class Settings(st.GameState):
         )
 
         self.frame_rgb1 = gb.Frame(self.game.canvas, (x-2*dw-2*py, y0, dw, dh), alpha=255, bg_color=self.game.cols['bg'], origin='topleft')
-        self.slider_r1 = gb.Slider(self.frame_rgb1, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
-        self.slider_g1 = gb.Slider(self.frame_rgb1, (0.20, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
-        self.slider_b1 = gb.Slider(self.frame_rgb1, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
+        self.slider_r1 = gb.Slider(self.frame_rgb1, (0.05, -0.05, 0.10, dh-0.1), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
+        self.slider_g1 = gb.Slider(self.frame_rgb1, (0.20, -0.05, 0.10, dh-0.1), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
+        self.slider_b1 = gb.Slider(self.frame_rgb1, (0.35, -0.05, 0.10, dh-0.1), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
 
         self.buttons_p2 = dict()
         y0 = -0.28
@@ -70,9 +70,9 @@ class Settings(st.GameState):
 
 
         self.frame_rgb2 = gb.Frame(self.game.canvas, (x-2*dw-2*py, y0, dw, dh), alpha=255, bg_color=self.game.cols['bg'], origin='topleft')
-        self.slider_r2 = gb.Slider(self.frame_rgb2, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
-        self.slider_g2 = gb.Slider(self.frame_rgb2, (0.20, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
-        self.slider_b2 = gb.Slider(self.frame_rgb2, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
+        self.slider_r2 = gb.Slider(self.frame_rgb2, (0.05, -0.05, 0.10, dh-0.1), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
+        self.slider_g2 = gb.Slider(self.frame_rgb2, (0.20, -0.05, 0.10, dh-0.1), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
+        self.slider_b2 = gb.Slider(self.frame_rgb2, (0.35, -0.05, 0.10, dh-0.1), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
 
 
     def __str__(self):

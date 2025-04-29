@@ -19,7 +19,7 @@ class CartPoleGame(gb.BaseScreen):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.game_duration = 120
+        self.game_duration = 45
 
         self.rel_path = Path(__file__).parent
         self.assets_path = self.rel_path / 'assets'

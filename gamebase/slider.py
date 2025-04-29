@@ -32,6 +32,8 @@ class Slider():
         self.canvas = canvas
         self.max_value = max_value
         self.min_value = min_value
+        if init_value > max_value or init_value < min_value:
+            raise ValueError(f"'init_value' deve ser menor ou igual a 'max_value' e maior ou igual a 'min_value': {max_value=:.2f} >= {init_value=:.2f} >= {min_value=:.2f}" )
         self.init_value = init_value
 
         if not isinstance(rect, gb.Rect_f):
