@@ -16,7 +16,7 @@ class Settings(st.GameState):
 
         y0 = 0.9
         y = y0
-        x = -0.4
+        x = 0.2
         for key, input_ in self.game.inputs.items():
             self.buttons_p1[key] = gb.BaseButton(self.game.canvas, (x, y, w, h), key,
                                                  font=self.game.fonts['medium'],
@@ -28,21 +28,28 @@ class Settings(st.GameState):
                                                  focus_color=self.game.players['p1'].base_color,
                                                  font_focus_color=self.game.players['p1'].base_color,
                                                  border_width=2,
-
                                                  )
             y -= h + py
+
+        dw, dh = w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)
         self.buttons_p1_dummy = gb.BaseButton(
-            self.game.canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
+            self.game.canvas, (x - w - py, y0, dw, dh),
             text='P1', font=self.game.fonts['huge'],
             selectable=False,
             bg_unselectable_color=self.game.players['p1'].base_color,
             font_unselectable_color=self.game.cols['bg'],
-                                          )
+        )
+
+        self.frame_rgb1 = gb.Frame(self.game.canvas, (x-2*dw-2*py, y0, dw, dh), alpha=255, bg_color=self.game.cols['bg'], origin='topleft')
+        self.slider_r1 = gb.Slider(self.frame_rgb1, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[0], fg_color=(255,90,90))
+        self.slider_g1 = gb.Slider(self.frame_rgb1, (0.2, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[1], fg_color=(90,255,90))
+        self.slider_b1 = gb.Slider(self.frame_rgb1, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[2], fg_color=(90,90,255))
+
+
 
         self.buttons_p2 = dict()
         y0 = -0.28
         y = y0
-        x = -0.4
         for key, input_ in self.game.inputs.items():
             self.buttons_p2[key] = gb.BaseButton(self.game.canvas, (x, y, w, h), key,
                                                  font=self.game.fonts['medium'],
@@ -55,13 +62,21 @@ class Settings(st.GameState):
                                                  font_focus_color=self.game.players['p2'].base_color,
                                                  )
             y -= h + py
+        dw, dh = w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)
         self.buttons_p2_dummy = gb.BaseButton(
-            self.game.canvas, (x - w - py, y0, w, h * len(self.game.inputs) + py * (len(self.game.inputs) - 1)),
+            self.game.canvas, (x - w - py, y0, dw, dh),
             text='P2', font=self.game.fonts['huge'],
             selectable=False,
             bg_unselectable_color=self.game.players['p2'].base_color,
             font_unselectable_color=self.game.cols['bg'],
         )
+
+
+        self.frame_rgb2 = gb.Frame(self.game.canvas, (x-2*dw-2*py, y0, dw, dh), alpha=255, bg_color=self.game.cols['bg'], origin='topleft')
+        self.slider_r2 = gb.Slider(self.frame_rgb2, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[0], fg_color=(255,90,90))
+        self.slider_g2 = gb.Slider(self.frame_rgb2, (0.2, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[1], fg_color=(90,255,90))
+        self.slider_b2 = gb.Slider(self.frame_rgb2, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p2'].base_color[2], fg_color=(90,90,255))
+
 
     def __str__(self):
         return 'Settings'
@@ -91,6 +106,27 @@ class Settings(st.GameState):
 
         self.buttons_p1_dummy.draw()
         self.buttons_p2_dummy.draw()
+        self.frame_rgb1.update(self.game)
+        self.frame_rgb2.update(self.game)
+
+        #update colors
+        self.game.players['p1'].base_color = self.slider_r1.value, self.slider_g1.value, self.slider_b1.value
+        self.buttons_p1_dummy.bg_unselectable_color = self.game.players['p1'].base_color
+        self.game.players['p1'].progress_fuel.on_color = self.game.players['p1'].base_color
+        for key, input_ in self.game.inputs.items():
+            self.buttons_p1[key].bg_selected_color=self.game.players['p1'].base_color
+            self.buttons_p1[key].selected_color=self.game.players['p1'].base_color
+            self.buttons_p1[key].focus_color=self.game.players['p1'].base_color
+            self.buttons_p1[key].font_focus_color=self.game.players['p1'].base_color
+
+        self.game.players['p2'].base_color = self.slider_r2.value, self.slider_g2.value, self.slider_b2.value
+        self.buttons_p2_dummy.bg_unselectable_color = self.game.players['p2'].base_color
+        self.game.players['p2'].progress_fuel.on_color = self.game.players['p2'].base_color
+        for key, input_ in self.game.inputs.items():
+            self.buttons_p2[key].bg_selected_color=self.game.players['p2'].base_color
+            self.buttons_p2[key].selected_color=self.game.players['p2'].base_color
+            self.buttons_p2[key].focus_color=self.game.players['p2'].base_color
+            self.buttons_p2[key].font_focus_color=self.game.players['p2'].base_color
 
     def select_bt(self, pressed_button: gb.BaseButton, player, buttons):
         for key, button in buttons.items():
