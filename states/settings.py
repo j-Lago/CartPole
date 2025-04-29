@@ -7,7 +7,6 @@ class Settings(st.GameState):
     def __init__(self, game):
         super().__init__(game)
         self.previous_state = None
-        # self.menu = gb.PopUp(main_canvas=self.game.active_canvas, size=(200, 150), bg_color=(200,180,90), fonts=self.game.fonts, draw_fun=draw_settings, got_focus_callback=None)
 
         self.buttons_p1 = dict()
         h = .1
@@ -44,8 +43,6 @@ class Settings(st.GameState):
         self.slider_r1 = gb.Slider(self.frame_rgb1, (0.05, -0.05, 0.10, 0.5), text='r', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[0], bg_color=self.game.cols['bg'] ,fg_color=(255,60,60))
         self.slider_g1 = gb.Slider(self.frame_rgb1, (0.20, -0.05, 0.10, 0.5), text='g', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[1], bg_color=self.game.cols['bg'] ,fg_color=(60,255,60))
         self.slider_b1 = gb.Slider(self.frame_rgb1, (0.35, -0.05, 0.10, 0.5), text='b', font=self.game.fonts['small'], min_value=0, max_value=255, init_value=self.game.players['p1'].base_color[2], bg_color=self.game.cols['bg'] ,fg_color=(60,60,255))
-
-
 
         self.buttons_p2 = dict()
         y0 = -0.28
