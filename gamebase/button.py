@@ -169,7 +169,8 @@ class Button():
                 if self.toggle:
                     if not self.radio:
                         self.state = not self.state
-                        self.toggle_callback(self)
+                        if self.toggle_callback is not None:
+                            self.toggle_callback(self)
                     else:
                         if not self.state:
                             self.state = True
