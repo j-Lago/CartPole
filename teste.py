@@ -101,6 +101,19 @@ class Teste(gb.BaseScreen):
                 self.particle.step()
             self.particle.draw()
 
+        x,y = self.mouse.pos
+        line1 = (0.8, 0.7), (1.1, 0.4)
+        line2 = (x, y), (x+.4, y+.2)
+
+        inter = gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], True)
+
+        color = (255,0,0) if gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], False) is not None else (255, 255, 255)
+
+        self.canvas.draw_line(color, line1[0], line1[1], 2)
+        self.canvas.draw_line(color, line2[0], line2[1], 2)
+        if inter is not None:
+            self.canvas.draw_circle((255,255,0), inter, .02)
+
 
 
 

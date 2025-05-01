@@ -1,6 +1,7 @@
 import math
 import gamebase as gb
 from gamebase.canvas import Canvas
+from pygame import Vector2
 
 
 class CollidableParticle():
@@ -19,7 +20,7 @@ class CollidableParticle():
 
     @property
     def pos(self):
-        return self.x, self.y
+        return Vector2(self.x, self.y)
 
     @pos.setter
     def pos(self, point):
@@ -27,7 +28,7 @@ class CollidableParticle():
 
     @property
     def vel(self):
-        return self.vel_x, self.vel_y
+        return Vector2(self.vel_x, self.vel_y)
 
     @property
     def abs_vel(self):
@@ -61,10 +62,21 @@ class BallCollidableParticle(CollidableParticle):
     def step(self, line):
         start = self.pos
         super().step()
+        end = self.pos
+
+        # l = (end-start).magnitude()
+        # end = gb.lerp_vec2(start, end, 1+self.radius/l)
+        #
+        # inter = gb.find_lines_intersection(start, end, line[0], line[1])
+        # if inter is not None:
+        #     self.vel_y *= -self.collision_decay
+        #     x, y = inter
+        #     y += self.radius
+        #     self.y = y
+        #
         if gb.circle_line_collision(self.pos, self.radius, line[0], line[1]):
             self.vel_y *= -self.collision_decay
-
-            x, y = gb.find_lines_intersection(start, self.pos, line[0], line[1])
+            x, y = gb.find_lines_intersection(start, self.pos, line[0], line[1], True)
             y += self.radius
             self.y = y
 

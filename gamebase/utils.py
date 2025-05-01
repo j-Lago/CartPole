@@ -61,28 +61,24 @@ def find_lines_intersection(
         start1: tuple[float, float],
         end1: tuple[float, float],
         start2: tuple[float, float],
-        end2: tuple[float, float]
+        end2: tuple[float, float],
+        extend_to_infinity: bool = False,
 ) -> tuple[float, float] | None:
-
 
     dir1 = (end1[0] - start1[0], end1[1] - start1[1])
     dir2 = (end2[0] - start2[0], end2[1] - start2[1])
-
     det = dir1[0] * (-dir2[1]) - dir1[1] * (-dir2[0])
+
     if det == 0:
-        return None
+        return None  # As semirretas são paralelas ou coincidentes
 
     t1 = ((start2[0] - start1[0]) * (-dir2[1]) - (start2[1] - start1[1]) * (-dir2[0])) / det
-    # t2 = ((start2[0] - start1[0]) * (dir1[1]) - (start2[1] - start1[1]) * (dir1[0])) / det
+    t2 = ((start2[0] - start1[0]) * (-dir1[1]) - (start2[1] - start1[1]) * (-dir1[0])) / det
 
-    # # Garantindo que o ponto está na direção positiva das semirretas
-    # if t1 < 0 or t2 < 0:
-    #     return None
+    if 1 >= t1 >= 0 and 1 >= t2 >= 0 or extend_to_infinity:
+        return start1[0] + t1 * dir1[0], start1[1] + t1 * dir1[1]
 
-    intersection_x = start1[0] + t1 * dir1[0]
-    intersection_y = start1[1] + t1 * dir1[1]
-
-    return (intersection_x, intersection_y)
+    return None
 
 
 
