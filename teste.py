@@ -1,3 +1,5 @@
+import random
+
 import pygame.mouse
 
 import gamebase as gb
@@ -40,11 +42,24 @@ class Teste(gb.BaseScreen):
         self.button_h = gb.Button(self.frame_bt2, (0.05, -0.41, .1, .1), text=('■', '●'), text_font=self.fonts['small'], radio=True, label='button H')
 
         self.frame_bt3 = gb.Frame(self.canvas, (-0.95, -0.2, .45, .56), alpha=200, origin='topleft')
-        self.button_i = gb.Button(self.frame_bt3, (0.05, -0.05, .35, .1), text='normal', text_font=self.fonts['small'], press_callback=lambda b: print('clicked'))
+        self.button_i = gb.Button(self.frame_bt3, (0.05, -0.05, .35, .1), text='normal', text_font=self.fonts['small'], press_callback=lambda b: print(f'click'))
         self.button_j = gb.Button(self.frame_bt3, (0.05, -0.17, .35, .1), text='toggle', text_font=self.fonts['small'], toggle=True, toggle_callback=lambda b: print(f'toggled: {b.state}'))
         self.button_k = gb.Button(self.frame_bt3, (0.05, -0.29, .35, .1), text='inactive', text_font=self.fonts['small'], active=False, press_callback=lambda b: print('should not be clicked'))
         self.button_l = gb.Button(self.frame_bt3, (0.05, -0.41, .35, .1), text='unselectable', text_font=self.fonts['small'], unselectable=True, press_callback=lambda b: print('should not be clicked'))
+
+        self.frame_bt4 = gb.Frame(self.canvas, (-0.65, 0.6, .45, .33), alpha=200, origin='topleft')
+        self.spawn_n = gb.Button(self.frame_bt4, (0.05, -0.05, .35, .1), text='spawn N', text_font=self.fonts['small'], press_callback=self.spawn_normal_particle)
+        self.spawn_c = gb.Button(self.frame_bt4, (0.05, -0.17, .35, .1), text='spawn C', text_font=self.fonts['small'], press_callback=self.spawn_collidable_particle)
+
+
+        self.particle = None
         self.th = 0.0
+
+    def spawn_normal_particle(self, button):
+        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, 0.4), 0.0), 1 / self.clock.fps, g=-98)
+
+    def spawn_collidable_particle(self, button):
+        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, 0.4), 0.0), 1 / self.clock.fps, g=-98)
 
     def color_reset(self, button):
         print('color reset')
@@ -68,6 +83,7 @@ class Teste(gb.BaseScreen):
         self.frame_bt.update(self)
         self.frame_bt2.update(self)
         self.frame_bt3.update(self)
+        self.frame_bt4.update(self)
 
         # scope
         x = self.clock.t
@@ -75,6 +91,15 @@ class Teste(gb.BaseScreen):
         y = (self.last_active_frame_time * self.clock.fps - 1, total_frame_time * self.clock.fps - 1)
         self.scope.append(x, y)
         self.scope.update(self)
+
+        line = (-.9, -0.1), (0.9, -0.1)
+        self.canvas.draw_line((255, 255, 0), line[0], line[1], 4)
+        if self.particle is not None:
+            if isinstance(self.particle, gb.CollidableParticle):
+                self.particle.step(line)
+            else:
+                self.particle.step()
+            self.particle.draw()
 
 
 

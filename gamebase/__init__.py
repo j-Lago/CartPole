@@ -13,6 +13,7 @@ from .image import Image
 from .inputs import BaseInput, Joystick, LinearController, NoneInput, InputPool, Keyboard
 from .mouse import Mouse, MouseScroll, MouseButton
 from .particles import Particles, Particle, TextParticle, BallParticle
+from .collidable_particle import CollidableParticle, BallCollidableParticle
 from .popup import PopUpText, PopUp
 from .scope import Scope
 from .gameclock import Clock, Timer

@@ -35,6 +35,59 @@ def point_circle_collision(point: Vec2, circ_center: Vec2, circ_radius: float):
 #     return rect[0] < point[0] < rect[0] + rect[2] and rect[1] > point[1] > rect[1] - rect[3]
 
 
+def circle_line_collision(center, radius, start, end):
+    dir_vector = (end[0] - start[0], end[1] - start[1])
+    magnitude = math.sqrt(dir_vector[0] ** 2 + dir_vector[1] ** 2)
+    dir_unit = (dir_vector[0] / magnitude, dir_vector[1] / magnitude)
+    start_to_center = (center[0] - start[0], center[1] - start[1])
+    projection_length = start_to_center[0] * dir_unit[0] + start_to_center[1] * dir_unit[1]
+
+    if projection_length < 0 or projection_length > magnitude:
+        return False
+
+    closest_point = (
+        start[0] + projection_length * dir_unit[0],
+        start[1] + projection_length * dir_unit[1]
+    )
+
+    distance_to_circle = math.sqrt(
+        (closest_point[0] - center[0]) ** 2 + (closest_point[1] - center[1]) ** 2
+    )
+
+    return distance_to_circle <= radius
+
+
+def find_lines_intersection(
+        start1: tuple[float, float],
+        end1: tuple[float, float],
+        start2: tuple[float, float],
+        end2: tuple[float, float]
+) -> tuple[float, float] | None:
+
+
+    dir1 = (end1[0] - start1[0], end1[1] - start1[1])
+    dir2 = (end2[0] - start2[0], end2[1] - start2[1])
+
+    det = dir1[0] * (-dir2[1]) - dir1[1] * (-dir2[0])
+    if det == 0:
+        return None
+
+    t1 = ((start2[0] - start1[0]) * (-dir2[1]) - (start2[1] - start1[1]) * (-dir2[0])) / det
+    # t2 = ((start2[0] - start1[0]) * (dir1[1]) - (start2[1] - start1[1]) * (dir1[0])) / det
+
+    # # Garantindo que o ponto está na direção positiva das semirretas
+    # if t1 < 0 or t2 < 0:
+    #     return None
+
+    intersection_x = start1[0] + t1 * dir1[0]
+    intersection_y = start1[1] + t1 * dir1[1]
+
+    return (intersection_x, intersection_y)
+
+
+
+
+
 class ColorsDiscIterator:
     def __init__(self, maxlen, h0=0.0, s=1.0, v=1.0):
         self.N = maxlen
