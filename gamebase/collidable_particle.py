@@ -24,19 +24,22 @@ class BallCollidableParticle(gb.Particle):
 
         for line in self.interference_lines:
 
-            ext_end = gb.lerp_vec2(start, end, 1+self.radius/l) if l != 0 else end
+            # ext_end = gb.lerp_vec2(start, end, 1+self.radius/l) if l != 0 else end
             # norm = Vector2(*line).rotate(90)
             # ext_end = end + norm*self.radius
-            inter = gb.find_lines_intersection(end, ext_end, line[0], line[1])
-            if inter is not None:
+            # inter = gb.find_lines_intersection(end, ext_end, line[0], line[1])
+            # if inter is not None:
+            distance, closest_point = gb.point_line_distance(end, line[0], line[1])
+            if distance <= self.radius:
+                print(distance, self.radius)
                 _, dir = gb.find_lines_intersection((0, 0), self.vel, line[0], line[1], True, True)
-                collision_point = inter
+                collision_point = closest_point
                 # pos = collision_point -norm * self.radius
-                l = (collision_point-start).magnitude()
-                pos = gb.lerp_vec2(start, collision_point, 1-self.radius/l)
+                # l = (collision_point-start).magnitude()
+                # pos = gb.lerp_vec2(start, collision_point, 1-self.radius/l)
 
-                self.collision_points.append(pos)
                 self.pos = start
+                self.collision_points.append(self.pos)
                 vel_mag = self.vel.magnitude()
                 if vel_mag < self.min_vel*2:
                     vel_mag = vel_mag*self.collision_decay**2

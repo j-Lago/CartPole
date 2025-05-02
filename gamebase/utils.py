@@ -36,16 +36,21 @@ def point_circle_collision(point: Vec2, circ_center: Vec2, circ_radius: float):
 
 
 def circle_line_collision(center, radius, start, end):
-    dir_vector = (end[0] - start[0], end[1] - start[1])
-    magnitude = math.sqrt(dir_vector[0] ** 2 + dir_vector[1] ** 2)
-    dir_unit = (dir_vector[0] / magnitude, dir_vector[1] / magnitude)
-    start_to_center = (center[0] - start[0], center[1] - start[1])
+    distance_to_circle, _ = point_line_distance(center, start, end)
+    return distance_to_circle <= radius
+
+
+def point_line_distance(center, start, end):
+    dir_vector = Vector2(end[0] - start[0], end[1] - start[1])
+    magnitude = dir_vector.magnitude()
+    dir_unit = dir_vector / magnitude
+    start_to_center = Vector2(center[0] - start[0], center[1] - start[1])
     projection_length = start_to_center[0] * dir_unit[0] + start_to_center[1] * dir_unit[1]
     if projection_length < 0 or projection_length > magnitude:
-        return False
-    closest_point = ( start[0] + projection_length * dir_unit[0], start[1] + projection_length * dir_unit[1] )
-    distance_to_circle = math.sqrt( (closest_point[0] - center[0]) ** 2 + (closest_point[1] - center[1]) ** 2 )
-    return distance_to_circle <= radius
+        return float('inf'), center
+    closest_point = Vector2( start[0] + projection_length * dir_unit[0], start[1] + projection_length * dir_unit[1] )
+    distance_to_circle = (closest_point-center).magnitude()
+    return distance_to_circle, closest_point
 
 
 def find_lines_intersection(start1: Vec2, end1: Vec2, start2: Vec2, end2: Vec2, extends: bool = False, ret_reflection: bool = False) -> Vector2 | None:
