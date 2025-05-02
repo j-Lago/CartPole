@@ -48,16 +48,23 @@ def circle_line_collision(center, radius, start, end):
     return distance_to_circle <= radius
 
 
-def find_lines_intersection(start1: Vec2, end1: Vec2, start2: Vec2, end2: Vec2, extends: bool = False) -> Vector2 | None:
-    dir1 = (end1[0] - start1[0], end1[1] - start1[1])
-    dir2 = (end2[0] - start2[0], end2[1] - start2[1])
+def find_lines_intersection(start1: Vec2, end1: Vec2, start2: Vec2, end2: Vec2, extends: bool = False, ret_reflection: bool = False) -> Vector2 | None:
+    dir1 = Vector2(end1[0] - start1[0], end1[1] - start1[1])
+    dir2 = Vector2(end2[0] - start2[0], end2[1] - start2[1])
     det = dir1[0] * (-dir2[1]) - dir1[1] * (-dir2[0])
     if det == 0:
         return None  # As semirretas são paralelas ou coincidentes
     t1 = ((start2[0] - start1[0]) * (-dir2[1]) - (start2[1] - start1[1]) * (-dir2[0])) / det
     t2 = ((start2[0] - start1[0]) * (-dir1[1]) - (start2[1] - start1[1]) * (-dir1[0])) / det
     if 1 >= t1 >= 0 and 1 >= t2 >= 0 or extends:
-        return Vector2(start1[0] + t1 * dir1[0], start1[1] + t1 * dir1[1])
+        itersec =  Vector2(start1[0] + t1 * dir1[0], start1[1] + t1 * dir1[1])
+        if ret_reflection:
+            dir1 = dir1.normalize()
+            normal = dir2.normalize().rotate(90)
+            reflection = dir1 - 2 * dir1.dot(normal) * normal
+            return itersec, reflection
+        return itersec
+
     return None
 
 

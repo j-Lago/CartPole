@@ -5,37 +5,48 @@ from pygame import Vector2
 
 
 class BallCollidableParticle(gb.Particle):
-    def __init__(self, canvas: Canvas, color, radius, radius_in_pixels=False, *args, collision_decay: float = 0.7, **kwargs):
+    def __init__(self, canvas: Canvas, color, radius, radius_in_pixels=False, *args, min_vel=0.05, collision_decay: float = 0.7, **kwargs):
         super().__init__(*args, **kwargs)
         self.color = color
         self.canvas = canvas
         self.radius = radius
+        self.min_vel = min_vel
         self.radius_in_pixels = radius_in_pixels
         self.collision_decay = collision_decay
         self.interference_lines = []
+        self.collision_points = []
 
     def step(self):
+        start = self.pos
+        super().step()
+        end = self.pos
+        l = (end-start).magnitude()
 
         for line in self.interference_lines:
-            start = self.pos
-            super().step()
-            end = self.pos
 
-            # l = (end-start).magnitude()
-            # end = gb.lerp_vec2(start, end, 1+self.radius/l)
-            #
-            # inter = gb.find_lines_intersection(start, end, line[0], line[1])
-            # if inter is not None:
-            #     self.vel_y *= -self.collision_decay
-            #     x, y = inter
-            #     y += self.radius
-            #     self.y = y
-            #
-            if gb.circle_line_collision(self.pos, self.radius, line[0], line[1]):
-                self.vel_y *= -self.collision_decay
-                x, y = gb.find_lines_intersection(start, self.pos, line[0], line[1], True)
-                y += self.radius
-                self.y = y
+            ext_end = gb.lerp_vec2(start, end, 1+self.radius/l) if l != 0 else end
+
+            inter = gb.find_lines_intersection(start, ext_end, line[0], line[1])
+            if inter is not None:
+                _, dir = gb.find_lines_intersection((0, 0), self.vel, line[0], line[1], True, True)
+                collision_point = inter
+                l = (collision_point-start).magnitude()
+                pos = gb.lerp_vec2(start, collision_point, 1-self.radius/l)
+
+                self.collision_points.append(pos)
+                self.pos = start
+                vel_mag = self.vel.magnitude()
+                if vel_mag < self.min_vel*2:
+                    vel_mag = vel_mag*self.collision_decay**2
+                    if vel_mag < self.min_vel:
+                        vel_mag = 0.0
+                self.vel = dir * vel_mag * self.collision_decay
+
+                print(vel_mag, self.vel.magnitude(), dir.magnitude(), self.collision_decay)
+
+            for point in self.collision_points:
+                self.canvas.draw_circle((240, 90, 90), point, self.radius, 2)
+
 
 
     def draw(self):

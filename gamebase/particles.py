@@ -2,7 +2,7 @@ import math
 import pygame
 from _collections import deque
 from gamebase.canvas import Canvas
-
+from pygame import Vector2
 
 
 
@@ -21,11 +21,19 @@ class Particle():
 
     @property
     def pos(self):
-        return self.x, self.y
+        return Vector2(self.x, self.y)
+
+    @pos.setter
+    def pos(self, value):
+        self.x, self.y = value
 
     @property
     def vel(self):
-        return self.vel_x, self.vel_y
+        return Vector2(self.vel_x, self.vel_y)
+
+    @vel.setter
+    def vel(self, value):
+        self.vel_x, self.vel_y = value
 
     @property
     def abs_vel(self):

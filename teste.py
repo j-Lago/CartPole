@@ -1,3 +1,4 @@
+import math
 import random
 
 import pygame.mouse
@@ -19,11 +20,12 @@ class Teste(gb.BaseScreen):
                               pos=(-1.6, -0.65),
                               size=(320, 180), maxlen=400, visible=True)
 
-        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .35, .75), alpha=200, origin='topleft')
+        self.frame = gb.Frame(self.canvas, (0.4, -0.2, .5, .75), alpha=200, origin='topleft')
         self.slider = gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.65), text='w', font=self.fonts['small'], max_value=0.5, min_value=-0.5)
         self.slider2 = gb.Slider(self.frame, (0.2, -0.05, 0.1, 0.65), text='s', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
+        self.slider3 = gb.Slider(self.frame, (0.35, -0.05, 0.1, 0.65), text='a', font=self.fonts['small'], max_value=math.pi, min_value=-math.pi, init_value=0.0)
 
-        self.frame_rgb = gb.Frame(self.canvas, (0.8, -0.2, .5, .75), alpha=200, origin='topleft')
+        self.frame_rgb = gb.Frame(self.canvas, (0.95, -0.2, .5, .75), alpha=200, origin='topleft')
         self.slider_r = gb.Slider(self.frame_rgb, (0.05, -0.05, 0.10, 0.5), text='r', font=self.fonts['small'], min_value=0, max_value=255, init_value=120, fg_color=(255,90,90))
         self.slider_g = gb.Slider(self.frame_rgb, (0.2, -0.05, 0.10, 0.5), text='g', font=self.fonts['small'], min_value=0, max_value=255, init_value=190, fg_color=(90,255,90))
         self.slider_b = gb.Slider(self.frame_rgb, (0.35, -0.05, 0.10, 0.5), text='b', font=self.fonts['small'], min_value=0, max_value=255, init_value=50, fg_color=(90,90,255))
@@ -51,15 +53,16 @@ class Teste(gb.BaseScreen):
         self.spawn_n = gb.Button(self.frame_bt4, (0.05, -0.05, .35, .1), text='spawn N', text_font=self.fonts['small'], press_callback=self.spawn_normal_particle)
         self.spawn_c = gb.Button(self.frame_bt4, (0.05, -0.17, .35, .1), text='spawn C', text_font=self.fonts['small'], press_callback=self.spawn_collidable_particle)
 
-
         self.particle = None
         self.th = 0.0
+        self.dth = 0.0
+        self.th0 = 0.0
 
     def spawn_normal_particle(self, button):
-        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, 0.01), 0.0), 1 / self.clock.fps, g=-98)
+        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, -0.3), 0.0), 1 / self.clock.fps*3, g=-9.8)
 
     def spawn_collidable_particle(self, button):
-        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, 0.01), 0.0), 1 / self.clock.fps, g=-98)
+        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, -0.3), 0.0), 1 / self.clock.fps*3, g=-9.8)
 
     def color_reset(self, button):
         print('color reset')
@@ -74,7 +77,9 @@ class Teste(gb.BaseScreen):
         points = gb.Points((0, 0), (0.6, 0.1), (0.4, 0.6))
 
 
-        self.th -= .1 * self.slider.value
+        self.th0 = self.slider3.value
+        self.dth -= .1 * self.slider.value
+        self.th = self.dth + self.th0
         color = int(self.slider_r.value), int(self.slider_g.value), int(self.slider_b.value)
         canvas.draw_polygon(color, points.rotate(self.th, (0.4, 0.2)).scale(self.slider2.value))
 
@@ -92,20 +97,28 @@ class Teste(gb.BaseScreen):
         self.scope.append(x, y)
         self.scope.update(self)
 
-        line_a = (-.9, 0.1), (-0.2, 0.1)
-        line_b = (-1.5, -0.3), (-1.2, -0.3)
-        line_c = (-1.1, -0.1), (-0.9, -0.1)
+        lines = [
+            ((-.9, 0.1), (-0.2, 0.1)),
+            ((-1.2, -0.4), (-0.9, 0.1)),
+            ((-1.5, 0.0), (-1.3, -0.3)),
+            ((-1.5, 0.0), (-1.5, .4)),
+            ((-1.5, -0.6), (-1.0, -0.6)),
+            ((-1.5, -0.6), (-1.5, -0.3)),
+            ((-1.0, -0.4), (-1.0, -0.6)),
+            ]
+
 
         x,y = self.mouse.pos
-        line1 = (0.8, 0.7), (1.1, 0.4)
-        line2 = (x, y), (x+.4, y+.0)
+        line1 = Vector2(.3,0).rotate(self.th*180/math.pi)+ (1.1, 0.4), (1.1, 0.4)
+        xx, yy = (1.1, 0.4)
+        line2 = (xx, yy), (xx+.4, yy+.2)
 
-        self.canvas.draw_line((255, 255, 0), line_a[0], line_a[1], 4)
-        self.canvas.draw_line((255, 255, 0), line_b[0], line_b[1], 4)
-        self.canvas.draw_line((255, 255, 0), line_c[0], line_c[1], 4)
+        for line in lines:
+            self.canvas.draw_line((255, 255, 0), line[0], line[1], 4)
+
         if self.particle is not None:
             if isinstance(self.particle, gb.BallCollidableParticle):
-                self.particle.interference_lines = [line_a, line_b, line_c, line2]
+                self.particle.interference_lines = lines
                 self.particle.step()
             else:
                 self.particle.step()
@@ -113,14 +126,15 @@ class Teste(gb.BaseScreen):
 
 
 
-        inter = gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], True)
+        inter = gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], True, ret_reflection=True)
 
         color = (255,0,0) if gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], False) is not None else (255, 255, 0)
 
         self.canvas.draw_line(color, line1[0], line1[1], 4)
         self.canvas.draw_line(color, line2[0], line2[1], 4)
         if inter is not None:
-            self.canvas.draw_circle((255,255,0), inter, .02)
+            self.canvas.draw_line((255,255,0), inter[0], inter[0]+inter[1])
+
 
 
 
