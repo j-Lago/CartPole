@@ -11,7 +11,7 @@ class Teste(gb.BaseScreen):
         super().__init__(*args, **kwargs)
         self.canvas.draw_fun = self.draw_main
         # self.mouse.set_visible(False)
-        self.show_info()
+        # self.show_info()
 
         self.scope = gb.Scope(self.canvas, name='frame time', legend=('active', 'total'), fps=self.clock.fps,
                               alpha=200, color=self.cols['info'],
@@ -56,10 +56,10 @@ class Teste(gb.BaseScreen):
         self.th = 0.0
 
     def spawn_normal_particle(self, button):
-        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, 0.4), 0.0), 1 / self.clock.fps, g=-98)
+        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, 0.01), 0.0), 1 / self.clock.fps, g=-98)
 
     def spawn_collidable_particle(self, button):
-        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, 0.4), 0.0), 1 / self.clock.fps, g=-98)
+        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, 0.01), 0.0), 1 / self.clock.fps, g=-98)
 
     def color_reset(self, button):
         print('color reset')
@@ -92,25 +92,33 @@ class Teste(gb.BaseScreen):
         self.scope.append(x, y)
         self.scope.update(self)
 
-        line = (-.9, -0.1), (0.9, -0.1)
-        self.canvas.draw_line((255, 255, 0), line[0], line[1], 4)
+        line_a = (-.9, 0.1), (-0.2, 0.1)
+        line_b = (-1.5, -0.3), (-1.2, -0.3)
+        line_c = (-1.1, -0.1), (-0.9, -0.1)
+
+        x,y = self.mouse.pos
+        line1 = (0.8, 0.7), (1.1, 0.4)
+        line2 = (x, y), (x+.4, y+.0)
+
+        self.canvas.draw_line((255, 255, 0), line_a[0], line_a[1], 4)
+        self.canvas.draw_line((255, 255, 0), line_b[0], line_b[1], 4)
+        self.canvas.draw_line((255, 255, 0), line_c[0], line_c[1], 4)
         if self.particle is not None:
-            if isinstance(self.particle, gb.CollidableParticle):
-                self.particle.step(line)
+            if isinstance(self.particle, gb.BallCollidableParticle):
+                self.particle.interference_lines = [line_a, line_b, line_c, line2]
+                self.particle.step()
             else:
                 self.particle.step()
             self.particle.draw()
 
-        x,y = self.mouse.pos
-        line1 = (0.8, 0.7), (1.1, 0.4)
-        line2 = (x, y), (x+.4, y+.2)
+
 
         inter = gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], True)
 
-        color = (255,0,0) if gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], False) is not None else (255, 255, 255)
+        color = (255,0,0) if gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], False) is not None else (255, 255, 0)
 
-        self.canvas.draw_line(color, line1[0], line1[1], 2)
-        self.canvas.draw_line(color, line2[0], line2[1], 2)
+        self.canvas.draw_line(color, line1[0], line1[1], 4)
+        self.canvas.draw_line(color, line2[0], line2[1], 4)
         if inter is not None:
             self.canvas.draw_circle((255,255,0), inter, .02)
 
