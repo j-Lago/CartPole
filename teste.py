@@ -59,10 +59,10 @@ class Teste(gb.BaseScreen):
         self.th0 = 0.0
 
     def spawn_normal_particle(self, button):
-        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, -0.3), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
 
     def spawn_collidable_particle(self, button):
-        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.5, -0.3), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
 
     def color_reset(self, button):
         print('color reset')
