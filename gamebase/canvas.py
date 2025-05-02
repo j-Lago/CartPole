@@ -273,6 +273,9 @@ def remap(point: tuple[float, float] | Vector2, origin: tuple[float, float, floa
     ox0, oy0, ow, oh = origin
     dx0, dy0, dw, dh = dest
 
+    if ow / oh < dw / dh:
+        oh = dh / dw * ow
+
     oxr = ox - ox0
     oyr = oy - oy0
 
