@@ -1,5 +1,6 @@
 import math
 import random
+from _collections import deque
 
 import pygame.mouse
 
@@ -53,7 +54,7 @@ class Teste(gb.BaseScreen):
         self.spawn_n = gb.Button(self.frame_bt4, (0.05, -0.05, .35, .1), text='spawn N', text_font=self.fonts['small'], press_callback=self.spawn_normal_particle)
         self.spawn_c = gb.Button(self.frame_bt4, (0.05, -0.17, .35, .1), text='spawn C', text_font=self.fonts['small'], press_callback=self.spawn_collidable_particle)
 
-        self.particle = None
+        self.particles = deque(maxlen=100)
         self.th = 0.0
         self.dth = 0.0
         self.th0 = 0.0
@@ -63,16 +64,17 @@ class Teste(gb.BaseScreen):
     @property
     def canon_dir(self):
         # return Vector2(self.slider2.value, 0.0).rotate_rad(self.slider3.value)
-        return Vector2(random.uniform(-0.8, -0.2), 0.0)
+        return Vector2(random.uniform(-0.8, -0.2), random.uniform(-0.2, 0.2))
 
 
     def spawn_normal_particle(self, button):
         self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
 
     def spawn_collidable_particle(self, button):
-        print('')
-        # self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
-        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
+        for _ in range(30):
+            self.particles.append(
+                gb.BallCollidableParticle(self.canvas, (random.randint(0,255), random.randint(0,255), random.randint(0,255)), random.uniform(.03, .05), False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
+            )
 
     def color_reset(self, button):
         print('color reset')
@@ -113,10 +115,12 @@ class Teste(gb.BaseScreen):
             ((-.9, 0.1), (-0.2, 0.1)),
             ((-1.2, -0.4), (-0.9, 0.1)),
             ((-1.5, 0.0), (-1.3, -0.3)),
-            ((-1.5, 0.0), (-1.5, .4)),
+            ((-1.5, 0.0), (-1.5, .7)),
             ((-1.5, -0.6), (-1.0, -0.6)),
             ((-1.5, -0.6), (-1.5, -0.3)),
+            ((-1.5, -0.3), (-1.3, -0.3)),
             ((-1.0, -0.4), (-1.0, -0.6)),
+            ((-1.2, -0.4), (-1.0, -0.4)),
             ]
 
 
@@ -128,13 +132,13 @@ class Teste(gb.BaseScreen):
         for line in lines:
             self.canvas.draw_line((255, 255, 0), line[0], line[1], 4)
 
-        if self.particle is not None:
-            if isinstance(self.particle, gb.BallCollidableParticle):
-                self.particle.interference_lines = lines
-                self.particle.step()
+        for particle in self.particles:
+            if isinstance(particle, gb.BallCollidableParticle):
+                particle.interference_lines = lines
+                particle.step()
             else:
-                self.particle.step()
-            self.particle.draw()
+                particle.step()
+            particle.draw()
 
 
 

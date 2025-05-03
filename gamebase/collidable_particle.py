@@ -14,9 +14,9 @@ class BallCollidableParticle(gb.Particle):
         self.radius_in_pixels = radius_in_pixels
         self.collision_decay = collision_decay
         self.interference_lines = []
-        self.collision_points = []
-        self.collision_rewind_points = []
-        self.collision_corrected_points = []
+        # self.collision_points = []
+        # self.collision_rewind_points = []
+        # self.collision_corrected_points = []
 
     def step(self):
         start = self.pos
@@ -47,30 +47,30 @@ class BallCollidableParticle(gb.Particle):
                 # l = (collision_point-start).magnitude()
                 # pos = gb.lerp_vec2(start, collision_point, 1-self.radius/l)
 
-                self.collision_points.append(self.pos)
+                # self.collision_points.append(self.pos)
                 super().step_rewind_dt(overlap*self.dt)
 
-                self.collision_rewind_points.append(self.pos)
+                # self.collision_rewind_points.append(self.pos)
 
 
                 vel_mag = self.vel.magnitude()
-                if vel_mag < self.min_vel*2:
-                    vel_mag = vel_mag*self.collision_decay**2
-                    if vel_mag < self.min_vel:
-                        vel_mag = 0.0
+                # if vel_mag < self.min_vel*2:
+                #     vel_mag = vel_mag*self.collision_decay**2
+                #     if vel_mag < self.min_vel:
+                #         vel_mag = 0.0
                 self.vel = dir * vel_mag * self.collision_decay
 
                 super().step_dt(overlap*self.dt)
-                self.collision_corrected_points.append(self.pos)
+                # self.collision_corrected_points.append(self.pos)
 
-            for point in self.collision_points:
-                self.canvas.draw_circle((240, 90, 90), point, self.radius, 2)
-
-            for point in self.collision_rewind_points:
-                self.canvas.draw_circle((90, 255, 90), point, self.radius, 2)
-
-            for point in self.collision_corrected_points:
-                self.canvas.draw_circle((90, 90, 255), point, self.radius, 2)
+            # for point in self.collision_points:
+            #     self.canvas.draw_circle((240, 90, 90), point, self.radius, 2)
+            #
+            # for point in self.collision_rewind_points:
+            #     self.canvas.draw_circle((90, 255, 90), point, self.radius, 2)
+            #
+            # for point in self.collision_corrected_points:
+            #     self.canvas.draw_circle((90, 90, 255), point, self.radius, 2)
 
 
 
