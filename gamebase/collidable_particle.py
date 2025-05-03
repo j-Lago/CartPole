@@ -24,7 +24,7 @@ class BallCollidableParticle(gb.Particle):
         end = self.pos
         l = (end-start).magnitude()
 
-        prev_distance = 0.0
+        frame_distance = (end-start).magnitude()
         for line in self.interference_lines:
 
             # ext_end = gb.lerp_vec2(start, end, 1+self.radius/l) if l != 0 else end
@@ -35,10 +35,9 @@ class BallCollidableParticle(gb.Particle):
             distance, closest_point = gb.point_line_distance(end, line[0], line[1])
             if distance <= self.radius:
 
-                delta = (distance - prev_distance)
+                delta = frame_distance
                 overlap = min(1.0, (self.radius-distance) / delta) if delta != 0 else 0.0
-                prev_distance = distance
-                print(f'{overlap:.5f}')
+
                 iter = gb.find_lines_intersection((0, 0), self.vel, line[0], line[1], True, True)
                 if iter is None:
                     continue
@@ -49,15 +48,16 @@ class BallCollidableParticle(gb.Particle):
                 # pos = gb.lerp_vec2(start, collision_point, 1-self.radius/l)
 
                 self.collision_points.append(self.pos)
-                self.pos = gb.lerp_vec2(start, end, 1-overlap)
+                super().step_rewind_dt(overlap*self.dt)
+
                 self.collision_rewind_points.append(self.pos)
 
 
                 vel_mag = self.vel.magnitude()
-                # if vel_mag < self.min_vel*2:
-                #     vel_mag = vel_mag*self.collision_decay**2
-                #     if vel_mag < self.min_vel:
-                #         vel_mag = 0.0
+                if vel_mag < self.min_vel*2:
+                    vel_mag = vel_mag*self.collision_decay**2
+                    if vel_mag < self.min_vel:
+                        vel_mag = 0.0
                 self.vel = dir * vel_mag * self.collision_decay
 
                 super().step_dt(overlap*self.dt)

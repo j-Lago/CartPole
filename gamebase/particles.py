@@ -56,11 +56,20 @@ class Particle():
             self.alive = False
 
     def step_dt(self, dt):
+
         self.x += self.vel_x * dt
         self.y += self.vel_y * dt
-
         self.vel_x = self.vel_x * self.decay
         self.vel_y = self.vel_y * self.decay + 0.5 * self.g * dt**2
+
+    def step_rewind_dt(self, dt):
+        if dt > 0:
+            dt = -dt
+
+        self.x += self.vel_x * dt
+        self.y += self.vel_y * dt
+        self.vel_x = self.vel_x / self.decay
+        self.vel_y = self.vel_y / self.decay - 0.5 * self.g * dt**2
 
 
 class BallParticle(Particle):
