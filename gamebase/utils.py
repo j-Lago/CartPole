@@ -58,6 +58,7 @@ def find_lines_intersection(start1: Vec2, end1: Vec2, start2: Vec2, end2: Vec2, 
     dir2 = Vector2(end2[0] - start2[0], end2[1] - start2[1])
     det = dir1[0] * (-dir2[1]) - dir1[1] * (-dir2[0])
     if det == 0:
+        # return end1, dir2.normalize().rotate(90)
         return None  # As semirretas são paralelas ou coincidentes
     t1 = ((start2[0] - start1[0]) * (-dir2[1]) - (start2[1] - start1[1]) * (-dir2[0])) / det
     t2 = ((start2[0] - start1[0]) * (-dir1[1]) - (start2[1] - start1[1]) * (-dir1[0])) / det

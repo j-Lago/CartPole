@@ -23,7 +23,7 @@ class Teste(gb.BaseScreen):
         self.frame = gb.Frame(self.canvas, (0.4, -0.2, .5, .75), alpha=200, origin='topleft')
         self.slider = gb.Slider(self.frame, (0.05, -0.05, 0.1, 0.65), text='w', font=self.fonts['small'], max_value=0.5, min_value=-0.5)
         self.slider2 = gb.Slider(self.frame, (0.2, -0.05, 0.1, 0.65), text='s', font=self.fonts['small'], max_value=1.8, min_value=0.2, init_value=1.0)
-        self.slider3 = gb.Slider(self.frame, (0.35, -0.05, 0.1, 0.65), text='a', font=self.fonts['small'], max_value=math.pi, min_value=-math.pi, init_value=0.0)
+        self.slider3 = gb.Slider(self.frame, (0.35, -0.05, 0.1, 0.65), text='a', font=self.fonts['small'], max_value=math.pi, min_value=-math.pi, init_value=-1.8)
 
         self.frame_rgb = gb.Frame(self.canvas, (0.95, -0.2, .5, .75), alpha=200, origin='topleft')
         self.slider_r = gb.Slider(self.frame_rgb, (0.05, -0.05, 0.10, 0.5), text='r', font=self.fonts['small'], min_value=0, max_value=255, init_value=120, fg_color=(255,90,90))
@@ -58,11 +58,20 @@ class Teste(gb.BaseScreen):
         self.dth = 0.0
         self.th0 = 0.0
 
+        self.canon_origin = Vector2(-0.1, .9)
+
+    @property
+    def canon_dir(self):
+        return Vector2(self.slider2.value, 0.0).rotate_rad(self.slider3.value)
+
+
     def spawn_normal_particle(self, button):
-        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
 
     def spawn_collidable_particle(self, button):
-        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, (-0.1, 0.9), (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        print('')
+        # self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        self.particle = gb.BallCollidableParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, self.canon_dir, 1 / self.clock.fps*3, g=-9.8)
 
     def color_reset(self, button):
         print('color reset')
@@ -74,7 +83,7 @@ class Teste(gb.BaseScreen):
 
 
 
-        points = gb.Points((0, 0), (0.6, 0.1), (0.4, 0.6))
+        points = gb.Points((0.0, 0.0), (0.6, 0.1), (0.4, 0.6))
 
 
         self.th0 = self.slider3.value
@@ -97,6 +106,8 @@ class Teste(gb.BaseScreen):
         self.scope.append(x, y)
         self.scope.update(self)
 
+        canvas.draw_line((255,0,0), self.canon_origin, self.canon_origin+self.canon_dir, 1)
+
         lines = [
             ((-.9, 0.1), (-0.2, 0.1)),
             ((-1.2, -0.4), (-0.9, 0.1)),
@@ -109,7 +120,7 @@ class Teste(gb.BaseScreen):
 
 
         x,y = self.mouse.pos
-        line1 = Vector2(.3,0).rotate(self.th*180/math.pi)+ (1.1, 0.4), (1.1, 0.4)
+        line1 = Vector2(.3,0.0).rotate(self.th*180/math.pi)+ (1.1, 0.4), (1.1, 0.4)
         xx, yy = (1.1, 0.4)
         line2 = (xx, yy), (xx+.4, yy+.2)
 

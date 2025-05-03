@@ -15,6 +15,8 @@ class BallCollidableParticle(gb.Particle):
         self.collision_decay = collision_decay
         self.interference_lines = []
         self.collision_points = []
+        self.collision_rewind_points = []
+        self.collision_corrected_points = []
 
     def step(self):
         start = self.pos
@@ -22,6 +24,7 @@ class BallCollidableParticle(gb.Particle):
         end = self.pos
         l = (end-start).magnitude()
 
+        prev_distance = 0.0
         for line in self.interference_lines:
 
             # ext_end = gb.lerp_vec2(start, end, 1+self.radius/l) if l != 0 else end
@@ -31,24 +34,45 @@ class BallCollidableParticle(gb.Particle):
             # if inter is not None:
             distance, closest_point = gb.point_line_distance(end, line[0], line[1])
             if distance <= self.radius:
-                print(distance, self.radius)
-                _, dir = gb.find_lines_intersection((0, 0), self.vel, line[0], line[1], True, True)
-                collision_point = closest_point
+
+                delta = (distance - prev_distance)
+                overlap = min(1.0, (self.radius-distance) / delta) if delta != 0 else 0.0
+                prev_distance = distance
+                print(f'{overlap:.5f}')
+                iter = gb.find_lines_intersection((0, 0), self.vel, line[0], line[1], True, True)
+                if iter is None:
+                    continue
+
+                _, dir = iter
                 # pos = collision_point -norm * self.radius
                 # l = (collision_point-start).magnitude()
                 # pos = gb.lerp_vec2(start, collision_point, 1-self.radius/l)
 
-                self.pos = start
                 self.collision_points.append(self.pos)
+                self.pos = gb.lerp_vec2(start, end, 1-overlap)
+                self.collision_rewind_points.append(self.pos)
+
+
                 vel_mag = self.vel.magnitude()
-                if vel_mag < self.min_vel*2:
-                    vel_mag = vel_mag*self.collision_decay**2
-                    if vel_mag < self.min_vel:
-                        vel_mag = 0.0
+                # if vel_mag < self.min_vel*2:
+                #     vel_mag = vel_mag*self.collision_decay**2
+                #     if vel_mag < self.min_vel:
+                #         vel_mag = 0.0
                 self.vel = dir * vel_mag * self.collision_decay
+
+                super().step_dt(overlap*self.dt)
+                self.collision_corrected_points.append(self.pos)
 
             for point in self.collision_points:
                 self.canvas.draw_circle((240, 90, 90), point, self.radius, 2)
+
+            for point in self.collision_rewind_points:
+                self.canvas.draw_circle((90, 255, 90), point, self.radius, 2)
+
+            for point in self.collision_corrected_points:
+                self.canvas.draw_circle((90, 90, 255), point, self.radius, 2)
+
+
 
 
 
