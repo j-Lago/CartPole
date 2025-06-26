@@ -95,6 +95,7 @@ class CartPoleGame(gb.BaseScreen):
         self.extra_help = [
             f'────────────────────────',
             f'ESC: reset',
+            f' F2: settings',
             f' F7: toggle stress test',
             f'  1: toggle player 1 en',
             f'  2: toggle player 2 en',
