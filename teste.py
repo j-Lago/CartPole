@@ -68,12 +68,16 @@ class Teste(gb.BaseScreen):
 
 
     def spawn_normal_particle(self, button):
-        self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        # self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
+        self.particles.append(gb.BallCollidableParticle(self.canvas, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
+                                  random.uniform(.005, .01), False, self.canon_origin, self.canon_dir * 0.5,
+                                  1 / self.clock.fps * 3, g=-9.8))
 
     def spawn_collidable_particle(self, button):
         for _ in range(30):
             self.particles.append(
-                gb.BallCollidableParticle(self.canvas, (random.randint(0,255), random.randint(0,255), random.randint(0,255)), random.uniform(.03, .05), False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
+                gb.BallCollidableParticle(self.canvas, (random.randint(0,255), random.randint(0,255), random.randint(0,255)),
+                                          random.uniform(.01, .03), False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
             )
 
     def color_reset(self, button):
