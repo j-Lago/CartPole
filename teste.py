@@ -51,8 +51,8 @@ class Teste(gb.BaseScreen):
         self.button_l = gb.Button(self.frame_bt3, (0.05, -0.41, .35, .1), text='unselectable', text_font=self.fonts['small'], unselectable=True, press_callback=lambda b: print('should not be clicked'))
 
         self.frame_bt4 = gb.Frame(self.canvas, (-0.65, 0.6, .45, .33), alpha=200, origin='topleft')
-        self.spawn_n = gb.Button(self.frame_bt4, (0.05, -0.05, .35, .1), text='spawn N', text_font=self.fonts['small'], press_callback=self.spawn_normal_particle)
-        self.spawn_c = gb.Button(self.frame_bt4, (0.05, -0.17, .35, .1), text='spawn C', text_font=self.fonts['small'], press_callback=self.spawn_collidable_particle)
+        self.spawn_n = gb.Button(self.frame_bt4, (0.05, -0.05, .35, .1), text='spawn 1', text_font=self.fonts['small'], press_callback=self.spawn_single_collidable_particle)
+        self.spawn_c = gb.Button(self.frame_bt4, (0.05, -0.17, .35, .1), text='spawn M', text_font=self.fonts['small'], press_callback=self.spawn_multiple_collidable_particle)
 
         self.particles = deque(maxlen=100)
         self.th = 0.0
@@ -67,17 +67,17 @@ class Teste(gb.BaseScreen):
         return Vector2(random.uniform(-0.8, -0.2), random.uniform(-0.2, 0.2))
 
 
-    def spawn_normal_particle(self, button):
+    def spawn_single_collidable_particle(self, button):
         # self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
         self.particles.append(gb.BallCollidableParticle(self.canvas, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
                                   random.uniform(.005, .01), False, self.canon_origin, self.canon_dir * 0.5,
                                   1 / self.clock.fps * 3, g=-9.8))
 
-    def spawn_collidable_particle(self, button):
+    def spawn_multiple_collidable_particle(self, button):
         for _ in range(30):
             self.particles.append(
                 gb.BallCollidableParticle(self.canvas, (random.randint(0,255), random.randint(0,255), random.randint(0,255)),
-                                          random.uniform(.01, .03), False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
+                                          random.uniform(.005, .01), False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
             )
 
     def color_reset(self, button):
