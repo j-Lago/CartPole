@@ -50,34 +50,36 @@ class Teste(gb.BaseScreen):
         self.button_k = gb.Button(self.frame_bt3, (0.05, -0.29, .35, .1), text='inactive', text_font=self.fonts['small'], active=False, press_callback=lambda b: print('should not be clicked'))
         self.button_l = gb.Button(self.frame_bt3, (0.05, -0.41, .35, .1), text='unselectable', text_font=self.fonts['small'], unselectable=True, press_callback=lambda b: print('should not be clicked'))
 
-        self.frame_bt4 = gb.Frame(self.canvas, (-0.65, 0.6, .45, .33), alpha=200, origin='topleft')
+        self.frame_bt4 = gb.Frame(self.canvas, (-1.2, 0.8, .45, .33), alpha=200, origin='topleft')
         self.spawn_n = gb.Button(self.frame_bt4, (0.05, -0.05, .35, .1), text='spawn 1', text_font=self.fonts['small'], press_callback=self.spawn_single_collidable_particle)
         self.spawn_c = gb.Button(self.frame_bt4, (0.05, -0.17, .35, .1), text='spawn M', text_font=self.fonts['small'], press_callback=self.spawn_multiple_collidable_particle)
 
-        self.particles = deque(maxlen=100)
+        self.particles = deque(maxlen=300)
         self.th = 0.0
         self.dth = 0.0
         self.th0 = 0.0
 
-        self.canon_origin = Vector2(-0.1, .9)
+        self.canon_origin = Vector2(-0.05, .8)
 
     @property
     def canon_dir(self):
         # return Vector2(self.slider2.value, 0.0).rotate_rad(self.slider3.value)
-        return Vector2(random.uniform(-0.8, -0.2), random.uniform(-0.2, 0.2))
+        return Vector2(random.uniform(-0.8, -0.2), random.uniform(-0.5, 0.1))
 
 
     def spawn_single_collidable_particle(self, button):
         # self.particle = gb.BallParticle(self.canvas, (255,90,180), .05, False, self.canon_origin, (random.uniform(-0.4, -0.1), 0.0), 1 / self.clock.fps*3, g=-9.8)
         self.particles.append(gb.BallCollidableParticle(self.canvas, (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)),
-                                  random.uniform(.005, .01), False, self.canon_origin, self.canon_dir * 0.5,
-                                  1 / self.clock.fps * 3, g=-9.8))
+                                  random.uniform(.02, .03), False, self.canon_origin,
+                                                        self.canon_dir * 2, 1 / self.clock.fps * 3, g=-9.8))
 
     def spawn_multiple_collidable_particle(self, button):
-        for _ in range(30):
+        for _ in range(100):
             self.particles.append(
                 gb.BallCollidableParticle(self.canvas, (random.randint(0,255), random.randint(0,255), random.randint(0,255)),
-                                          random.uniform(.005, .01), False, self.canon_origin, self.canon_dir*0.5, 1 / self.clock.fps*3, g=-9.8)
+                                          random.uniform(.005, .01),
+                                          False, self.canon_origin,
+                                          self.canon_dir*2, 1 / self.clock.fps*3, g=-9.8)
             )
 
     def color_reset(self, button):
@@ -97,7 +99,8 @@ class Teste(gb.BaseScreen):
         self.dth -= .1 * self.slider.value
         self.th = self.dth + self.th0
         color = int(self.slider_r.value), int(self.slider_g.value), int(self.slider_b.value)
-        canvas.draw_polygon(color, points.rotate(self.th, (0.4, 0.2)).scale(self.slider2.value))
+        points_polygon = points.rotate(self.th, (0.4, 0.2)).scale(self.slider2.value)
+        canvas.draw_polygon(color, points_polygon)
 
         self.frame.update(self)
         self.frame_rgb.update(self)
@@ -113,10 +116,10 @@ class Teste(gb.BaseScreen):
         self.scope.append(x, y)
         self.scope.update(self)
 
-        canvas.draw_line((255,0,0), self.canon_origin, self.canon_origin+self.canon_dir, 1)
+        canvas.draw_line((0,255,0), self.canon_origin, self.canon_origin+self.canon_dir, 3)
 
         lines = [
-            ((-.9, 0.1), (-0.2, 0.1)),
+            ((-.9, 0.1), (0.0, 0.1)),
             ((-1.2, -0.4), (-0.9, 0.1)),
             ((-1.5, 0.0), (-1.3, -0.3)),
             ((-1.5, 0.0), (-1.5, .7)),
@@ -125,13 +128,21 @@ class Teste(gb.BaseScreen):
             ((-1.5, -0.3), (-1.3, -0.3)),
             ((-1.0, -0.4), (-1.0, -0.6)),
             ((-1.2, -0.4), (-1.0, -0.4)),
+            ((0.0, 0.1), (0.0, 0.3)),
+            ((0.0, 0.5), (0.0, 0.9)),
+            ((0.0, 0.3), (0.0, 0.5)) if self.button_j.state else ((0.0, 0.5), (0.2, 0.5)),
+            (points_polygon[0], points_polygon[1]),
+            (points_polygon[1], points_polygon[2]),
+            (points_polygon[2], points_polygon[0]),
+            ((-1.5, .7), (-1.2, 0.9)),
+            ((-1.2, 0.9), (0.0, 0.9)),
             ]
 
 
-        x,y = self.mouse.pos
-        line1 = Vector2(.3,0.0).rotate(self.th*180/math.pi)+ (1.1, 0.4), (1.1, 0.4)
-        xx, yy = (1.1, 0.4)
-        line2 = (xx, yy), (xx+.4, yy+.2)
+        # x,y = self.mouse.pos
+        # line1 = Vector2(.3,0.0).rotate(self.th*180/math.pi)+ (1.1, 0.4), (1.1, 0.4)
+        # xx, yy = (1.1, 0.4)
+        # line2 = (xx, yy), (xx+.4, yy+.2)
 
         for line in lines:
             self.canvas.draw_line((255, 255, 0), line[0], line[1], 4)
@@ -146,14 +157,14 @@ class Teste(gb.BaseScreen):
 
 
 
-        inter = gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], True, ret_reflection=True)
+        # inter = gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], True, ret_reflection=True)
 
-        color = (255,0,0) if gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], False) is not None else (255, 255, 0)
+        # color = (255,0,0) if gb.find_lines_intersection(line1[0], line1[1], line2[0], line2[1], False) is not None else (255, 255, 0)
 
-        self.canvas.draw_line(color, line1[0], line1[1], 4)
-        self.canvas.draw_line(color, line2[0], line2[1], 4)
-        if inter is not None:
-            self.canvas.draw_line((255,255,0), inter[0], inter[0]+inter[1])
+        # self.canvas.draw_line(color, line1[0], line1[1], 4)
+        # self.canvas.draw_line(color, line2[0], line2[1], 4)
+        # if inter is not None:
+        #     self.canvas.draw_line((255,255,0), inter[0], inter[0]+inter[1])
 
 
 
